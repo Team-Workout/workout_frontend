@@ -7,15 +7,19 @@
       "name": "pt_service",
       "version": "1.0.0+1",
       "dependencies": [
+        "cookie_jar",
         "cupertino_icons",
         "dio",
+        "dio_cookie_manager",
         "fl_chart",
         "flutter",
+        "flutter_dotenv",
         "flutter_riverpod",
         "freezed_annotation",
         "go_router",
         "intl",
         "json_annotation",
+        "path_provider",
         "riverpod_annotation",
         "shared_preferences",
         "table_calendar"
@@ -163,6 +167,29 @@
         "flutter",
         "intl",
         "simple_gesture_detector"
+      ]
+    },
+    {
+      "name": "flutter_dotenv",
+      "version": "5.2.1",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "cookie_jar",
+      "version": "4.0.8",
+      "dependencies": [
+        "meta",
+        "universal_io"
+      ]
+    },
+    {
+      "name": "dio_cookie_manager",
+      "version": "3.3.0",
+      "dependencies": [
+        "cookie_jar",
+        "dio"
       ]
     },
     {
@@ -796,6 +823,15 @@
       ]
     },
     {
+      "name": "universal_io",
+      "version": "2.2.2",
+      "dependencies": [
+        "collection",
+        "meta",
+        "typed_data"
+      ]
+    },
+    {
       "name": "dio_web_adapter",
       "version": "2.1.1",
       "dependencies": [
@@ -1087,6 +1123,34 @@
       "name": "sprintf",
       "version": "7.0.0",
       "dependencies": []
+    },
+    {
+      "name": "path_provider",
+      "version": "2.1.5",
+      "dependencies": [
+        "flutter",
+        "path_provider_android",
+        "path_provider_foundation",
+        "path_provider_linux",
+        "path_provider_platform_interface",
+        "path_provider_windows"
+      ]
+    },
+    {
+      "name": "path_provider_foundation",
+      "version": "2.4.1",
+      "dependencies": [
+        "flutter",
+        "path_provider_platform_interface"
+      ]
+    },
+    {
+      "name": "path_provider_android",
+      "version": "2.2.17",
+      "dependencies": [
+        "flutter",
+        "path_provider_platform_interface"
+      ]
     }
   ],
   "configVersion": 1

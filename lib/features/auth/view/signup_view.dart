@@ -17,18 +17,19 @@ class _SignupViewState extends ConsumerState<SignupView> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _birthdayController = TextEditingController();
-  
+
   bool _isPasswordVisible = false;
   bool _agreedToTerms = false;
   String? _selectedGender;
   String? _selectedGoal;
-  
+
   final List<String> _fitnessGoals = [
-    'Lose Weight',
-    'Build Muscle',
-    'Improve Endurance',
-    'Stay Healthy',
-    'Increase Flexibility',
+    '체중 감량',
+    '근육 증가',
+    '지구력 향상',
+    '건강 유지',
+    '유연성 향상',
+    '체력 증진 및 근력 향상',
   ];
 
   @override
@@ -49,7 +50,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
     );
     if (picked != null) {
       setState(() {
-        _birthdayController.text = '${picked.month}/${picked.day}/${picked.year}';
+        _birthdayController.text =
+            '${picked.month}/${picked.day}/${picked.year}';
       });
     }
   }
@@ -108,11 +110,13 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                          borderSide:
+                              BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 1),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF2C3E50), width: 1),
                         ),
                       ),
                       validator: (value) {
@@ -149,11 +153,13 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                          borderSide:
+                              BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 1),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF2C3E50), width: 1),
                         ),
                       ),
                       keyboardType: TextInputType.emailAddress,
@@ -195,15 +201,19 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                          borderSide:
+                              BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 1),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF2C3E50), width: 1),
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                            _isPasswordVisible
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.grey[600],
                           ),
                           onPressed: () {
@@ -259,14 +269,17 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                          borderSide:
+                              BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 1),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF2C3E50), width: 1),
                         ),
                         suffixIcon: IconButton(
-                          icon: const Icon(Icons.calendar_today, color: Color(0xFF2C3E50)),
+                          icon: const Icon(Icons.calendar_today,
+                              color: Color(0xFF2C3E50)),
                           onPressed: () => _selectDate(context),
                         ),
                       ),
@@ -308,7 +321,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "What's your primary fitness goal?",
+                      'Fitness Goal',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF2C3E50),
@@ -318,7 +331,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                     DropdownButtonFormField<String>(
                       value: _selectedGoal,
                       decoration: InputDecoration(
-                        hintText: 'Select your goal',
+                        hintText: 'Select your fitness goal',
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         filled: true,
                         fillColor: Colors.grey[50],
@@ -328,23 +341,31 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                          borderSide:
+                              BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 1),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF2C3E50), width: 1),
                         ),
                       ),
-                      items: _fitnessGoals.map((goal) {
-                        return DropdownMenuItem(
+                      items: _fitnessGoals.map((String goal) {
+                        return DropdownMenuItem<String>(
                           value: goal,
                           child: Text(goal),
                         );
                       }).toList(),
-                      onChanged: (value) {
+                      onChanged: (String? newValue) {
                         setState(() {
-                          _selectedGoal = value;
+                          _selectedGoal = newValue;
                         });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select your fitness goal';
+                        }
+                        return null;
                       },
                     ),
                   ],
@@ -406,11 +427,21 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         ? null
                         : () {
                             if (_formKey.currentState!.validate()) {
+                              if (_selectedGender == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please select your gender'),
+                                  ),
+                                );
+                                return;
+                              }
                               ref.read(authViewModelProvider.notifier).signup(
                                     email: _emailController.text,
                                     password: _passwordController.text,
                                     name: _nameController.text,
                                     userType: UserType.member,
+                                    gender: _selectedGender,
+                                    goal: _selectedGoal,
                                   );
                             }
                           },
@@ -428,7 +459,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : const Text(

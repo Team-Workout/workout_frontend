@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pt_service/features/auth/model/user_model.dart';
+import 'api_auth_repository.dart';
 
 abstract class AuthRepository {
   Future<User> login(String email, String password);
@@ -9,6 +10,8 @@ abstract class AuthRepository {
     required String name,
     required UserType userType,
     String? phoneNumber,
+    String? gender,
+    String? goal,
   });
   Future<void> logout();
 }
@@ -54,6 +57,8 @@ class MockAuthRepository implements AuthRepository {
     required String name,
     required UserType userType,
     String? phoneNumber,
+    String? gender,
+    String? goal,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
     
@@ -74,5 +79,7 @@ class MockAuthRepository implements AuthRepository {
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return MockAuthRepository();
+  // Using the API implementation instead of mock
+  // If you want to use mock for testing, you can switch back to MockAuthRepository()
+  return ref.watch(apiAuthRepositoryProvider);
 });
