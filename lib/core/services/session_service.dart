@@ -1,10 +1,8 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
-import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 class SessionService {
   final SharedPreferences _prefs;
@@ -22,7 +20,7 @@ class SessionService {
       ignoreExpires: true,
       storage: FileStorage(cookiePath),
     );
-    
+
     // Load saved session from SharedPreferences
     _sessionId = _prefs.getString('session_id');
     _sessionToken = _prefs.getString('session_token');
@@ -34,13 +32,13 @@ class SessionService {
   Future<void> saveSession(Response response) async {
     // Check for session in headers
     final headers = response.headers;
-    
+
     // Common session header names
-    final sessionHeader = headers['x-session-id']?.first ?? 
-                         headers['session-id']?.first ?? 
-                         headers['x-auth-token']?.first ??
-                         headers['authorization']?.first;
-    
+    final sessionHeader = headers['x-session-id']?.first ??
+        headers['session-id']?.first ??
+        headers['x-auth-token']?.first ??
+        headers['authorization']?.first;
+
     if (sessionHeader != null) {
       _sessionToken = sessionHeader;
       await _prefs.setString('session_token', sessionHeader);
@@ -48,7 +46,7 @@ class SessionService {
 
     // Check for session ID in cookies (handled automatically by CookieManager)
     // The cookies are automatically saved by PersistCookieJar
-    
+
     // Also check response body for session info
     if (response.data is Map) {
       final data = response.data as Map;
@@ -66,16 +64,16 @@ class SessionService {
   // Get session for requests
   Map<String, String> getSessionHeaders() {
     final headers = <String, String>{};
-    
+
     if (_sessionToken != null) {
       headers['Authorization'] = 'Bearer $_sessionToken';
       headers['X-Session-Token'] = _sessionToken!;
     }
-    
+
     if (_sessionId != null) {
       headers['X-Session-Id'] = _sessionId!;
     }
-    
+
     return headers;
   }
 

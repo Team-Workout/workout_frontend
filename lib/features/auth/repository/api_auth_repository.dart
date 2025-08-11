@@ -54,7 +54,6 @@ class ApiAuthRepository implements AuthRepository {
     required UserType userType,
     String? phoneNumber,
     String? gender,
-    String? goal,
   }) async {
     try {
       final response = await _apiService.post(
@@ -65,7 +64,6 @@ class ApiAuthRepository implements AuthRepository {
           'password': password,
           'name': name,
           'gender': gender?.toUpperCase() ?? 'MALE',
-          'goal': goal ?? '체력 증진 및 근력 향상',
           'role': _mapUserTypeToRole(userType),
         },
       );

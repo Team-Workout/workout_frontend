@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
-import 'package:intl/intl.dart';
 
 class AnalysisReportView extends ConsumerWidget {
   const AnalysisReportView({super.key});
@@ -10,7 +9,7 @@ class AnalysisReportView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -34,7 +33,7 @@ class AnalysisReportView extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildWorkoutAnalysis(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -76,7 +75,14 @@ class AnalysisReportView extends ConsumerWidget {
                             sideTitles: SideTitles(
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
-                                const months = ['1월', '2월', '3월', '4월', '5월', '6월'];
+                                const months = [
+                                  '1월',
+                                  '2월',
+                                  '3월',
+                                  '4월',
+                                  '5월',
+                                  '6월'
+                                ];
                                 return Text(
                                   months[value.toInt()],
                                   style: const TextStyle(fontSize: 14),
@@ -105,12 +111,24 @@ class AnalysisReportView extends ConsumerWidget {
                         ),
                         borderData: FlBorderData(show: false),
                         barGroups: [
-                          BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 12, color: Colors.blue)]),
-                          BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 15, color: Colors.blue)]),
-                          BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 18, color: Colors.blue)]),
-                          BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 16, color: Colors.blue)]),
-                          BarChartGroupData(x: 4, barRods: [BarChartRodData(toY: 14, color: Colors.blue)]),
-                          BarChartGroupData(x: 5, barRods: [BarChartRodData(toY: 19, color: Colors.blue)]),
+                          BarChartGroupData(x: 0, barRods: [
+                            BarChartRodData(toY: 12, color: Colors.blue)
+                          ]),
+                          BarChartGroupData(x: 1, barRods: [
+                            BarChartRodData(toY: 15, color: Colors.blue)
+                          ]),
+                          BarChartGroupData(x: 2, barRods: [
+                            BarChartRodData(toY: 18, color: Colors.blue)
+                          ]),
+                          BarChartGroupData(x: 3, barRods: [
+                            BarChartRodData(toY: 16, color: Colors.blue)
+                          ]),
+                          BarChartGroupData(x: 4, barRods: [
+                            BarChartRodData(toY: 14, color: Colors.blue)
+                          ]),
+                          BarChartGroupData(x: 5, barRods: [
+                            BarChartRodData(toY: 19, color: Colors.blue)
+                          ]),
                         ],
                       ),
                     ),
@@ -215,7 +233,7 @@ class AnalysisReportView extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildWeightAnalysis(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -260,8 +278,16 @@ class AnalysisReportView extends ConsumerWidget {
                               showTitles: true,
                               interval: 1,
                               getTitlesWidget: (value, meta) {
-                                const months = ['1월', '2월', '3월', '4월', '5월', '6월'];
-                                if (value.toInt() >= 0 && value.toInt() < months.length) {
+                                const months = [
+                                  '1월',
+                                  '2월',
+                                  '3월',
+                                  '4월',
+                                  '5월',
+                                  '6월'
+                                ];
+                                if (value.toInt() >= 0 &&
+                                    value.toInt() < months.length) {
                                   return Text(
                                     months[value.toInt()],
                                     style: const TextStyle(fontSize: 12),
@@ -341,10 +367,11 @@ class AnalysisReportView extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           '-4.5kg',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
                         ),
                       ],
                     ),
@@ -371,10 +398,11 @@ class AnalysisReportView extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           '0.5kg',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
                         ),
                       ],
                     ),
@@ -411,7 +439,7 @@ class AnalysisReportView extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildOverallStats(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -425,10 +453,13 @@ class AnalysisReportView extends ConsumerWidget {
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
             children: [
-              _buildStatCard('총 운동 일수', '94일', Icons.calendar_month, Colors.blue),
+              _buildStatCard(
+                  '총 운동 일수', '94일', Icons.calendar_month, Colors.blue),
               _buildStatCard('총 운동 시간', '156시간', Icons.timer, Colors.green),
-              _buildStatCard('평균 주간 운동', '3.2회', Icons.fitness_center, Colors.orange),
-              _buildStatCard('지속 운동 일수', '24일', Icons.trending_up, Colors.purple),
+              _buildStatCard(
+                  '평균 주간 운동', '3.2회', Icons.fitness_center, Colors.orange),
+              _buildStatCard(
+                  '지속 운동 일수', '24일', Icons.trending_up, Colors.purple),
             ],
           ),
           const SizedBox(height: 24),
@@ -443,13 +474,17 @@ class AnalysisReportView extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
-                  _buildAchievement('첫 번째 PT 완료', '성취 완료', Icons.check_circle, Colors.green),
+                  _buildAchievement(
+                      '첫 번째 PT 완료', '성취 완료', Icons.check_circle, Colors.green),
                   const SizedBox(height: 8),
-                  _buildAchievement('체중 5kg 감량', '진행 중', Icons.trending_down, Colors.orange),
+                  _buildAchievement(
+                      '체중 5kg 감량', '진행 중', Icons.trending_down, Colors.orange),
                   const SizedBox(height: 8),
-                  _buildAchievement('주 3회 운동 달성', '성취 완료', Icons.flag, Colors.green),
+                  _buildAchievement(
+                      '주 3회 운동 달성', '성취 완료', Icons.flag, Colors.green),
                   const SizedBox(height: 8),
-                  _buildAchievement('한 달 지속 운동', '진행 중', Icons.calendar_today, Colors.blue),
+                  _buildAchievement(
+                      '한 달 지속 운동', '진행 중', Icons.calendar_today, Colors.blue),
                 ],
               ),
             ),
@@ -494,7 +529,7 @@ class AnalysisReportView extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildIntensityRow(String label, double value, Color color) {
     return Row(
       children: [
@@ -514,7 +549,7 @@ class AnalysisReportView extends ConsumerWidget {
       ],
     );
   }
-  
+
   Widget _buildBMIInfo(String label, String bmi, String status, Color color) {
     return Column(
       children: [
@@ -545,8 +580,9 @@ class AnalysisReportView extends ConsumerWidget {
       ],
     );
   }
-  
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -581,8 +617,9 @@ class AnalysisReportView extends ConsumerWidget {
       ),
     );
   }
-  
-  Widget _buildAchievement(String title, String status, IconData icon, Color color) {
+
+  Widget _buildAchievement(
+      String title, String status, IconData icon, Color color) {
     return Row(
       children: [
         Icon(
@@ -612,8 +649,9 @@ class AnalysisReportView extends ConsumerWidget {
       ],
     );
   }
-  
-  Widget _buildRecommendation(String title, String description, IconData icon, Color color) {
+
+  Widget _buildRecommendation(
+      String title, String description, IconData icon, Color color) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

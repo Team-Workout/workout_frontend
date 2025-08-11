@@ -51,7 +51,6 @@ class AuthViewModel extends StateNotifier<AuthViewState> {
     required UserType userType,
     String? phoneNumber,
     String? gender,
-    String? goal,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -63,7 +62,6 @@ class AuthViewModel extends StateNotifier<AuthViewState> {
         userType: userType,
         phoneNumber: phoneNumber,
         gender: gender,
-        goal: goal,
       );
       _authState.setUser(user);
       state = state.copyWith(isLoading: false);

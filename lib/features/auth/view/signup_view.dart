@@ -21,16 +21,6 @@ class _SignupViewState extends ConsumerState<SignupView> {
   bool _isPasswordVisible = false;
   bool _agreedToTerms = false;
   String? _selectedGender;
-  String? _selectedGoal;
-
-  final List<String> _fitnessGoals = [
-    '체중 감량',
-    '근육 증가',
-    '지구력 향상',
-    '건강 유지',
-    '유연성 향상',
-    '체력 증진 및 근력 향상',
-  ];
 
   @override
   void dispose() {
@@ -316,60 +306,6 @@ class _SignupViewState extends ConsumerState<SignupView> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fitness Goal',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF2C3E50),
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: _selectedGoal,
-                      decoration: InputDecoration(
-                        hintText: 'Select your fitness goal',
-                        hintStyle: TextStyle(color: Colors.grey[400]),
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.grey[300]!, width: 1),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                              color: Color(0xFF2C3E50), width: 1),
-                        ),
-                      ),
-                      items: _fitnessGoals.map((String goal) {
-                        return DropdownMenuItem<String>(
-                          value: goal,
-                          child: Text(goal),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedGoal = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please select your fitness goal';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -441,7 +377,6 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                     name: _nameController.text,
                                     userType: UserType.member,
                                     gender: _selectedGender,
-                                    goal: _selectedGoal,
                                   );
                             }
                           },

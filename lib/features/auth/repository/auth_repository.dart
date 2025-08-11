@@ -11,7 +11,6 @@ abstract class AuthRepository {
     required UserType userType,
     String? phoneNumber,
     String? gender,
-    String? goal,
   });
   Future<void> logout();
 }
@@ -58,7 +57,6 @@ class MockAuthRepository implements AuthRepository {
     required UserType userType,
     String? phoneNumber,
     String? gender,
-    String? goal,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
     
