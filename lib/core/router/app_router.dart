@@ -22,19 +22,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: authState,
     redirect: (context, state) {
-      final isAuthenticated = authState.value != null;
+      final isAuthenticated = authState.isLoggedIn;
       final isSplashRoute = state.matchedLocation == '/';
       final isAuthRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup';
 
+      // 스플래시 화면은 그대로 둠
       if (isSplashRoute) {
         return null;
       }
 
+      // 인증되지 않은 상태에서 로그인/회원가입 페이지가 아닌 곳에 접근하면 로그인 페이지로
       if (!isAuthenticated && !isAuthRoute) {
         return '/login';
       }
 
+      // 인증된 상태에서 로그인/회원가입 페이지에 접근하면 대시보드로
       if (isAuthenticated && isAuthRoute) {
         final userType = authState.value!.userType;
         switch (userType) {

@@ -109,8 +109,12 @@ class ApiService {
       case DioExceptionType.cancel:
         return Exception('요청이 취소되었습니다.');
       case DioExceptionType.unknown:
-        if (error.error.toString().contains('SocketException')) {
-          return Exception('인터넷 연결을 확인해주세요.');
+        try {
+          if (error.error.toString().contains('SocketException')) {
+            return Exception('인터넷 연결을 확인해주세요.');
+          }
+        } catch (e) {
+          // toString() 실패 시 안전하게 처리
         }
         return Exception('알 수 없는 오류가 발생했습니다.');
       default:

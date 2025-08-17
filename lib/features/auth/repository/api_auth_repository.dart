@@ -25,16 +25,13 @@ class ApiAuthRepository implements AuthRepository {
 
       final userData = response.data;
       
-      // Store token if returned
-      if (userData['token'] != null) {
-        await _prefs.setString('auth_token', userData['token']);
-      }
-
+      // Session is automatically handled by SessionService via interceptor
+      
       // Map API response to User model
       return User(
-        id: userData['id']?.toString() ?? '',
-        email: userData['email'] ?? email,
-        name: userData['name'] ?? '',
+        id: userData['userId']?.toString() ?? userData['id']?.toString() ?? '',
+        email: userData['email'] ?? email,  // Use login email if not in response
+        name: userData['name'] ?? email.split('@')[0],  // Use email prefix as name if not provided
         userType: _mapRoleToUserType(userData['role']),
         phoneNumber: userData['phoneNumber'],
         createdAt: userData['createdAt'] != null 
@@ -42,7 +39,7 @@ class ApiAuthRepository implements AuthRepository {
             : DateTime.now(),
       );
     } catch (e) {
-      throw Exception('로그인 실패: ${e.toString()}');
+      throw Exception('로그인 실패: 인증 오류가 발생했습니다.');
     }
   }
 
@@ -70,10 +67,7 @@ class ApiAuthRepository implements AuthRepository {
 
       final userData = response.data;
       
-      // Store token if returned
-      if (userData['token'] != null) {
-        await _prefs.setString('auth_token', userData['token']);
-      }
+      // Session is automatically handled by SessionService via interceptor
 
       return User(
         id: userData['id']?.toString() ?? '',
@@ -86,7 +80,7 @@ class ApiAuthRepository implements AuthRepository {
             : DateTime.now(),
       );
     } catch (e) {
-      throw Exception('회원가입 실패: ${e.toString()}');
+      throw Exception('회원가입 실패: 서버 오류가 발생했습니다.');
     }
   }
 
@@ -99,11 +93,9 @@ class ApiAuthRepository implements AuthRepository {
       }
     } catch (e) {
       // Even if logout API fails, we still clear local session
-      print('Logout API error: $e');
     } finally {
-      // Clear local session and tokens
+      // Clear local session
       await _sessionService.clearSession();
-      await _prefs.remove('auth_token');
     }
   }
 

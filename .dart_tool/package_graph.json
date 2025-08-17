@@ -22,6 +22,7 @@
         "path_provider",
         "riverpod_annotation",
         "shared_preferences",
+        "sqflite",
         "table_calendar"
       ],
       "devDependencies": [
@@ -202,6 +203,18 @@
         "http_parser",
         "meta",
         "path"
+      ]
+    },
+    {
+      "name": "sqflite",
+      "version": "2.4.2",
+      "dependencies": [
+        "flutter",
+        "path",
+        "sqflite_android",
+        "sqflite_common",
+        "sqflite_darwin",
+        "sqflite_platform_interface"
       ]
     },
     {
@@ -864,6 +877,47 @@
       ]
     },
     {
+      "name": "sqflite_common",
+      "version": "2.5.6",
+      "dependencies": [
+        "meta",
+        "path",
+        "synchronized"
+      ]
+    },
+    {
+      "name": "sqflite_platform_interface",
+      "version": "2.4.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "platform",
+        "plugin_platform_interface",
+        "sqflite_common"
+      ]
+    },
+    {
+      "name": "sqflite_darwin",
+      "version": "2.4.2",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "path",
+        "sqflite_common",
+        "sqflite_platform_interface"
+      ]
+    },
+    {
+      "name": "sqflite_android",
+      "version": "2.4.1",
+      "dependencies": [
+        "flutter",
+        "path",
+        "sqflite_common",
+        "sqflite_platform_interface"
+      ]
+    },
+    {
       "name": "path_provider_windows",
       "version": "2.3.0",
       "dependencies": [
@@ -1089,8 +1143,8 @@
       ]
     },
     {
-      "name": "ffi",
-      "version": "2.1.4",
+      "name": "synchronized",
+      "version": "3.4.0",
       "dependencies": []
     },
     {
@@ -1103,6 +1157,11 @@
     {
       "name": "platform",
       "version": "3.1.6",
+      "dependencies": []
+    },
+    {
+      "name": "ffi",
+      "version": "2.1.4",
       "dependencies": []
     },
     {

@@ -19,10 +19,12 @@ class WorkoutDayRecord {
 class SetRecord {
   final int reps;
   final double? weight;
+  final String? memo;
 
   SetRecord({
     required this.reps,
     this.weight,
+    this.memo,
   });
 }
 
@@ -43,10 +45,12 @@ class ExerciseRecord {
 class WorkoutSet {
   final TextEditingController repsController = TextEditingController();
   final TextEditingController weightController = TextEditingController();
+  final TextEditingController memoController = TextEditingController();
   
   void dispose() {
     repsController.dispose();
     weightController.dispose();
+    memoController.dispose();
   }
 }
 

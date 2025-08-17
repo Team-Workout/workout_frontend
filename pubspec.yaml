@@ -29,6 +29,7 @@ dependencies:
   # Storage
   shared_preferences: ^2.2.3
   path_provider: ^2.1.3
+  sqflite: ^2.3.3
   
   # Http
   dio: ^5.4.3+1

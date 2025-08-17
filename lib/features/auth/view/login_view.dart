@@ -46,10 +46,12 @@ class _LoginViewState extends ConsumerState<LoginView> {
                       color: const Color(0xFF2C3E50),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.fitness_center,
-                      size: 40,
-                      color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: Image.asset(
+                        'lib/assets/logo.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),

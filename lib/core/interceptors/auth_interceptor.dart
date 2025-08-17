@@ -17,9 +17,6 @@ class AuthInterceptor extends Interceptor {
       options.headers.addAll(sessionHeaders);
     }
 
-    // Log request for debugging
-    print('🚀 REQUEST[${options.method}] => PATH: ${options.path}');
-    print('Headers: ${options.headers}');
     
     super.onRequest(options, handler);
   }
@@ -32,7 +29,6 @@ class AuthInterceptor extends Interceptor {
       sessionService.saveSession(response);
     }
 
-    print('✅ RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}');
     
     super.onResponse(response, handler);
   }
@@ -46,8 +42,6 @@ class AuthInterceptor extends Interceptor {
       // You can add navigation to login here if needed
     }
 
-    print('❌ ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}');
-    print('Error Message: ${err.response?.data}');
     
     super.onError(err, handler);
   }
