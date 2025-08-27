@@ -15,6 +15,43 @@ class _LoginViewState extends ConsumerState<LoginView> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _hasShownSuccessMessage = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 회원가입 성공 메시지 표시
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = ref.read(authViewModelProvider);
+      if (authState.signupSuccess && !_hasShownSuccessMessage) {
+        _hasShownSuccessMessage = true;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    authState.successMessage ?? '회원가입이 완료되었습니다! 로그인해주세요.',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        // 메시지 표시 후 상태 초기화
+        ref.read(authViewModelProvider.notifier).clearMessages();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -68,7 +105,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Email',
+                        '이메일',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                               color: const Color(0xFF2C3E50),
@@ -78,7 +115,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
-                          hintText: 'Enter your email',
+                          hintText: '이메일을 입력하세요',
                           hintStyle: TextStyle(color: Colors.grey[400]),
                           filled: true,
                           fillColor: Colors.grey[50],
@@ -100,10 +137,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
+                            return '이메일을 입력해주세요';
                           }
                           if (!value.contains('@')) {
-                            return 'Please enter a valid email';
+                            return '올바른 이메일 형식이 아닙니다';
                           }
                           return null;
                         },
@@ -115,7 +152,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Password',
+                        '비밀번호',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                               color: const Color(0xFF2C3E50),
@@ -160,10 +197,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
+                            return '비밀번호를 입력해주세요';
                           }
                           if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
+                            return '비밀번호는 최소 6자 이상이어야 합니다';
                           }
                           return null;
                         },
@@ -176,7 +213,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     child: TextButton(
                       onPressed: () {},
                       child: Text(
-                        'Forgot password?',
+                        '비밀번호를 잊으셨나요?',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14,
@@ -216,7 +253,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                               ),
                             )
                           : const Text(
-                              'Log In',
+                              '로그인',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -236,7 +273,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'OR',
+                          '또는',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -255,21 +292,21 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   _buildSocialLoginButton(
                     context,
                     icon: Icons.g_mobiledata,
-                    text: 'Continue with Google',
+                    text: '구글로 계속하기',
                     onPressed: () {},
                   ),
                   const SizedBox(height: 12),
                   _buildSocialLoginButton(
                     context,
                     icon: Icons.apple,
-                    text: 'Continue with Apple',
+                    text: '애플로 계속하기',
                     onPressed: () {},
                   ),
                   const SizedBox(height: 12),
                   _buildSocialLoginButton(
                     context,
                     icon: Icons.facebook,
-                    text: 'Continue with Facebook',
+                    text: '페이스북으로 계속하기',
                     onPressed: () {},
                   ),
                   const SizedBox(height: 32),
@@ -277,7 +314,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        "계정이 없으신가요? ",
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14,
@@ -288,7 +325,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           context.push('/signup');
                         },
                         child: const Text(
-                          'Sign Up',
+                          '회원가입',
                           style: TextStyle(
                             color: Color(0xFF2C3E50),
                             fontSize: 14,

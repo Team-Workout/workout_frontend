@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pt_service/screens/splash_screen.dart';
@@ -7,11 +8,15 @@ import 'package:pt_service/features/dashboard/view/trainer_dashboard_view.dart';
 import 'package:pt_service/features/dashboard/view/member_dashboard_view.dart';
 import 'package:pt_service/features/dashboard/view/manager_dashboard_view.dart';
 import 'package:pt_service/features/workout/view/workout_record_view.dart';
-import 'package:pt_service/features/profile/view/member_profile_view.dart';
 import 'package:pt_service/features/report/view/analysis_report_view.dart';
 import 'package:pt_service/features/schedule/view/pt_schedule_view.dart';
 import 'package:pt_service/features/settings/view/settings_view.dart';
+import 'package:pt_service/features/trainer_profile/view/trainer_profile_edit_view.dart';
+import 'package:pt_service/features/trainer/view/gym_trainers_view.dart';
+import 'package:pt_service/features/trainer/view/trainer_detail_view.dart';
+import 'package:pt_service/features/trainer/model/trainer_model.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
+import 'package:pt_service/features/body_composition/view/body_composition_view.dart';
 
 import '../../features/auth/model/user_model.dart';
 
@@ -82,12 +87,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const WorkoutRecordView(),
       ),
       GoRoute(
-        path: '/member-profile/:memberId',
-        builder: (context, state) => MemberProfileView(
-          memberId: state.pathParameters['memberId']!,
-        ),
-      ),
-      GoRoute(
         path: '/analysis-report',
         builder: (context, state) => const AnalysisReportView(),
       ),
@@ -98,6 +97,61 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsView(),
+      ),
+      GoRoute(
+        path: '/body-composition',
+        builder: (context, state) => const BodyCompositionView(),
+      ),
+      GoRoute(
+        path: '/trainer-profile-edit',
+        builder: (context, state) => const TrainerProfileEditView(),
+      ),
+      GoRoute(
+        path: '/gym-trainers/:gymId',
+        builder: (context, state) {
+          final gymIdStr = state.pathParameters['gymId'];
+          if (gymIdStr == null) {
+            // 기본값으로 헬스장 ID 1 사용
+            return const GymTrainersView(gymId: 1);
+          }
+          final gymId = int.tryParse(gymIdStr) ?? 1;
+          return GymTrainersView(gymId: gymId);
+        },
+      ),
+      GoRoute(
+        path: '/trainer-detail/:trainerId',
+        builder: (context, state) {
+          final trainerIdStr = state.pathParameters['trainerId'];
+          final trainer = state.extra as TrainerProfile?;
+          
+          if (trainerIdStr == null) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Error'),
+              ),
+              body: const Center(
+                child: Text('Trainer ID not provided'),
+              ),
+            );
+          }
+          
+          final trainerId = int.tryParse(trainerIdStr);
+          if (trainerId == null) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Error'),
+              ),
+              body: const Center(
+                child: Text('Invalid trainer ID'),
+              ),
+            );
+          }
+          
+          return TrainerDetailView(
+            trainerId: trainerId,
+            trainer: trainer, // fallback data if available
+          );
+        },
       ),
     ],
   );

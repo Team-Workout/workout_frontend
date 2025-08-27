@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/shared/widgets/dashboard_card.dart';
+import 'package:pt_service/features/trainer_profile/view/trainer_profile_edit_view.dart';
 
 class TrainerDashboardView extends ConsumerWidget {
   const TrainerDashboardView({super.key});
@@ -16,6 +17,18 @@ class TrainerDashboardView extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('트레이너 대시보드'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TrainerProfileEditView(),
+                ),
+              );
+            },
+            tooltip: '프로필 수정',
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
@@ -218,7 +231,10 @@ class TrainerDashboardView extends ConsumerWidget {
                           onPressed: () {},
                         ),
                         onTap: () {
-                          context.push('/member-profile/${index + 1}');
+                          // 멤버 상세 보기 - 추후 구현
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('멤버 상세 페이지는 준비 중입니다')),
+                          );
                         },
                       );
                     },

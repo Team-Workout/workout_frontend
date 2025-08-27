@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
+import 'package:pt_service/features/auth/model/user_model.dart';
 
 class SettingsView extends ConsumerWidget {
   const SettingsView({super.key});
@@ -9,7 +10,7 @@ class SettingsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('설정'),
@@ -44,12 +45,13 @@ class SettingsView extends ConsumerWidget {
                 Text(
                   user?.email ?? '',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                        color: Colors.grey[600],
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(16),
@@ -76,7 +78,8 @@ class SettingsView extends ConsumerWidget {
                 Icons.person,
                 '프로필 수정',
                 () {
-                  context.push('/member-profile/${user?.id}');
+                  // 임시로 모든 사용자를 트레이너로 가정하고 프로필 편집 페이지로 이동
+                  context.push('/trainer-profile-edit');
                 },
               ),
               _buildSettingItem(
@@ -214,7 +217,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   String _getUserTypeLabel(String? userType) {
     switch (userType) {
       case 'trainer':
@@ -227,7 +230,7 @@ class SettingsView extends ConsumerWidget {
         return '사용자';
     }
   }
-  
+
   Widget _buildSection(BuildContext context, String title, List<Widget> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,9 +240,9 @@ class SettingsView extends ConsumerWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
         ),
         Card(
@@ -252,7 +255,7 @@ class SettingsView extends ConsumerWidget {
       ],
     );
   }
-  
+
   Widget _buildSettingItem(
     BuildContext context,
     IconData icon,
@@ -266,7 +269,7 @@ class SettingsView extends ConsumerWidget {
       onTap: onTap,
     );
   }
-  
+
   Widget _buildSwitchItem(
     BuildContext context,
     IconData icon,
@@ -283,7 +286,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showChangePasswordDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -335,7 +338,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showChangePhoneDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -367,7 +370,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showThemeDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -411,7 +414,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showLanguageDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -449,7 +452,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showBackupDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -477,7 +480,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showHelpDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -520,7 +523,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showAppInfoDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -550,7 +553,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showPrivacyDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -580,7 +583,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showTermsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -609,7 +612,7 @@ class SettingsView extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,

@@ -10,13 +10,13 @@ class WorkoutApiService {
   // 운동 기록 저장 API
   Future<Map<String, dynamic>> saveWorkoutLog(WorkoutLogRequest request) async {
     try {
-      
       final response = await _apiService.post(
         '/workout-logs',
         data: request.toJson(),
       );
-      
-      
+
+      // 루틴 만들기 -> 루틴 불러오기 !!!
+
       // 서버가 문자열로 응답하는 경우 처리
       if (response.data is String) {
         return {'message': response.data, 'success': true};
@@ -26,7 +26,6 @@ class WorkoutApiService {
         return {'message': '운동 기록이 성공적으로 저장되었습니다.', 'success': true};
       }
     } catch (e) {
-      
       final errorMessage = e.toString();
       if (errorMessage.contains('401')) {
         throw Exception('인증이 필요합니다. 다시 로그인해주세요.');

@@ -21,6 +21,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
   bool _isPasswordVisible = false;
   bool _agreedToTerms = false;
   String? _selectedGender;
+  String _selectedRole = '\ud68c\uc6d0';
 
   @override
   void dispose() {
@@ -50,6 +51,24 @@ class _SignupViewState extends ConsumerState<SignupView> {
   Widget build(BuildContext context) {
     final authViewState = ref.watch(authViewModelProvider);
 
+    // 회원가입 성공 시 로그인 화면으로 이동
+    ref.listen<AuthViewState>(authViewModelProvider, (previous, next) {
+      if (next.signupSuccess) {
+        // 성공 메시지 표시
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.successMessage ?? '회원가입이 완료되었습니다!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        // 로그인 화면으로 이동
+        Future.delayed(const Duration(milliseconds: 500), () {
+          context.pop();
+        });
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -60,7 +79,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
           onPressed: () => context.pop(),
         ),
         title: const Text(
-          'Create Account',
+          '회원가입',
           style: TextStyle(
             color: Color(0xFF2C3E50),
             fontWeight: FontWeight.w600,
@@ -80,7 +99,32 @@ class _SignupViewState extends ConsumerState<SignupView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Full Name',
+                      '나는',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF2C3E50),
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildRoleButton('\ud68c\uc6d0'),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildRoleButton('\ud2b8\ub808\uc774\ub108'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '이름',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF2C3E50),
@@ -90,7 +134,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        hintText: 'Enter your full name',
+                        hintText: '이름을 입력하세요',
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         filled: true,
                         fillColor: Colors.grey[50],
@@ -111,7 +155,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
+                          return '이름을 입력해주세요';
                         }
                         return null;
                       },
@@ -123,7 +167,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Email Address',
+                      '이메일 주소',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF2C3E50),
@@ -155,10 +199,10 @@ class _SignupViewState extends ConsumerState<SignupView> {
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
+                          return '이메일을 입력해주세요';
                         }
                         if (!value.contains('@')) {
-                          return 'Please enter a valid email';
+                          return '올바른 이메일 형식이 아닙니다';
                         }
                         return null;
                       },
@@ -170,7 +214,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Password',
+                      '비밀번호',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF2C3E50),
@@ -181,7 +225,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
                       decoration: InputDecoration(
-                        hintText: 'Create a password',
+                        hintText: '비밀번호를 입력하세요',
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         filled: true,
                         fillColor: Colors.grey[50],
@@ -215,17 +259,17 @@ class _SignupViewState extends ConsumerState<SignupView> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
+                          return '비밀번호를 입력해주세요';
                         }
                         if (value.length < 8) {
-                          return 'Must be at least 8 characters';
+                          return '최소 8자 이상 입력해주세요';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Must be at least 8 characters',
+                      '최소 8자 이상 입력해주세요',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 12,
@@ -238,7 +282,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Birthday',
+                      '생년월일',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF2C3E50),
@@ -249,7 +293,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                       controller: _birthdayController,
                       readOnly: true,
                       decoration: InputDecoration(
-                        hintText: 'mm/dd/yyyy',
+                        hintText: '월/일/년',
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         filled: true,
                         fillColor: Colors.grey[50],
@@ -282,7 +326,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Gender',
+                      '성별',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF2C3E50),
@@ -292,15 +336,15 @@ class _SignupViewState extends ConsumerState<SignupView> {
                     Row(
                       children: [
                         Expanded(
-                          child: _buildGenderButton('Male'),
+                          child: _buildGenderButton('\ub0a8\uc131'),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _buildGenderButton('Female'),
+                          child: _buildGenderButton('\uc5ec\uc131'),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _buildGenderButton('Other'),
+                          child: _buildGenderButton('\uae30\ud0c0'),
                         ),
                       ],
                     ),
@@ -332,17 +376,17 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               fontSize: 14,
                             ),
                             children: const [
-                              TextSpan(text: 'I agree to the'),
+                              TextSpan(text: '다음에 동의합니다: '),
                               TextSpan(
-                                text: 'Terms of Service',
+                                text: '서비스 이용약관',
                                 style: TextStyle(
                                   decoration: TextDecoration.underline,
                                   color: Color(0xFF2C3E50),
                                 ),
                               ),
-                              TextSpan(text: ' and '),
+                              TextSpan(text: ' 및 '),
                               TextSpan(
-                                text: 'Privacy Policy',
+                                text: '개인정보 처리방침',
                                 style: TextStyle(
                                   decoration: TextDecoration.underline,
                                   color: Color(0xFF2C3E50),
@@ -366,17 +410,29 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               if (_selectedGender == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Please select your gender'),
+                                    content: Text('성별을 선택해주세요'),
                                   ),
                                 );
                                 return;
                               }
+                              // \uc131\ubcc4\uc744 \uc601\uc5b4\ub85c \ubcc0\ud658
+                              String? genderInEnglish;
+                              if (_selectedGender == '\ub0a8\uc131') {
+                                genderInEnglish = 'Male';
+                              } else if (_selectedGender == '\uc5ec\uc131') {
+                                genderInEnglish = 'Female';
+                              } else if (_selectedGender == '\uae30\ud0c0') {
+                                genderInEnglish = 'Other';
+                              }
+                              
                               ref.read(authViewModelProvider.notifier).signup(
                                     email: _emailController.text,
                                     password: _passwordController.text,
                                     name: _nameController.text,
-                                    userType: UserType.member,
-                                    gender: _selectedGender,
+                                    userType: _selectedRole == '\ud68c\uc6d0' 
+                                        ? UserType.member 
+                                        : UserType.trainer,
+                                    gender: genderInEnglish,
                                   );
                             }
                           },
@@ -399,7 +455,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                             ),
                           )
                         : const Text(
-                            'Create Account',
+                            '가입하기',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -412,7 +468,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Already have an account? ',
+                      '이미 계정이 있으신가요? ',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -423,7 +479,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         context.pop();
                       },
                       child: const Text(
-                        'Sign in',
+                        '로그인',
                         style: TextStyle(
                           color: Color(0xFF2C3E50),
                           fontSize: 14,
@@ -436,7 +492,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
-                    '© 2025 Fitness Management App. All rights reserved.',
+                    '© 2025 피트니스 관리 앱. All rights reserved.',
                     style: TextStyle(
                       color: Colors.grey[500],
                       fontSize: 12,
@@ -494,6 +550,49 @@ class _SignupViewState extends ConsumerState<SignupView> {
               color: isSelected ? Colors.white : Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleButton(String role) {
+    final isSelected = _selectedRole == role;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedRole = role;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF2C3E50) : Colors.grey[50],
+          border: Border.all(
+            color: isSelected ? const Color(0xFF2C3E50) : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                role == '\ud68c\uc6d0' ? Icons.person : Icons.fitness_center,
+                color: isSelected ? Colors.white : Colors.grey[700],
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                role,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey[700],
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ],
           ),
         ),
       ),

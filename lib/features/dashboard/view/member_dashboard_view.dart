@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pt_service/core/providers/auth_provider.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+import '../../body_composition/viewmodel/body_composition_viewmodel.dart';
 
 class MemberDashboardView extends ConsumerWidget {
   const MemberDashboardView({super.key});
@@ -38,10 +40,7 @@ class MemberDashboardView extends ConsumerWidget {
               padding: const EdgeInsets.only(right: 16),
               child: GestureDetector(
                 onTap: () {
-                  final userId = ref.read(currentUserProvider)?.id;
-                  if (userId != null) {
-                    context.push('/member-profile/$userId');
-                  }
+                  context.push('/settings');
                 },
                 child: CircleAvatar(
                   radius: 16,
@@ -79,10 +78,7 @@ class MemberDashboardView extends ConsumerWidget {
             } else if (index == 2) {
               context.push('/pt-schedule');
             } else if (index == 4) {
-              final userId = ref.read(currentUserProvider)?.id;
-              if (userId != null) {
-                context.push('/member-profile/$userId');
-              }
+              context.push('/settings');
             }
           },
           type: BottomNavigationBarType.fixed,
@@ -101,66 +97,244 @@ class MemberDashboardView extends ConsumerWidget {
   }
 }
 
-class _FitProTab extends StatelessWidget {
+class _FitProTab extends ConsumerWidget {
   const _FitProTab();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bodyStats = ref.watch(bodyStatsProvider);
+    final bodyCompositions = ref.watch(bodyCompositionListProvider);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // Body Composition Card
+        GestureDetector(
+          onTap: () => context.push('/body-composition'),
+          child: Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '체성분',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          bodyCompositions.when(
+                            data: (compositions) {
+                              if (compositions.isEmpty) {
+                                return Text(
+                                  '데이터 없음',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                );
+                              }
+                              final latest = compositions.first;
+                              final date = DateTime.parse(latest.measurementDate);
+                              return Text(
+                                '최근 업데이트: ${DateFormat('MM월 dd일').format(date)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              );
+                            },
+                            loading: () => Text(
+                              '로딩 중...',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            error: (_, __) => Text(
+                              '업데이트 불가',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  bodyCompositions.when(
+                    data: (compositions) {
+                      if (compositions.isEmpty) {
+                        return Container(
+                          height: 100,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '체중 데이터가 없습니다',
+                              style: TextStyle(color: Colors.grey, fontSize: 14),
+                            ),
+                          ),
+                        );
+                      }
+                      return Container(
+                        height: 120,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: _buildMiniWeightChart(compositions),
+                      );
+                    },
+                    loading: () => Container(
+                      height: 100,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, _) => Container(
+                      height: 100,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '차트 로드 실패',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  bodyStats != null
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStat('체중', '${bodyStats.currentWeight.toStringAsFixed(1)} kg'),
+                            _buildStat('체지방률', '${bodyStats.bodyFatPercentage.toStringAsFixed(1)}%'),
+                            _buildStat('근육량', '${bodyStats.muscleMass.toStringAsFixed(1)} kg'),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStat('체중', '- kg'),
+                            _buildStat('체지방률', '-%'),
+                            _buildStat('근육량', '- kg'),
+                          ],
+                        ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // PT Booking Card
         Card(
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      '체성분',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.fitness_center,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
-                    Text(
-                      '최근 업데이트: 7월 28일',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'PT 예약하기',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '전문 트레이너와 함께 운동하세요',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Container(
-                  height: 100,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '체중 & 체지방률 차트',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                GestureDetector(
+                  onTap: () {
+                    // 헬스장 ID를 1로 가정 (나중에 사용자의 헬스장 ID로 변경 가능)
+                    context.push('/gym-trainers/1');
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      '트레이너 보기',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF3498DB),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStat('체중', '72.5 kg'),
-                    _buildStat('체지방률', '18.2%'),
-                    _buildStat('근육량', '35.7 kg'),
-                  ],
                 ),
               ],
             ),
@@ -279,6 +453,86 @@ class _FitProTab extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMiniWeightChart(compositions) {
+    if (compositions.isEmpty) {
+      return const Center(
+        child: Text('데이터가 없습니다', style: TextStyle(color: Colors.grey)),
+      );
+    }
+    
+    // Sort and take recent data points (max 7 for mini chart)
+    final sortedData = List.from(compositions)
+      ..sort((a, b) => a.measurementDate.compareTo(b.measurementDate));
+    final recentData = sortedData.length > 7 
+        ? sortedData.sublist(sortedData.length - 7)
+        : sortedData;
+
+    final spots = recentData.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value.weightKg);
+    }).toList();
+
+    double minWeight = recentData.map((e) => e.weightKg).reduce((a, b) => a < b ? a : b);
+    double maxWeight = recentData.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
+    
+    return LineChart(
+      LineChartData(
+        lineTouchData: LineTouchData(
+          enabled: true,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (touchedSpot) => const Color(0xFF1A1F36),
+            tooltipRoundedRadius: 8,
+            tooltipPadding: const EdgeInsets.all(8),
+            getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+              return touchedBarSpots.map((barSpot) {
+                final flSpot = barSpot;
+                final date = DateTime.parse(recentData[flSpot.x.toInt()].measurementDate);
+                return LineTooltipItem(
+                  '${DateFormat('MM/dd').format(date)}\n${flSpot.y.toStringAsFixed(1)}kg',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        minX: 0,
+        maxX: (recentData.length - 1).toDouble(),
+        minY: minWeight - 2,
+        maxY: maxWeight + 2,
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: const Color(0xFF6366F1),
+            barWidth: 2,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 2,
+                  color: Colors.white,
+                  strokeWidth: 1,
+                  strokeColor: const Color(0xFF6366F1),
+                );
+              },
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: const Color(0xFF6366F1).withOpacity(0.1),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

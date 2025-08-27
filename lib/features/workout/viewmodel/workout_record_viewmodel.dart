@@ -180,7 +180,7 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
         for (var setRecord in exerciseRecord.sets) {
           exercise.addSet();
           final workoutSet = exercise.sets.last;
-          workoutSet.repsController.text = setRecord.reps.toString();
+          workoutSet.repsController.text = setRecord.reps?.toString() ?? '0';
           workoutSet.weightController.text = setRecord.weight?.toString() ?? '';
           workoutSet.memoController.text = setRecord.memo ?? '';
         }
@@ -538,8 +538,8 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
         for (var setData in sets) {
           exerciseDetail.addSet();
           final workoutSet = exerciseDetail.sets.last;
-          workoutSet.repsController.text = setData['reps'].toString();
-          workoutSet.weightController.text = setData['weight'].toString();
+          workoutSet.repsController.text = setData['reps']?.toString() ?? '0';
+          workoutSet.weightController.text = setData['weight']?.toString() ?? '0';
           workoutSet.memoController.text = setData['memo']?.toString() ?? '';
         }
 

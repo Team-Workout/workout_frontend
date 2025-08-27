@@ -14,6 +14,10 @@ final dioProvider = Provider<Dio>((ref) {
     headers: {
       'Content-Type': 'application/json',
     },
+    validateStatus: (status) {
+      // 2xx 및 201 응답을 모두 성공으로 처리
+      return status != null && status >= 200 && status < 300;
+    },
   ));
 
   // Add cookie manager for automatic cookie handling
@@ -93,6 +97,11 @@ class ApiService {
         return Exception('연결 시간이 초과되었습니다.');
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
+        // 201 Created는 성공 응답이므로 에러로 처리하지 않음
+        if (statusCode == 201) {
+          // 201은 성공이므로 에러가 아님 - 이 경우는 발생하지 않아야 함
+          return Exception('예상치 못한 에러 처리');
+        }
         final message = error.response?.data['message'] ?? '오류가 발생했습니다.';
         if (statusCode == 400) {
           return Exception(message);

@@ -25,18 +25,27 @@ class ApiAuthRepository implements AuthRepository {
 
       final userData = response.data;
       
+
       // Session is automatically handled by SessionService via interceptor
-      
-      // Map API response to User model
+
+      // role을 확인하여 UserType 결정
+      UserType userType;
+      if (userData['role'] == 'TRAINER') {
+        userType = UserType.trainer;
+      } else if (userData['role'] == 'MANAGER') {
+        userType = UserType.manager;
+      } else {
+        userType = UserType.member; // 기본값 (MEMBER or USER)
+      }
+
+      // 간단한 응답 처리: id와 name만 받음
       return User(
-        id: userData['userId']?.toString() ?? userData['id']?.toString() ?? '',
-        email: userData['email'] ?? email,  // Use login email if not in response
-        name: userData['name'] ?? email.split('@')[0],  // Use email prefix as name if not provided
-        userType: _mapRoleToUserType(userData['role']),
-        phoneNumber: userData['phoneNumber'],
-        createdAt: userData['createdAt'] != null 
-            ? DateTime.parse(userData['createdAt']) 
-            : DateTime.now(),
+        id: userData['id']?.toString() ?? '',
+        email: email, // 로그인 시 입력한 이메일 사용
+        name: userData['name'] ?? '',
+        userType: userType,
+        phoneNumber: null,
+        createdAt: DateTime.now(),
       );
     } catch (e) {
       throw Exception('로그인 실패: 인증 오류가 발생했습니다.');
@@ -53,8 +62,13 @@ class ApiAuthRepository implements AuthRepository {
     String? gender,
   }) async {
     try {
+      // Different endpoints based on user type
+      final endpoint = userType == UserType.trainer
+          ? '/auth/signup/trainer'
+          : '/auth/signup/user';
+
       final response = await _apiService.post(
-        '/auth/signup',
+        endpoint,
         data: {
           'gymId': 1, // Default gym ID
           'email': email,
@@ -62,24 +76,43 @@ class ApiAuthRepository implements AuthRepository {
           'name': name,
           'gender': gender?.toUpperCase() ?? 'MALE',
           'role': _mapUserTypeToRole(userType),
+          // Add trainer-specific fields if needed
+          if (userType == UserType.trainer) ...{
+            'specialization': 'General Fitness', // Default specialization
+            'experience': 0, // Default experience
+          },
         },
       );
 
-      final userData = response.data;
-      
+      // 서버가 단순히 ID만 반환하는 경우 처리
+      String userId;
+      if (response.data is int || response.data is String) {
+        // 응답이 단순 ID 값인 경우
+        userId = response.data.toString();
+      } else if (response.data is Map) {
+        // 응답이 객체인 경우
+        final userData = response.data as Map;
+        userId = userData['id']?.toString() ?? userData['userId']?.toString() ?? '';
+      } else {
+        // 예상치 못한 응답 형식
+        userId = '';
+      }
+
       // Session is automatically handled by SessionService via interceptor
 
       return User(
-        id: userData['id']?.toString() ?? '',
-        email: userData['email'] ?? email,
-        name: userData['name'] ?? name,
+        id: userId,
+        email: email,
+        name: name,
         userType: userType,
         phoneNumber: phoneNumber,
-        createdAt: userData['createdAt'] != null 
-            ? DateTime.parse(userData['createdAt']) 
-            : DateTime.now(),
+        createdAt: DateTime.now(),
       );
     } catch (e) {
+      // 더 구체적인 에러 메시지 전달
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
       throw Exception('회원가입 실패: 서버 오류가 발생했습니다.');
     }
   }
@@ -99,18 +132,6 @@ class ApiAuthRepository implements AuthRepository {
     }
   }
 
-  UserType _mapRoleToUserType(String? role) {
-    switch (role?.toUpperCase()) {
-      case 'TRAINER':
-        return UserType.trainer;
-      case 'MANAGER':
-        return UserType.manager;
-      case 'USER':
-      case 'MEMBER':
-      default:
-        return UserType.member;
-    }
-  }
 
   String _mapUserTypeToRole(UserType userType) {
     switch (userType) {
@@ -119,7 +140,7 @@ class ApiAuthRepository implements AuthRepository {
       case UserType.manager:
         return 'MANAGER';
       case UserType.member:
-        return 'USER';
+        return 'MEMBER';
     }
   }
 }
