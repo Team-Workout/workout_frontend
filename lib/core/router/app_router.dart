@@ -17,6 +17,19 @@ import 'package:pt_service/features/trainer/view/trainer_detail_view.dart';
 import 'package:pt_service/features/trainer/model/trainer_model.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/body_composition/view/body_composition_view.dart';
+import 'package:pt_service/features/pt_offerings/view/pt_offering_create_view.dart';
+import 'package:pt_service/features/pt_offerings/view/pt_offerings_list_view.dart';
+import 'package:pt_service/features/pt_offerings/view/trainer_pt_offerings_view.dart';
+import 'package:pt_service/features/pt_applications/view/pt_applications_list_view.dart';
+import 'package:pt_service/features/workout/view/routine_list_view.dart';
+import 'package:pt_service/features/workout/view/routine_detail_view.dart';
+import 'package:pt_service/features/workout/view/workout_routine_create_view.dart';
+import 'package:pt_service/features/pt_contract/view/pt_contract_list_view.dart';
+import 'package:pt_service/features/pt_reservation/view/reservation_request_view.dart';
+import 'package:pt_service/features/pt_reservation/view/reservation_recommendation_view.dart';
+import 'package:pt_service/features/pt_reservation/view/appointment_confirmation_view.dart';
+import 'package:pt_service/features/pt_reservation/view/my_appointment_requests_view.dart';
+import 'package:pt_service/features/pt_reservation/view/reservation_history_view.dart';
 
 import '../../features/auth/model/user_model.dart';
 
@@ -152,6 +165,88 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             trainer: trainer, // fallback data if available
           );
         },
+      ),
+      GoRoute(
+        path: '/pt-offerings',
+        builder: (context, state) => const PtOfferingsListView(),
+      ),
+      GoRoute(
+        path: '/pt-offerings/create',
+        builder: (context, state) => const PtOfferingCreateView(),
+      ),
+      GoRoute(
+        path: '/trainer/:trainerId/pt-offerings',
+        builder: (context, state) {
+          final trainerIdStr = state.pathParameters['trainerId'];
+          final trainer = state.extra as Trainer?;
+          
+          if (trainerIdStr == null || trainer == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Trainer information not provided')),
+            );
+          }
+          
+          return TrainerPtOfferingsView(trainer: trainer);
+        },
+      ),
+      GoRoute(
+        path: '/pt-applications',
+        builder: (context, state) => const PtApplicationsListView(),
+      ),
+      GoRoute(
+        path: '/workout-routines',
+        builder: (context, state) => const RoutineListView(),
+      ),
+      GoRoute(
+        path: '/workout-routine/:routineId',
+        builder: (context, state) {
+          final routineIdStr = state.pathParameters['routineId'];
+          if (routineIdStr == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('루틴 ID가 제공되지 않았습니다')),
+            );
+          }
+          
+          final routineId = int.tryParse(routineIdStr);
+          if (routineId == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('잘못된 루틴 ID입니다')),
+            );
+          }
+          
+          return RoutineDetailView(routineId: routineId);
+        },
+      ),
+      GoRoute(
+        path: '/workout-routine-create',
+        builder: (context, state) => const WorkoutRouteCreateView(),
+      ),
+      GoRoute(
+        path: '/pt-contracts',
+        builder: (context, state) => const PtContractListView(),
+      ),
+      GoRoute(
+        path: '/reservation-requests',
+        builder: (context, state) => const ReservationRequestView(),
+      ),
+      GoRoute(
+        path: '/reservation-recommendations',
+        builder: (context, state) => const ReservationRecommendationView(),
+      ),
+      GoRoute(
+        path: '/reservation-history',
+        builder: (context, state) => const PtContractListView(),
+      ),
+      GoRoute(
+        path: '/appointment-confirmation',
+        builder: (context, state) => const AppointmentConfirmationView(),
+      ),
+      GoRoute(
+        path: '/my-appointment-requests',
+        builder: (context, state) => const MyAppointmentRequestsView(),
       ),
     ],
   );

@@ -22,6 +22,19 @@ class _CalendarViewState extends State<CalendarView> {
   void initState() {
     super.initState();
     _loadWorkoutDates();
+    // ViewModel의 변경사항을 감지하여 달력 데이터 새로고침
+    widget.viewModel.addListener(_onViewModelChanged);
+  }
+  
+  @override
+  void dispose() {
+    widget.viewModel.removeListener(_onViewModelChanged);
+    super.dispose();
+  }
+  
+  void _onViewModelChanged() {
+    // 운동기록 변경 시 달력 데이터 새로고침
+    _loadWorkoutDates();
   }
   
   Future<void> _loadWorkoutDates() async {
@@ -119,19 +132,58 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  // 로컬 데이터 기반 이벤트 로더
+  // 서버/로컬 데이터 기반 이벤트 로더
   List<WorkoutDayRecord> _getEventsForDay(DateTime day) {
     final dateString = DateFormat('yyyy-MM-dd').format(day);
     if (_workoutDataCache.containsKey(dateString)) {
       return _workoutDataCache[dateString]!.map((workoutData) {
-        return _convertToWorkoutDayRecord(workoutData, day);
+        // 서버 데이터인지 로컬 데이터인지 판단
+        if (workoutData.containsKey('workoutLogId')) {
+          return _convertServerDataToWorkoutDayRecord(workoutData, day);
+        } else {
+          return _convertLocalDataToWorkoutDayRecord(workoutData, day);
+        }
       }).toList();
     }
     return [];
   }
 
+  // 서버 데이터를 WorkoutDayRecord로 변환
+  WorkoutDayRecord _convertServerDataToWorkoutDayRecord(Map<String, dynamic> serverData, DateTime day) {
+    final workoutExercises = (serverData['workoutExercises'] as List<dynamic>).map((exerciseData) {
+      final workoutSets = (exerciseData['workoutSets'] as List<dynamic>).map((setData) {
+        return SetRecord(
+          reps: setData['reps'] as int,
+          weight: setData['weight'] != null ? (setData['weight'] as num).toDouble() : null,
+          memo: null, // 서버 데이터에서는 세트별 메모가 feedbacks에 있음
+        );
+      }).toList();
+
+      return ExerciseRecord(
+        name: exerciseData['exerciseName']?.toString() ?? 'Unknown Exercise',
+        sets: workoutSets,
+        memo: null, // 운동별 피드백은 feedbacks에 있음
+      );
+    }).toList();
+
+    // 전체 운동 로그의 피드백을 diaryMemo로 사용
+    final feedbacks = serverData['feedbacks'] as List<dynamic>;
+    final diaryMemo = feedbacks.isNotEmpty 
+        ? feedbacks.map((f) => '${f['authorName']}: ${f['content']}').join('\n')
+        : null;
+
+    return WorkoutDayRecord(
+      date: day,
+      title: workoutExercises.isNotEmpty 
+          ? '${workoutExercises.length}개 운동 완료'
+          : '운동 완료',
+      diaryMemo: diaryMemo,
+      exercises: workoutExercises,
+    );
+  }
+
   // 로컬 저장소 데이터를 WorkoutDayRecord로 변환
-  WorkoutDayRecord _convertToWorkoutDayRecord(Map<String, dynamic> workoutData, DateTime day) {
+  WorkoutDayRecord _convertLocalDataToWorkoutDayRecord(Map<String, dynamic> workoutData, DateTime day) {
     final exercises = (workoutData['exercises'] as List<dynamic>).map((exerciseData) {
       final sets = (exerciseData['sets'] as List<dynamic>).map((setData) {
         return SetRecord(

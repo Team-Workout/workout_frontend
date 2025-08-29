@@ -129,6 +129,15 @@ class BodyCompositionNotifier extends StateNotifier<AsyncValue<List<BodyComposit
       throw e;
     }
   }
+
+  Future<void> deleteBodyComposition(int id) async {
+    try {
+      await repository.deleteBodyComposition(id);
+      await loadBodyCompositions();
+    } catch (e) {
+      throw e;
+    }
+  }
 }
 
 final bodyCompositionNotifierProvider = 

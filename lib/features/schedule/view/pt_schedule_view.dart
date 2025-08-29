@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:pt_service/features/schedule/model/pt_schedule_model.dart';
-import 'package:pt_service/features/schedule/viewmodel/schedule_viewmodel.dart';
+import 'package:pt_service/features/pt_schedule/model/pt_schedule_models.dart';
+import 'package:pt_service/features/pt_schedule/viewmodel/pt_schedule_viewmodel.dart';
+import 'package:pt_service/features/pt_schedule/widget/schedule_change_request_dialog.dart';
+import 'package:pt_service/features/pt_contract/widget/pt_session_create_dialog.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
+import 'package:pt_service/features/auth/model/user_model.dart';
 import 'package:intl/intl.dart';
 
 class PTScheduleView extends ConsumerStatefulWidget {
@@ -17,26 +20,34 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  
+
   @override
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
+    // 현재 달의 스케줄 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(ptScheduleViewModelProvider.notifier)
+          .loadMonthlySchedule(month: _focusedDay, status: 'SCHEDULED');
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final schedules = ref.watch(ptScheduleListProvider);
+    final schedulesAsync = ref.watch(ptScheduleViewModelProvider);
     final user = ref.watch(currentUserProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('PT 일정 관리'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.refresh),
             onPressed: () {
-              _showAddScheduleDialog(context);
+              ref
+                  .read(ptScheduleViewModelProvider.notifier)
+                  .loadMonthlySchedule(month: _focusedDay, status: 'SCHEDULED');
             },
           ),
         ],
@@ -45,7 +56,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
         children: [
           Card(
             margin: const EdgeInsets.all(16),
-            child: TableCalendar<PTSchedule>(
+            child: TableCalendar<PtSchedule>(
               firstDay: DateTime.utc(2020, 1, 1),
               lastDay: DateTime.utc(2030, 12, 31),
               focusedDay: _focusedDay,
@@ -54,9 +65,20 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                 return isSameDay(_selectedDay, day);
               },
               eventLoader: (day) {
-                return schedules.when(
-                  data: (data) => data.where((schedule) => 
-                    isSameDay(schedule.dateTime, day)).toList(),
+                return schedulesAsync.when(
+                  data: (schedules) {
+                    final eventsForDay = schedules.where((schedule) {
+                      final scheduleDate = DateTime.parse(schedule.startTime);
+                      return isSameDay(scheduleDate, day);
+                    }).toList();
+
+                    if (eventsForDay.isNotEmpty) {
+                      print(
+                          '📅 ${day.toString().substring(0, 10)}에 ${eventsForDay.length}개 일정 있음');
+                    }
+
+                    return eventsForDay;
+                  },
                   loading: () => [],
                   error: (_, __) => [],
                 );
@@ -96,12 +118,16 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                 setState(() {
                   _focusedDay = focusedDay;
                 });
+                // 달 변경 시 새로운 달의 스케줄 로드
+                ref
+                    .read(ptScheduleViewModelProvider.notifier)
+                    .loadMonthlySchedule(month: focusedDay, status: 'SCHEDULED');
               },
             ),
           ),
           Expanded(
-            child: schedules.when(
-              data: (data) => _buildScheduleList(data),
+            child: schedulesAsync.when(
+              data: (schedules) => _buildScheduleList(schedules),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(
                 child: Text('오류가 발생했습니다: $error'),
@@ -112,14 +138,17 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
       ),
     );
   }
-  
-  Widget _buildScheduleList(List<PTSchedule> allSchedules) {
-    final selectedSchedules = allSchedules.where((schedule) => 
-      _selectedDay != null && isSameDay(schedule.dateTime, _selectedDay!)
-    ).toList();
-    
-    selectedSchedules.sort((a, b) => a.dateTime.compareTo(b.dateTime));
-    
+
+  Widget _buildScheduleList(List<PtSchedule> allSchedules) {
+    final selectedSchedules = allSchedules.where((schedule) {
+      if (_selectedDay == null) return false;
+      final scheduleDate = DateTime.parse(schedule.startTime);
+      return isSameDay(scheduleDate, _selectedDay!);
+    }).toList();
+
+    selectedSchedules.sort((a, b) =>
+        DateTime.parse(a.startTime).compareTo(DateTime.parse(b.startTime)));
+
     if (selectedSchedules.isEmpty) {
       return Center(
         child: Column(
@@ -133,27 +162,33 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
             const SizedBox(height: 16),
             Text(
               _selectedDay != null
-                ? '${DateFormat('M월 d일').format(_selectedDay!)}에 예약된 PT가 없습니다'
-                : '날짜를 선택해주세요',
+                  ? '${DateFormat('M월 d일').format(_selectedDay!)}에 예약된 PT가 없습니다'
+                  : '날짜를 선택해주세요',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
           ],
         ),
       );
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: selectedSchedules.length,
       itemBuilder: (context, index) {
         final schedule = selectedSchedules[index];
+        final startTime = DateTime.parse(schedule.startTime);
+        final endTime = DateTime.parse(schedule.endTime);
+        final timeText =
+            '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime)}';
+
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: _getStatusColor(schedule.status).withOpacity(0.2),
+              backgroundColor:
+                  _getStatusColor(schedule.status).withOpacity(0.2),
               child: Icon(
                 _getStatusIcon(schedule.status),
                 color: _getStatusColor(schedule.status),
@@ -161,65 +196,56 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
             ),
             title: Text(
               ref.watch(currentUserProvider)?.userType.name == 'trainer'
-                ? schedule.memberName
-                : schedule.trainerName,
+                  ? schedule.memberName
+                  : schedule.trainerName,
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${DateFormat('HH:mm').format(schedule.dateTime)} - ${DateFormat('HH:mm').format(schedule.dateTime.add(Duration(minutes: schedule.durationMinutes)))}',
-                ),
-                if (schedule.notes != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    schedule.notes!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                Text(timeText),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      _getStatusText(schedule.status),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _getStatusColor(schedule.status),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
-              ],
-            ),
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'edit':
-                    _showEditScheduleDialog(context, schedule);
-                    break;
-                  case 'complete':
-                    _completeSchedule(schedule);
-                    break;
-                  case 'cancel':
-                    _cancelSchedule(schedule);
-                    break;
-                  case 'delete':
-                    _deleteSchedule(schedule);
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Text('수정'),
-                ),
-                if (schedule.status == PTScheduleStatus.scheduled) ...[
-                  const PopupMenuItem(
-                    value: 'complete',
-                    child: Text('완료'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'cancel',
-                    child: Text('취소'),
-                  ),
-                ],
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Text('삭제'),
+                    if (schedule.hasChangeRequest == true) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: schedule.changeRequestBy == 'member'
+                              ? Colors.blue
+                              : schedule.changeRequestBy == 'trainer'
+                                  ? Colors.purple
+                                  : Colors.orange,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          schedule.changeRequestBy == 'member'
+                              ? '회원 요청'
+                              : schedule.changeRequestBy == 'trainer'
+                                  ? '트레이너 요청'
+                                  : '변경요청',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
+            trailing: _buildTrailingWidget(schedule),
             onTap: () {
               _showScheduleDetail(context, schedule);
             },
@@ -228,60 +254,556 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
       },
     );
   }
-  
-  Color _getStatusColor(PTScheduleStatus status) {
-    switch (status) {
-      case PTScheduleStatus.scheduled:
-        return Colors.blue;
-      case PTScheduleStatus.completed:
-        return Colors.green;
-      case PTScheduleStatus.cancelled:
-        return Colors.red;
+
+  Widget _buildTrailingWidget(PtSchedule schedule) {
+    final userType = ref.watch(currentUserProvider)?.userType.name;
+
+    if (userType == 'trainer') {
+      // 트레이너용 메뉴
+      return PopupMenuButton<String>(
+        onSelected: (value) async {
+          await _handleScheduleAction(context, schedule, value);
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            value: 'detail',
+            child: Text('상세보기'),
+          ),
+          if (schedule.hasChangeRequest == true &&
+              schedule.changeRequestBy == 'member') ...[
+            const PopupMenuItem(
+              value: 'approve_change',
+              child: Text('시간 변경 승인'),
+            ),
+            const PopupMenuItem(
+              value: 'reject_change',
+              child: Text('시간 변경 거절'),
+            ),
+          ],
+          if (schedule.status == 'SCHEDULED' &&
+              schedule.hasChangeRequest != true) ...[
+            const PopupMenuItem(
+              value: 'trainer_request_change',
+              child: Text('시간 변경 요청'),
+            ),
+            const PopupMenuItem(
+              value: 'complete',
+              child: Text('수업 완료'),
+            ),
+            const PopupMenuItem(
+              value: 'cancel',
+              child: Text('수업 취소'),
+            ),
+          ],
+        ],
+      );
+    } else if (userType == 'member') {
+      // 회원용 메뉴
+      return PopupMenuButton<String>(
+        onSelected: (value) async {
+          await _handleScheduleAction(context, schedule, value);
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            value: 'detail',
+            child: Text('상세보기'),
+          ),
+          if (schedule.hasChangeRequest == true &&
+              schedule.changeRequestBy == 'trainer') ...[
+            const PopupMenuItem(
+              value: 'member_approve_change',
+              child: Text('시간 변경 승인'),
+            ),
+            const PopupMenuItem(
+              value: 'member_reject_change',
+              child: Text('시간 변경 거절'),
+            ),
+          ],
+          if (schedule.status == 'SCHEDULED' &&
+              schedule.hasChangeRequest != true) ...[
+            const PopupMenuItem(
+              value: 'request_change',
+              child: Text('시간 변경 요청'),
+            ),
+          ],
+        ],
+      );
+    }
+
+    return const Icon(Icons.arrow_forward_ios, size: 16);
+  }
+
+  Future<void> _handleScheduleAction(
+      BuildContext context, PtSchedule schedule, String action) async {
+    switch (action) {
+      case 'detail':
+        _showScheduleDetail(context, schedule);
+        break;
+      case 'complete':
+        await _showPtSessionCreateDialog(context, schedule);
+        break;
+      case 'cancel':
+        await _updateScheduleStatus(
+            context, schedule, 'CANCELLED', '수업을 취소로 표시하시겠습니까?');
+        break;
+      case 'request_change':
+        _showScheduleChangeRequestDialog(context, schedule, isTrainer: false);
+        break;
+      case 'trainer_request_change':
+        _showScheduleChangeRequestDialog(context, schedule, isTrainer: true);
+        break;
+      case 'approve_change':
+        await _approveScheduleChange(context, schedule);
+        break;
+      case 'reject_change':
+        await _rejectScheduleChange(context, schedule);
+        break;
+      case 'member_approve_change':
+        await _memberApproveScheduleChange(context, schedule);
+        break;
+      case 'member_reject_change':
+        await _memberRejectScheduleChange(context, schedule);
+        break;
     }
   }
-  
-  IconData _getStatusIcon(PTScheduleStatus status) {
-    switch (status) {
-      case PTScheduleStatus.scheduled:
-        return Icons.schedule;
-      case PTScheduleStatus.completed:
-        return Icons.check_circle;
-      case PTScheduleStatus.cancelled:
-        return Icons.cancel;
+
+  Future<void> _updateScheduleStatus(BuildContext context, PtSchedule schedule,
+      String status, String confirmMessage) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('상태 변경'),
+        content: Text(confirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref
+            .read(ptScheduleViewModelProvider.notifier)
+            .updateAppointmentStatus(
+              appointmentId: schedule.appointmentId,
+              status: status,
+            );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  '수업 상태가 ${status == 'COMPLETED' ? '완료' : '취소'}로 변경되었습니다.'),
+              backgroundColor:
+                  status == 'COMPLETED' ? Colors.green : Colors.orange,
+            ),
+          );
+        }
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('상태 변경 실패: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
-  
-  void _showAddScheduleDialog(BuildContext context) {
+
+  void _showScheduleChangeRequestDialog(
+      BuildContext context, PtSchedule schedule,
+      {required bool isTrainer}) {
     showDialog(
       context: context,
-      builder: (context) => const AddScheduleDialog(),
+      builder: (context) => ScheduleChangeRequestDialog(
+        schedule: schedule,
+        isTrainerRequest: isTrainer,
+      ),
     );
   }
-  
-  void _showEditScheduleDialog(BuildContext context, PTSchedule schedule) {
-    showDialog(
+
+  Future<void> _memberApproveScheduleChange(
+      BuildContext context, PtSchedule schedule) async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => EditScheduleDialog(schedule: schedule),
+      builder: (context) => AlertDialog(
+        title: const Text('시간 변경 승인'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${schedule.trainerName} 트레이너의 시간 변경 요청을 승인하시겠습니까?'),
+            if (schedule.requestedStartTime != null &&
+                schedule.requestedEndTime != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '변경 요청 시간',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat('yyyy년 M월 d일')
+                          .format(DateTime.parse(schedule.requestedStartTime!)),
+                    ),
+                    Text(
+                      '${DateFormat('HH:mm').format(DateTime.parse(schedule.requestedStartTime!))} - ${DateFormat('HH:mm').format(DateTime.parse(schedule.requestedEndTime!))}',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('승인'),
+          ),
+        ],
+      ),
     );
+
+    if (confirmed == true) {
+      try {
+        await ref
+            .read(ptScheduleViewModelProvider.notifier)
+            .memberApproveScheduleChange(
+              appointmentId: schedule.appointmentId,
+            );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('시간 변경 요청이 승인되었습니다.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('승인 실패: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
-  
-  void _showScheduleDetail(BuildContext context, PTSchedule schedule) {
+
+  Future<void> _memberRejectScheduleChange(
+      BuildContext context, PtSchedule schedule) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('시간 변경 거절'),
+        content: Text('${schedule.trainerName} 트레이너의 시간 변경 요청을 거절하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('거절'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      // 회원의 거절은 기존 reject API를 재사용
+      try {
+        await ref
+            .read(ptScheduleViewModelProvider.notifier)
+            .rejectScheduleChange(
+              appointmentId: schedule.appointmentId,
+            );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('시간 변경 요청이 거절되었습니다.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('거절 실패: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _approveScheduleChange(
+      BuildContext context, PtSchedule schedule) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('시간 변경 승인'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${schedule.memberName}님의 시간 변경 요청을 승인하시겠습니까?'),
+            if (schedule.requestedStartTime != null &&
+                schedule.requestedEndTime != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '변경 요청 시간',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${DateFormat('yyyy년 M월 d일').format(DateTime.parse(schedule.requestedStartTime!))}',
+                    ),
+                    Text(
+                      '${DateFormat('HH:mm').format(DateTime.parse(schedule.requestedStartTime!))} - ${DateFormat('HH:mm').format(DateTime.parse(schedule.requestedEndTime!))}',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('승인'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref
+            .read(ptScheduleViewModelProvider.notifier)
+            .approveScheduleChange(
+              appointmentId: schedule.appointmentId,
+            );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('시간 변경 요청이 승인되었습니다.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('승인 실패: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _rejectScheduleChange(
+      BuildContext context, PtSchedule schedule) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('시간 변경 거절'),
+        content: Text('${schedule.memberName}님의 시간 변경 요청을 거절하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('거절'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref
+            .read(ptScheduleViewModelProvider.notifier)
+            .rejectScheduleChange(
+              appointmentId: schedule.appointmentId,
+            );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('시간 변경 요청이 거절되었습니다.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('거절 실패: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _showPtSessionCreateDialog(
+      BuildContext context, PtSchedule schedule) async {
+    final user = ref.read(currentUserProvider);
+
+    // Only trainers can create PT sessions
+    if (user?.userType != UserType.trainer) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('PT 세션 기록은 트레이너만 가능합니다.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final sessionCreated = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PtSessionCreateDialog(
+        appointmentId: schedule.appointmentId,
+        trainerName: schedule.trainerName,
+        memberName: schedule.memberName,
+        sessionDate: DateTime.parse(schedule.startTime),
+      ),
+    );
+
+    if (sessionCreated == true) {
+      // After creating the session, mark the appointment as completed
+      try {
+        await ref
+            .read(ptScheduleViewModelProvider.notifier)
+            .updateAppointmentStatus(
+              appointmentId: schedule.appointmentId,
+              status: 'COMPLETED',
+            );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('수업이 완료되었습니다.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Refresh the schedule list
+          ref
+              .read(ptScheduleViewModelProvider.notifier)
+              .loadMonthlySchedule(month: _focusedDay, status: 'SCHEDULED');
+        }
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('상태 업데이트 실패: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showScheduleDetail(BuildContext context, PtSchedule schedule) {
+    final startTime = DateTime.parse(schedule.startTime);
+    final endTime = DateTime.parse(schedule.endTime);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('일정 상세'),
+        title: const Text('일정 상세'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDetailRow('트레이너', schedule.trainerName),
             _buildDetailRow('회원', schedule.memberName),
-            _buildDetailRow('날짜', DateFormat('yyyy년 M월 d일').format(schedule.dateTime)),
-            _buildDetailRow('시간', 
-              '${DateFormat('HH:mm').format(schedule.dateTime)} - ${DateFormat('HH:mm').format(schedule.dateTime.add(Duration(minutes: schedule.durationMinutes)))}'),
+            _buildDetailRow('날짜', DateFormat('yyyy년 M월 d일').format(startTime)),
+            _buildDetailRow('시간',
+                '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime)}'),
             _buildDetailRow('상태', _getStatusText(schedule.status)),
-            if (schedule.notes != null)
-              _buildDetailRow('노트', schedule.notes!),
+            if (schedule.hasChangeRequest == true) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.schedule, size: 16, color: Colors.orange[700]),
+                    const SizedBox(width: 8),
+                    Text(
+                      '시간 변경 요청 대기 중',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.orange[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            _buildDetailRow('예약 ID', schedule.appointmentId.toString()),
           ],
         ),
         actions: [
@@ -293,7 +815,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
       ),
     );
   }
-  
+
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -314,361 +836,43 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
       ),
     );
   }
-  
-  String _getStatusText(PTScheduleStatus status) {
+
+  String _getStatusText(String status) {
     switch (status) {
-      case PTScheduleStatus.scheduled:
+      case 'SCHEDULED':
         return '예약됨';
-      case PTScheduleStatus.completed:
+      case 'COMPLETED':
         return '완료';
-      case PTScheduleStatus.cancelled:
+      case 'CANCELLED':
         return '취소';
+      default:
+        return status;
     }
   }
-  
-  void _completeSchedule(PTSchedule schedule) {
-    ref.read(scheduleViewModelProvider.notifier).updateScheduleStatus(
-      schedule.id,
-      PTScheduleStatus.completed,
-    );
-  }
-  
-  void _cancelSchedule(PTSchedule schedule) {
-    ref.read(scheduleViewModelProvider.notifier).updateScheduleStatus(
-      schedule.id,
-      PTScheduleStatus.cancelled,
-    );
-  }
-  
-  void _deleteSchedule(PTSchedule schedule) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('일정 삭제'),
-        content: const Text('이 일정을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () {
-              ref.read(scheduleViewModelProvider.notifier).deleteSchedule(schedule.id);
-              Navigator.of(context).pop();
-            },
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
-class AddScheduleDialog extends ConsumerStatefulWidget {
-  const AddScheduleDialog({super.key});
-
-  @override
-  ConsumerState<AddScheduleDialog> createState() => _AddScheduleDialogState();
-}
-
-class _AddScheduleDialogState extends ConsumerState<AddScheduleDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _memberNameController = TextEditingController();
-  final _notesController = TextEditingController();
-  DateTime _selectedDateTime = DateTime.now();
-  int _duration = 60;
-  
-  @override
-  void dispose() {
-    _memberNameController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('PT 일정 추가'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _memberNameController,
-                decoration: const InputDecoration(
-                  labelText: '회원 이름',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '회원 이름을 입력해주세요';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: _selectDateTime,
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: '날짜 및 시간',
-                    border: OutlineInputBorder(),
-                  ),
-                  child: Text(
-                    DateFormat('yyyy년 M월 d일 HH:mm').format(_selectedDateTime),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                value: _duration,
-                decoration: const InputDecoration(
-                  labelText: '운동 시간',
-                  border: OutlineInputBorder(),
-                ),
-                items: [30, 45, 60, 90, 120].map((duration) {
-                  return DropdownMenuItem(
-                    value: duration,
-                    child: Text('$duration분'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _duration = value;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: '노트 (선택)',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        FilledButton(
-          onPressed: _saveSchedule,
-          child: const Text('저장'),
-        ),
-      ],
-    );
-  }
-  
-  Future<void> _selectDateTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _selectedDateTime,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    
-    if (date != null) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
-      );
-      
-      if (time != null) {
-        setState(() {
-          _selectedDateTime = DateTime(
-            date.year,
-            date.month,
-            date.day,
-            time.hour,
-            time.minute,
-          );
-        });
-      }
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'SCHEDULED':
+        return Colors.blue;
+      case 'COMPLETED':
+        return Colors.green;
+      case 'CANCELLED':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
-  
-  void _saveSchedule() {
-    if (_formKey.currentState!.validate()) {
-      final user = ref.read(currentUserProvider);
-      if (user == null) return;
-      
-      ref.read(scheduleViewModelProvider.notifier).addSchedule(
-        trainerId: user.id,
-        trainerName: user.name,
-        memberName: _memberNameController.text,
-        dateTime: _selectedDateTime,
-        durationMinutes: _duration,
-        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      );
-      
-      Navigator.of(context).pop();
-    }
-  }
-}
 
-class EditScheduleDialog extends ConsumerStatefulWidget {
-  final PTSchedule schedule;
-  
-  const EditScheduleDialog({super.key, required this.schedule});
-
-  @override
-  ConsumerState<EditScheduleDialog> createState() => _EditScheduleDialogState();
-}
-
-class _EditScheduleDialogState extends ConsumerState<EditScheduleDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _memberNameController;
-  late final TextEditingController _notesController;
-  late DateTime _selectedDateTime;
-  late int _duration;
-  
-  @override
-  void initState() {
-    super.initState();
-    _memberNameController = TextEditingController(text: widget.schedule.memberName);
-    _notesController = TextEditingController(text: widget.schedule.notes ?? '');
-    _selectedDateTime = widget.schedule.dateTime;
-    _duration = widget.schedule.durationMinutes;
-  }
-  
-  @override
-  void dispose() {
-    _memberNameController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('PT 일정 수정'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _memberNameController,
-                decoration: const InputDecoration(
-                  labelText: '회원 이름',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '회원 이름을 입력해주세요';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: _selectDateTime,
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: '날짜 및 시간',
-                    border: OutlineInputBorder(),
-                  ),
-                  child: Text(
-                    DateFormat('yyyy년 M월 d일 HH:mm').format(_selectedDateTime),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                value: _duration,
-                decoration: const InputDecoration(
-                  labelText: '운동 시간',
-                  border: OutlineInputBorder(),
-                ),
-                items: [30, 45, 60, 90, 120].map((duration) {
-                  return DropdownMenuItem(
-                    value: duration,
-                    child: Text('$duration분'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _duration = value;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: '노트 (선택)',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        FilledButton(
-          onPressed: _updateSchedule,
-          child: const Text('수정'),
-        ),
-      ],
-    );
-  }
-  
-  Future<void> _selectDateTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _selectedDateTime,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    
-    if (date != null) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
-      );
-      
-      if (time != null) {
-        setState(() {
-          _selectedDateTime = DateTime(
-            date.year,
-            date.month,
-            date.day,
-            time.hour,
-            time.minute,
-          );
-        });
-      }
-    }
-  }
-  
-  void _updateSchedule() {
-    if (_formKey.currentState!.validate()) {
-      final updatedSchedule = widget.schedule.copyWith(
-        memberName: _memberNameController.text,
-        dateTime: _selectedDateTime,
-        durationMinutes: _duration,
-        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      );
-      
-      ref.read(scheduleViewModelProvider.notifier).updateSchedule(updatedSchedule);
-      Navigator.of(context).pop();
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'SCHEDULED':
+        return Icons.schedule;
+      case 'COMPLETED':
+        return Icons.check_circle;
+      case 'CANCELLED':
+        return Icons.cancel;
+      default:
+        return Icons.help_outline;
     }
   }
 }

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../model/workout_record_models.dart';
 import '../model/workout_log_models.dart';
+import '../model/routine_models.dart';
 import '../service/workout_api_service.dart';
 import '../service/local_storage_service.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -10,8 +11,9 @@ import '../../../core/providers/auth_provider.dart';
 class WorkoutRecordViewmodel extends ChangeNotifier {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController diaryMemoController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  DateTime _focusedDate = DateTime.now();
+  late final DateTime _today;
+  late DateTime _selectedDate;
+  late DateTime _focusedDate;
   bool _disposed = false;
 
   // 실시간 운동 기록 관리
@@ -19,11 +21,18 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
 
   // API 서비스
   final WorkoutApiService _apiService;
+  WorkoutApiService get workoutApiService => _apiService;
   final LocalStorageService _localStorageService;
   final AuthState _authState;
 
   WorkoutRecordViewmodel(
-      this._apiService, this._localStorageService, this._authState);
+      this._apiService, this._localStorageService, this._authState) {
+    // 오늘 날짜를 시간 정보 없이 정규화
+    final now = DateTime.now();
+    _today = DateTime(now.year, now.month, now.day);
+    _selectedDate = _today;
+    _focusedDate = _today;
+  }
 
   // 운동 목록 (exerciseId를 위한)
   List<Map<String, dynamic>> _availableExercises = [];
@@ -33,63 +42,8 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  // Mock data - 실제로는 API에서 가져올 데이터
-  final Map<DateTime, WorkoutDayRecord> _workoutEvents = {
-    DateTime(2025, 8, 10): WorkoutDayRecord(
-      date: DateTime(2025, 8, 10),
-      title: '상체 집중 운동',
-      diaryMemo: '오늘 컨디션이 좋았고, 벤치프레스에서 중량을 늘릴 수 있었다.',
-      exercises: [
-        ExerciseRecord(
-          name: '벤치프레스',
-          sets: [
-            SetRecord(reps: 12, weight: 60),
-            SetRecord(reps: 10, weight: 60),
-            SetRecord(reps: 8, weight: 65),
-            SetRecord(reps: 6, weight: 70),
-          ],
-          memo: '마지막 세트에서 힘들었지만 완주',
-        ),
-        ExerciseRecord(
-          name: '덤벨플라이',
-          sets: [
-            SetRecord(reps: 15, weight: 15),
-            SetRecord(reps: 12, weight: 15),
-            SetRecord(reps: 10, weight: 15),
-          ],
-          memo: '가슴 수축에 집중',
-        ),
-      ],
-    ),
-    DateTime(2025, 8, 8): WorkoutDayRecord(
-      date: DateTime(2025, 8, 8),
-      title: '하체 데이',
-      diaryMemo: '스쿼트 폼을 개선하는데 집중했다.',
-      exercises: [
-        ExerciseRecord(
-          name: '스쿼트',
-          sets: [
-            SetRecord(reps: 12, weight: 70),
-            SetRecord(reps: 10, weight: 80),
-            SetRecord(reps: 8, weight: 80),
-            SetRecord(reps: 6, weight: 85),
-            SetRecord(reps: 4, weight: 90),
-          ],
-          memo: '깊이 내려가기에 집중',
-        ),
-        ExerciseRecord(
-          name: '레그프레스',
-          sets: [
-            SetRecord(reps: 15, weight: 100),
-            SetRecord(reps: 12, weight: 120),
-            SetRecord(reps: 10, weight: 120),
-            SetRecord(reps: 8, weight: 130),
-          ],
-          memo: '무릎이 약간 아팠음',
-        ),
-      ],
-    ),
-  };
+  // 현재 로드된 운동기록 (SQLite 기반)
+  final Map<DateTime, WorkoutDayRecord> _workoutEvents = {};
 
   // Getters
   DateTime get selectedDate => _selectedDate;
@@ -113,6 +67,12 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
   Future<void> initializeLocale() async {
     await initializeDateFormatting('ko');
     await _loadAvailableExercises();
+    
+    // 디버깅: 데이터베이스 상태 확인
+    await _localStorageService.checkDatabaseStatus();
+    
+    // 필요시 데이터 초기화 (개발 중에만 사용)
+    await _localStorageService.clearAllData();
   }
 
   Future<void> _loadAvailableExercises() async {
@@ -137,20 +97,24 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
   }
 
   List<WorkoutDayRecord> getEventsForDay(DateTime day) {
+    // 이제 달력에서는 CalendarView의 캐시된 데이터를 사용
+    // 이 메서드는 이전 버전과의 호환성을 위해 유지
     final record = _workoutEvents[DateTime(day.year, day.month, day.day)];
     return record != null ? [record] : [];
   }
 
   void updateSelectedDate(DateTime date) {
-    if (_selectedDate != date && !_disposed) {
-      _selectedDate = date;
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    if (_selectedDate != normalizedDate && !_disposed) {
+      _selectedDate = normalizedDate;
       notifyListeners();
     }
   }
 
   void updateFocusedDate(DateTime date) {
-    if (_focusedDate != date && !_disposed) {
-      _focusedDate = date;
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    if (_focusedDate != normalizedDate && !_disposed) {
+      _focusedDate = normalizedDate;
       notifyListeners();
     }
   }
@@ -158,99 +122,44 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
   void loadWorkoutForDate(DateTime date) {
     if (_disposed) return;
 
-    final dateKey = DateTime(date.year, date.month, date.day);
-    final existingRecord = _workoutEvents[dateKey];
-
-    if (existingRecord != null) {
-      titleController.text = existingRecord.title;
-      diaryMemoController.text = existingRecord.diaryMemo ?? '';
-
-      // 기존 운동들을 정리하고 새로 로드
-      for (var exercise in _exercises) {
-        exercise.dispose();
-      }
-      _exercises.clear();
-
-      for (var exerciseRecord in existingRecord.exercises) {
-        final exercise = WorkoutExerciseDetail();
-        exercise.nameController.text = exerciseRecord.name;
-        exercise.memoController.text = exerciseRecord.memo ?? '';
-
-        // 기존 세트 데이터 로드
-        for (var setRecord in exerciseRecord.sets) {
-          exercise.addSet();
-          final workoutSet = exercise.sets.last;
-          workoutSet.repsController.text = setRecord.reps?.toString() ?? '0';
-          workoutSet.weightController.text = setRecord.weight?.toString() ?? '';
-          workoutSet.memoController.text = setRecord.memo ?? '';
-        }
-
-        // 실시간 저장을 위한 리스너 추가
-        _addExerciseListeners(exercise);
-
-        _exercises.add(exercise);
-      }
-    } else {
+    // SQLite에서 해당 날짜의 운동기록을 비동기로 로드
+    _loadWorkoutFromSQLite(date);
+  }
+  
+  Future<void> _loadWorkoutFromSQLite(DateTime date) async {
+    if (_disposed) return;
+    
+    try {
+      final dateString = DateFormat('yyyy-MM-dd').format(date);
+      final localWorkouts = await _localStorageService.getWorkoutLogsByDate(dateString);
+      
+      // UI 컨트롤러 초기화
       titleController.clear();
       diaryMemoController.clear();
+      
+      // 기존 운동들 정리
       for (var exercise in _exercises) {
         exercise.dispose();
       }
       _exercises.clear();
-    }
-
-    if (!_disposed) {
-      notifyListeners();
+      
+      if (localWorkouts.isNotEmpty) {
+        // SQLite 데이터를 UI 모델로 변환
+        _loadWorkoutDataFromLocal(localWorkouts);
+      }
+      
+      if (!_disposed) {
+        notifyListeners();
+      }
+    } catch (e) {
+      print('❌ 날짜별 운동기록 로드 실패: $e');
     }
   }
 
   void saveCurrentWorkout() {
+    // 이 메서드는 이제 UI 업데이트만 담당 (실제 저장은 saveWorkoutToAPI에서)
     if (_disposed) return;
-
-    final dateKey =
-        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
-
-    final exercises = _exercises
-        .where((e) => e.nameController.text.trim().isNotEmpty)
-        .map((e) {
-      final sets = e.sets
-          .map((set) => SetRecord(
-                reps: int.tryParse(set.repsController.text) ?? 0,
-                weight: set.weightController.text.isNotEmpty
-                    ? double.tryParse(set.weightController.text)
-                    : null,
-                memo: set.memoController.text.trim().isNotEmpty
-                    ? set.memoController.text.trim()
-                    : null,
-              ))
-          .toList();
-
-      return ExerciseRecord(
-        name: e.nameController.text.trim(),
-        sets: sets,
-        memo: e.memoController.text.trim().isNotEmpty
-            ? e.memoController.text.trim()
-            : null,
-      );
-    }).toList();
-
-    if (titleController.text.trim().isNotEmpty ||
-        diaryMemoController.text.trim().isNotEmpty ||
-        exercises.isNotEmpty) {
-      _workoutEvents[dateKey] = WorkoutDayRecord(
-        date: _selectedDate,
-        title: titleController.text.trim().isNotEmpty
-            ? titleController.text.trim()
-            : '${DateFormat('MM월 dd일').format(_selectedDate)} 운동',
-        diaryMemo: diaryMemoController.text.trim().isNotEmpty
-            ? diaryMemoController.text.trim()
-            : null,
-        exercises: exercises,
-      );
-    } else {
-      _workoutEvents.remove(dateKey);
-    }
-
+    
     if (!_disposed) {
       notifyListeners();
     }
@@ -431,8 +340,11 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
       // API 요청 객체 생성
       final WorkoutLogRequest request;
       try {
+        final workoutDateString = DateFormat('yyyy-MM-dd').format(_selectedDate);
+        print('💾 운동기록 저장 날짜: $workoutDateString (선택된 날짜: $_selectedDate)');
+        
         request = WorkoutLogRequest(
-          workoutDate: DateFormat('yyyy-MM-dd').format(_selectedDate),
+          workoutDate: workoutDateString,
           logFeedback: diaryMemoController.text.trim().isNotEmpty
               ? diaryMemoController.text.trim()
               : null,
@@ -473,6 +385,11 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
 
       // 로컬 데이터 새로고침
       saveCurrentWorkout();
+      
+      // UI 새로고침을 위해 notifyListeners 호출
+      if (!_disposed) {
+        notifyListeners();
+      }
     } catch (e, stackTrace) {
       rethrow; // 에러를 상위로 전달하여 UI에서 처리할 수 있도록
     } finally {
@@ -518,20 +435,24 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
 
   // 로컬 데이터를 UI 모델로 변환
   void _loadWorkoutDataFromLocal(List<Map<String, dynamic>> localWorkouts) {
-    // 기존 운동 데이터 클리어
-    for (var exercise in _exercises) {
-      exercise.dispose();
-    }
-    _exercises.clear();
-
     // 로컬 데이터를 WorkoutExerciseDetail로 변환
     for (var workout in localWorkouts) {
+      // 제목 설정 (첫 번째 운동기록에서만)
+      if (titleController.text.isEmpty && workout['log_feedback'] != null) {
+        titleController.text = workout['log_feedback'];
+      }
+      
       final exercises = workout['exercises'] as List<dynamic>;
 
       for (var exerciseData in exercises) {
         final exerciseDetail = WorkoutExerciseDetail();
         exerciseDetail.nameController.text =
             exerciseData['exercise_name'] ?? '';
+        
+        // 운동 메모 설정
+        if (exerciseData['memo'] != null) {
+          exerciseDetail.memoController.text = exerciseData['memo'];
+        }
 
         // 세트 정보 추가
         final sets = exerciseData['sets'] as List<dynamic>;
@@ -543,10 +464,11 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
           workoutSet.memoController.text = setData['memo']?.toString() ?? '';
         }
 
+        // 리스너 추가
+        _addExerciseListeners(exerciseDetail);
         _exercises.add(exerciseDetail);
       }
     }
-
   }
 
   // 특정 월의 운동 기록이 있는 날짜들 조회 (달력용)
@@ -555,6 +477,65 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
       final year = month.year.toString();
       final monthStr = month.month.toString();
       return await _localStorageService.getWorkoutDatesInMonth(year, monthStr);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // 루틴 템플릿 기능 - 루틴을 선택해서 운동기록으로 변환
+  Future<void> loadRoutineAsTemplate(RoutineResponse routine) async {
+    if (_disposed) return;
+
+    // 기존 운동 데이터 클리어
+    for (var exercise in _exercises) {
+      exercise.dispose();
+    }
+    _exercises.clear();
+
+    // 루틴 이름을 제목으로 설정
+    titleController.text = routine.name;
+
+    // 루틴의 운동들을 WorkoutExerciseDetail로 변환
+    if (routine.routineExercises != null) {
+      for (var routineExercise in routine.routineExercises!) {
+        final exerciseDetail = WorkoutExerciseDetail();
+        
+        // 운동 이름 설정 (exerciseName이 있으면 사용, 없으면 ID로 검색)
+        if (routineExercise.exerciseName != null) {
+          exerciseDetail.nameController.text = routineExercise.exerciseName!;
+        } else if (routineExercise.exerciseId != null) {
+          // availableExercises에서 ID로 이름 찾기
+          final exercise = _availableExercises.firstWhere(
+            (ex) => (ex['id'] ?? ex['exerciseId']) == routineExercise.exerciseId,
+            orElse: () => {'name': '운동 ${routineExercise.exerciseId}'},
+          );
+          exerciseDetail.nameController.text = exercise['name'] ?? exercise['exerciseName'] ?? '';
+        }
+
+        // 루틴 세트를 운동 세트로 변환
+        for (var routineSet in routineExercise.routineSets) {
+          exerciseDetail.addSet();
+          final workoutSet = exerciseDetail.sets.last;
+          workoutSet.repsController.text = routineSet.reps.toString();
+          workoutSet.weightController.text = routineSet.weight.toString();
+        }
+
+        // 리스너 추가
+        _addExerciseListeners(exerciseDetail);
+        _exercises.add(exerciseDetail);
+      }
+    }
+
+    // UI 업데이트
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
+  // 내 루틴 목록 조회 (운동기록 화면에서 사용)
+  Future<List<RoutineResponse>> getMyRoutines() async {
+    try {
+      return await _apiService.getMyRoutines();
     } catch (e) {
       return [];
     }

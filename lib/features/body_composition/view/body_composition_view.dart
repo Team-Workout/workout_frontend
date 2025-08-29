@@ -91,6 +91,8 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                   const SizedBox(height: 24),
                   _buildBodyCompositionChart(compositions),
                   const SizedBox(height: 24),
+                  _buildDataListSection(compositions),
+                  const SizedBox(height: 24),
                   _buildKeyMeasurements(),
                   const SizedBox(height: 24),
                   _buildTrainerFeedback(),
@@ -689,6 +691,233 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
           style: const TextStyle(fontSize: 12),
         ),
       ],
+    );
+  }
+
+  Widget _buildDataListSection(List<BodyComposition> compositions) {
+    if (compositions.isEmpty) return const SizedBox.shrink();
+
+    final sortedCompositions = List<BodyComposition>.from(compositions)
+      ..sort((a, b) => b.measurementDate.compareTo(a.measurementDate));
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '체성분 데이터 목록',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '${sortedCompositions.length}개 항목',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...sortedCompositions.map((composition) => 
+            _buildDataListItem(composition)).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDataListItem(BodyComposition composition) {
+    final dateFormat = DateFormat('yyyy년 MM월 dd일');
+    final bodyFatPercentage = (composition.fatKg / composition.weightKg) * 100;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dateFormat.format(DateTime.parse(composition.measurementDate)),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1F36),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDataPoint(
+                        '체중', 
+                        '${composition.weightKg.toStringAsFixed(1)}kg',
+                        Icons.monitor_weight,
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildDataPoint(
+                        '체지방', 
+                        '${bodyFatPercentage.toStringAsFixed(1)}%',
+                        Icons.pie_chart,
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildDataPoint(
+                        '근육량', 
+                        '${composition.muscleMassKg.toStringAsFixed(1)}kg',
+                        Icons.fitness_center,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          IconButton(
+            onPressed: () => _showDeleteConfirmDialog(composition),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.delete_outline,
+                color: Colors.red,
+                size: 20,
+              ),
+            ),
+            tooltip: '삭제',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDataPoint(String label, String value, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              icon, 
+              size: 14, 
+              color: Colors.grey[600],
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1F36),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDeleteConfirmDialog(BodyComposition composition) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('데이터 삭제'),
+        content: Text(
+          '${DateFormat('yyyy년 MM월 dd일').format(DateTime.parse(composition.measurementDate))}의 체성분 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref
+                    .read(bodyCompositionNotifierProvider.notifier)
+                    .deleteBodyComposition(composition.id);
+
+                // Refresh the data
+                final dateRange = ref.read(dateRangeProvider);
+                await ref
+                    .read(bodyCompositionNotifierProvider.notifier)
+                    .loadBodyCompositions(
+                      startDate: dateRange.startDate
+                          .toIso8601String()
+                          .split('T')[0],
+                      endDate: dateRange.endDate
+                          .toIso8601String()
+                          .split('T')[0],
+                    );
+
+                ref.invalidate(bodyCompositionListProvider);
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('데이터가 성공적으로 삭제되었습니다'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('삭제 중 오류 발생: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
     );
   }
 

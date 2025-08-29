@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../body_composition/viewmodel/body_composition_viewmodel.dart';
+import '../../pt_schedule/viewmodel/pt_schedule_viewmodel.dart';
 
 class MemberDashboardView extends ConsumerWidget {
   const MemberDashboardView({super.key});
@@ -77,6 +78,8 @@ class MemberDashboardView extends ConsumerWidget {
               context.push('/workout-record');
             } else if (index == 2) {
               context.push('/pt-schedule');
+            } else if (index == 3) {
+              context.push('/pt-applications');
             } else if (index == 4) {
               context.push('/settings');
             }
@@ -88,7 +91,7 @@ class MemberDashboardView extends ConsumerWidget {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
             BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: '운동'),
             BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: '일정'),
-            BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: '진행률'),
+            BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'PT신청'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: '프로필'),
           ],
         ),
@@ -97,13 +100,27 @@ class MemberDashboardView extends ConsumerWidget {
   }
 }
 
-class _FitProTab extends ConsumerWidget {
+class _FitProTab extends ConsumerStatefulWidget {
   const _FitProTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FitProTab> createState() => _FitProTabState();
+}
+
+class _FitProTabState extends ConsumerState<_FitProTab> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(ptScheduleViewModelProvider.notifier).loadTodaySchedule();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bodyStats = ref.watch(bodyStatsProvider);
     final bodyCompositions = ref.watch(bodyCompositionListProvider);
+    final todayScheduleAsync = ref.watch(ptScheduleViewModelProvider);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -343,6 +360,60 @@ class _FitProTab extends ConsumerWidget {
         
         const SizedBox(height: 16),
         
+        // Reservation Menu Card
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '예약 관리',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildReservationAction(
+                      Icons.event_note,
+                      'PT 약속 요청',
+                      Colors.blue,
+                      () => context.push('/reservation-requests'),
+                    ),
+                    _buildReservationAction(
+                      Icons.fitness_center,
+                      'PT 계약 목록',
+                      Colors.green,
+                      () => context.push('/pt-contracts'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildReservationAction(
+                      Icons.history,
+                      '나의 신청 내역',
+                      Colors.purple,
+                      () => context.push('/my-appointment-requests'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        
         // PT Session Card
         Card(
           elevation: 2,
@@ -384,49 +455,103 @@ class _FitProTab extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  '상체 근력 운동',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
-                ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Colors.white24,
-                      child: Icon(Icons.person, color: Colors.white, size: 18),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                todayScheduleAsync.when(
+                  data: (schedules) {
+                    if (schedules.isEmpty) {
+                      return const Column(
                         children: [
                           Text(
-                            '사라 코치',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            '오늘 예정된 PT가 없습니다',
+                            style: TextStyle(color: Colors.white70, fontSize: 14),
                           ),
+                          SizedBox(height: 8),
                           Text(
-                            '오후 5:30 - 6:30',
-                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                            '새로운 PT 세션을 예약해보세요!',
+                            style: TextStyle(color: Colors.white60, fontSize: 12),
                           ),
                         ],
+                      );
+                    }
+                    
+                    final nextSession = schedules.first;
+                    final startTime = DateTime.parse(nextSession.startTime);
+                    final endTime = DateTime.parse(nextSession.endTime);
+                    final timeText = '${DateFormat('a h:mm', 'ko').format(startTime)} - ${DateFormat('h:mm').format(endTime)}';
+                    
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'PT 세션',
+                          style: const TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 18,
+                              backgroundColor: Colors.white24,
+                              child: Icon(Icons.person, color: Colors.white, size: 18),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    nextSession.trainerName,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    timeText,
+                                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                context.push('/pt-schedule');
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF2C3E50),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              child: const Text('상세보기', style: TextStyle(fontSize: 13)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 2,
                       ),
                     ),
-                    TextButton(
-                      onPressed: () {},
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF2C3E50),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  error: (error, stack) => const Column(
+                    children: [
+                      Text(
+                        '일정을 불러올 수 없습니다',
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
-                      child: const Text('상세보기', style: TextStyle(fontSize: 13)),
-                    ),
-                  ],
+                      SizedBox(height: 8),
+                      Text(
+                        '잠시 후 다시 시도해주세요',
+                        style: TextStyle(color: Colors.white60, fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -453,6 +578,36 @@ class _FitProTab extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildReservationAction(IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 28, color: color),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -6,6 +6,8 @@ import '../service/local_storage_service.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../widget/calendar_view.dart';
 import '../widget/workout_record_tab.dart';
+import '../widget/workout_routine_tab.dart';
+import 'routine_list_view.dart';
 
 class WorkoutRecordView extends ConsumerStatefulWidget {
   const WorkoutRecordView({super.key});
@@ -33,9 +35,8 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
 
   Future<void> _initializeViewModel() async {
     await _viewModel.initializeLocale();
+    // SQLite에서 오늘 날짜의 운동 기록 불러오기
     _viewModel.loadWorkoutForDate(_viewModel.selectedDate);
-    // 로컬 저장소에서 운동 기록 불러오기
-    await _viewModel.loadWorkoutFromStorage(_viewModel.selectedDate);
     _viewModel.initializeListeners();
     setState(() {
       _isInitialized = true;
@@ -51,14 +52,14 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 4,
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
           title: const Text(
-            '운동 일지',
+            '운동 관리',
             style: TextStyle(
               color: Color(0xFF2C3E50),
               fontWeight: FontWeight.bold,
@@ -72,6 +73,8 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
             tabs: [
               Tab(text: '운동 기록'),
               Tab(text: '달력 보기'),
+              Tab(text: '루틴 만들기'),
+              Tab(text: '내 루틴'),
             ],
           ),
         ),
@@ -83,6 +86,8 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
                     children: [
                       WorkoutRecordTab(viewModel: _viewModel),
                       CalendarView(viewModel: _viewModel),
+                      WorkoutRoutineTab(viewModel: _viewModel),
+                      const RoutineListView(),
                     ],
                   );
                 },

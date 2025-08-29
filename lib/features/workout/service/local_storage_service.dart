@@ -320,10 +320,35 @@ class LocalStorageService {
     }
   }
 
+  // 데이터베이스 완전 초기화 (디버깅용)
+  Future<void> clearAllData() async {
+    try {
+      final db = await database;
+      print('🗑️ 모든 데이터 삭제 시작');
+      
+      await db.transaction((txn) async {
+        await txn.delete('workout_sets');
+        await txn.delete('workout_exercises');
+        await txn.delete('workout_logs');
+      });
+      
+      print('🗑️ 모든 데이터 삭제 완료');
+    } catch (e) {
+      print('❌ 데이터 삭제 실패: $e');
+    }
+  }
+
   // 데이터베이스 상태 확인 (디버깅용)
   Future<void> checkDatabaseStatus() async {
     try {
       final db = await database;
+      
+      // 모든 운동기록 날짜 출력
+      final allLogs = await db.query('workout_logs', columns: ['workout_date', 'created_at']);
+      print('📅 저장된 운동기록 날짜들:');
+      for (var log in allLogs) {
+        print('   - ${log['workout_date']} (생성일: ${log['created_at']})');
+      }
       
       // 테이블 존재 확인
       final tables = await db.rawQuery(
@@ -379,13 +404,6 @@ class LocalStorageService {
     }
   }
 
-  // 데이터베이스 초기화 (개발/테스트용)
-  Future<void> clearAllData() async {
-    final db = await database;
-    await db.delete('workout_sets');
-    await db.delete('workout_exercises');
-    await db.delete('workout_logs');
-  }
   
   // 안전한 타입 변환 헬퍼 메서드들
   int _safeInt(dynamic value) {

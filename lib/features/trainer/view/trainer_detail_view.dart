@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../model/trainer_model.dart';
 import '../repository/trainer_repository.dart';
+import '../../pt_offerings/view/pt_offerings_list_view.dart';
 
 class TrainerDetailView extends ConsumerStatefulWidget {
   final int trainerId;
@@ -28,7 +29,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _loadTrainerProfile();
   }
 
@@ -205,7 +206,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
           onPressed: () => context.pop(),
         ),
         title: const Text(
-          'Trainer Certificates',
+          '트레이너 프로필',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -256,7 +257,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Senior Personal Trainer',
+                        '시니어 퍼스널 트레이너',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -283,7 +284,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                           }),
                           const SizedBox(width: 8),
                           const Text(
-                            '4.8 (124 reviews)',
+                            '4.8 (리뷰 124개)',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -306,7 +307,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Specialties',
+                    '전문 분야',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -355,9 +356,10 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
               indicatorColor: Colors.black,
               indicatorWeight: 2,
               tabs: const [
-                Tab(text: 'Certifications'),
-                Tab(text: 'Awards'),
-                Tab(text: 'Experience'),
+                Tab(text: '자격증'),
+                Tab(text: '수상'),
+                Tab(text: '경력'),
+                Tab(text: 'PT 상품'),
               ],
             ),
           ),
@@ -370,73 +372,11 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                 _buildCertificationsTab(),
                 _buildAwardsTab(),
                 _buildExperienceTab(),
+                _buildPtOfferingsTab(),
               ],
             ),
           ),
         ],
-      ),
-      
-      // Bottom Booking Section
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Session Price',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-                const Text(
-                  '\$65 / hour',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: () {
-                _showBookingDialog(trainer);
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3498DB),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  'Book Session',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -466,7 +406,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
             ),
             SizedBox(height: 8),
             Text(
-              'Certifications will appear here',
+              '자격증 정보가 여기에 표시됩니다',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
@@ -571,7 +511,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
             ),
             SizedBox(height: 8),
             Text(
-              'Awards and achievements will appear here',
+              '수상 및 성과가 여기에 표시됩니다',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
@@ -672,7 +612,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                       Icon(Icons.work_outline, color: Colors.blue),
                       SizedBox(width: 8),
                       Text(
-                        'Work Experience',
+                        '경력 사항',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -826,7 +766,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                       Icon(Icons.person_outline, color: Colors.green),
                       SizedBox(width: 8),
                       Text(
-                        'About Me',
+                        '자기소개',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -914,6 +854,13 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
           ],
         );
       },
+    );
+  }
+
+  Widget _buildPtOfferingsTab() {
+    return PtOfferingsListView(
+      trainerId: widget.trainerId,
+      isTrainerView: false,
     );
   }
 }

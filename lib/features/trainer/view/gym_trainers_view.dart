@@ -6,7 +6,7 @@ import '../model/trainer_model.dart';
 
 class GymTrainersView extends ConsumerStatefulWidget {
   final int gymId;
-  
+
   const GymTrainersView({
     super.key,
     required this.gymId,
@@ -24,7 +24,9 @@ class _GymTrainersViewState extends ConsumerState<GymTrainersView> {
     super.initState();
     // 헬스장 ID로 트레이너 목록 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(trainerProfileViewModelProvider.notifier).loadTrainersByGymId(widget.gymId);
+      ref
+          .read(trainerProfileViewModelProvider.notifier)
+          .loadTrainersByGymId(widget.gymId);
     });
   }
 
@@ -72,7 +74,8 @@ class _GymTrainersViewState extends ConsumerState<GymTrainersView> {
               decoration: InputDecoration(
                 hintText: 'Search trainers...',
                 hintStyle: TextStyle(color: Colors.grey[400] ?? Colors.grey),
-                prefixIcon: Icon(Icons.search, color: Colors.grey[400] ?? Colors.grey),
+                prefixIcon:
+                    Icon(Icons.search, color: Colors.grey[400] ?? Colors.grey),
                 filled: true,
                 fillColor: Colors.grey[100] ?? const Color(0xFFF5F5F5),
                 border: OutlineInputBorder(
@@ -85,7 +88,9 @@ class _GymTrainersViewState extends ConsumerState<GymTrainersView> {
                 ),
               ),
               onChanged: (value) {
-                ref.read(trainerProfileViewModelProvider.notifier).searchTrainers(value);
+                ref
+                    .read(trainerProfileViewModelProvider.notifier)
+                    .searchTrainers(value);
               },
             ),
           ),
@@ -178,7 +183,9 @@ class _GymTrainersViewState extends ConsumerState<GymTrainersView> {
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: () {
-                        ref.read(trainerProfileViewModelProvider.notifier).loadTrainersByGymId(widget.gymId);
+                        ref
+                            .read(trainerProfileViewModelProvider.notifier)
+                            .loadTrainersByGymId(widget.gymId);
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -228,174 +235,148 @@ class _GymTrainersViewState extends ConsumerState<GymTrainersView> {
           ],
         ),
         child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile Avatar
-            CircleAvatar(
-              radius: 35,
-              backgroundColor: Colors.grey[200] ?? const Color(0xFFEEEEEE),
-              child: Icon(
-                Icons.person,
-                size: 35,
-                color: Colors.grey[600] ?? Colors.grey,
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Profile Avatar
+              CircleAvatar(
+                radius: 35,
+                backgroundColor: Colors.grey[200] ?? const Color(0xFFEEEEEE),
+                child: Icon(
+                  Icons.person,
+                  size: 35,
+                  color: Colors.grey[600] ?? Colors.grey,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            // Trainer Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Name and Rating Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          trainer.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 18),
-                          const SizedBox(width: 4),
-                          const Text(
-                            '4.8', // 기본값, 나중에 API에서 평점 데이터가 있으면 사용
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+              const SizedBox(width: 16),
+              // Trainer Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Name and Rating Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            trainer.name,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  // Email or ID (show available info)
-                  if (trainer.email != null && trainer.email!.isNotEmpty) ...[
-                    Text(
-                      trainer.email!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600] ?? Colors.grey,
-                      ),
-                    ),
-                  ] else ...[
-                    Text(
-                      '트레이너 ID: ${trainer.trainerId}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600] ?? Colors.grey,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  // Introduction
-                  if (trainer.introduction != null && trainer.introduction!.isNotEmpty) ...[
-                    Text(
-                      trainer.introduction!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700] ?? Colors.grey,
-                        height: 1.4,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  // Specialties Tags
-                  if (trainer.specialties.isNotEmpty) ...[
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: trainer.specialties.take(3).map((specialty) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50] ?? Colors.blue.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.blue[200] ?? Colors.blue.withValues(alpha: 0.3),
-                              width: 1,
+                        ),
+                        Row(
+                          children: [
+                            const Icon(Icons.star,
+                                color: Colors.amber, size: 18),
+                            const SizedBox(width: 4),
+                            const Text(
+                              '4.8', // 기본값, 나중에 API에서 평점 데이터가 있으면 사용
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            specialty.toString(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.blue[700] ?? Colors.blue,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                  ],
-                  // Action Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Certifications count (optional)
-                      if (trainer.certifications.isNotEmpty)
-                        Text(
-                          '${trainer.certifications.length} certifications',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600] ?? Colors.grey,
-                          ),
-                        )
-                      else
-                        const SizedBox(),
-                      // Select Button
-                      GestureDetector(
-                        onTap: () {
-                          // TODO: 트레이너 선택 또는 상세 페이지로 이동
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${trainer.name} selected!'),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black87,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Select',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                    const SizedBox(height: 4),
+                    // Email or ID (show available info)
+                    if (trainer.email != null && trainer.email!.isNotEmpty) ...[
+                      Text(
+                        trainer.email!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600] ?? Colors.grey,
+                        ),
+                      ),
+                    ] else ...[
+                      Text(
+                        '트레이너 ID: ${trainer.trainerId}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600] ?? Colors.grey,
                         ),
                       ),
                     ],
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    // Introduction
+                    if (trainer.introduction != null &&
+                        trainer.introduction!.isNotEmpty) ...[
+                      Text(
+                        trainer.introduction!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700] ?? Colors.grey,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    // Specialties Tags
+                    if (trainer.specialties.isNotEmpty) ...[
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: trainer.specialties.take(3).map((specialty) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50] ??
+                                  Colors.blue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.blue[200] ??
+                                    Colors.blue.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              specialty.toString(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.blue[700] ?? Colors.blue,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    // Action Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Certifications count (optional)
+                        if (trainer.certifications.isNotEmpty)
+                          Text(
+                            '${trainer.certifications.length} certifications',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600] ?? Colors.grey,
+                            ),
+                          )
+                        else
+                          const SizedBox(),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );

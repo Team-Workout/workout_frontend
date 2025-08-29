@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
 import '../model/workout_record_models.dart';
+import '../model/routine_models.dart';
 
 class WorkoutRecordTab extends StatefulWidget {
   final WorkoutRecordViewmodel viewModel;
@@ -96,6 +97,38 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
                             color: Color(0xFF212529),
+                          ),
+                        ),
+                        const Spacer(),
+                        // 루틴 템플릿 버튼
+                        GestureDetector(
+                          onTap: _showRoutineSelector,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF28A745).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFF28A745).withOpacity(0.3)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.playlist_add,
+                                  size: 16,
+                                  color: Color(0xFF28A745),
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  '루틴 사용',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF28A745),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -1408,5 +1441,229 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
 
     // UI 업데이트
     setState(() {});
+  }
+
+  // 루틴 선택 다이얼로그 표시
+  void _showRoutineSelector() async {
+    try {
+      // 내 루틴 목록 불러오기
+      final routines = await widget.viewModel.getMyRoutines();
+      
+      if (!mounted) return;
+      
+      if (routines.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('저장된 루틴이 없습니다. 루틴을 먼저 만들어주세요.'),
+              ],
+            ),
+            backgroundColor: Colors.blue,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+        return;
+      }
+
+      // 루틴 선택 다이얼로그 표시
+      showDialog(
+        context: context,
+        builder: (context) => _buildRoutineSelectionDialog(routines),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text('루틴을 불러오는데 실패했습니다: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  // 루틴 선택 다이얼로그 위젯
+  Widget _buildRoutineSelectionDialog(List<RoutineResponse> routines) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.playlist_play, color: Color(0xFF28A745)),
+          SizedBox(width: 8),
+          Text(
+            '루틴 선택',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+      content: Container(
+        width: double.maxFinite,
+        constraints: const BoxConstraints(maxHeight: 400),
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: routines.length,
+          itemBuilder: (context, index) {
+            final routine = routines[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFF28A745),
+                  child: Icon(Icons.fitness_center, color: Colors.white, size: 18),
+                ),
+                title: Text(
+                  routine.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (routine.description != null) ...[
+                      Text(
+                        routine.description!,
+                        style: const TextStyle(
+                          color: Color(0xFF6C757D),
+                          fontSize: 14,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    if (routine.routineExercises != null)
+                      Text(
+                        '${routine.routineExercises!.length}개 운동',
+                        style: const TextStyle(
+                          color: Color(0xFF28A745),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => _selectRoutineAsTemplate(routine),
+              ),
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('취소'),
+        ),
+      ],
+    );
+  }
+
+  // 루틴을 템플릿으로 선택
+  void _selectRoutineAsTemplate(RoutineResponse routine) async {
+    Navigator.of(context).pop(); // 다이얼로그 닫기
+    
+    try {
+      // 확인 다이얼로그 표시
+      final bool? confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('루틴 적용'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('선택한 루틴: ${routine.name}'),
+              const SizedBox(height: 8),
+              const Text(
+                '현재 작성 중인 운동 기록이 모두 지워지고 루틴이 적용됩니다. 계속하시겠습니까?',
+                style: TextStyle(color: Color(0xFF6C757D)),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF28A745),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('적용'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true) {
+        // 루틴을 운동기록으로 변환
+        await widget.viewModel.loadRoutineAsTemplate(routine);
+        
+        // 성공 메시지
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text('루틴 "${routine.name}"이 적용되었습니다!'),
+                ],
+              ),
+              backgroundColor: const Color(0xFF28A745),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text('루틴 적용 실패: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    }
   }
 }

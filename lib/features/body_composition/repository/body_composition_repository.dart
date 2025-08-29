@@ -176,4 +176,19 @@ class BodyCompositionRepository {
       throw Exception('Failed to add body composition: $e');
     }
   }
+
+  Future<void> deleteBodyComposition(int id) async {
+    try {
+      await _dio.delete('/body/info/$id');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Unauthorized: Please log in');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Body composition not found or access denied');
+      }
+      throw Exception('Failed to delete body composition: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to delete body composition: $e');
+    }
+  }
 }
