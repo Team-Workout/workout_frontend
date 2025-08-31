@@ -96,7 +96,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
         final trainerId = int.parse(user!.id);
         ref.read(ptOfferingProvider.notifier).loadPtOfferings(trainerId);
         ref.read(ptApplicationProvider.notifier).loadPtApplications();
-        ref.read(ptScheduleViewModelProvider.notifier).loadTodaySchedule();
+        ref.read(todayScheduleViewModelProvider.notifier).loadTodaySchedule();
       }
     });
   }
@@ -106,7 +106,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
     final user = ref.watch(currentUserProvider);
     final ptOfferingsAsync = ref.watch(ptOfferingProvider);
     final ptApplicationsAsync = ref.watch(ptApplicationProvider);
-    final todayScheduleAsync = ref.watch(ptScheduleViewModelProvider);
+    final todayScheduleAsync = ref.watch(todayScheduleViewModelProvider);
     final monthlyPtCountAsync = ref.watch(monthlyPtCountProvider);
     final weeklyStatsAsync = ref.watch(weeklyPtStatsProvider);
     
@@ -563,14 +563,6 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
             onTap: () {
               Navigator.pop(context);
               context.push('/pt-offerings');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.analytics),
-            title: const Text('분석 리포트'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/analysis-report');
             },
           ),
           const Divider(),

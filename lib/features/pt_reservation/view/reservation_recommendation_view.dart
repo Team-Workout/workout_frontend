@@ -267,8 +267,10 @@ class _CreateAppointmentSheet extends ConsumerStatefulWidget {
 
 class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet> {
   DateTime? startTime;
-  DateTime? endTime;
+  int selectedDurationMinutes = 60; // 기본 1시간
   bool isLoading = false;
+  
+  DateTime? get endTime => startTime?.add(Duration(minutes: selectedDurationMinutes));
 
   @override
   Widget build(BuildContext context) {
@@ -347,37 +349,66 @@ class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '종료 시간',
+                  '소요 시간',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 8),
-                InkWell(
-                  onTap: startTime != null ? () => _selectEndTime() : null,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
+                Row(
+                  children: [
+                    _DurationButton(
+                      duration: 30,
+                      selectedDuration: selectedDurationMinutes,
+                      onSelected: (duration) {
+                        setState(() {
+                          selectedDurationMinutes = duration;
+                        });
+                      },
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time, color: Colors.grey[600]),
-                        const SizedBox(width: 8),
-                        Text(
-                          endTime != null
-                              ? DateFormat('yyyy년 M월 d일 HH:mm').format(endTime!)
-                              : '종료 시간을 선택해주세요',
-                          style: TextStyle(
-                            color: endTime != null ? Colors.black : Colors.grey[500],
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 8),
+                    _DurationButton(
+                      duration: 60,
+                      selectedDuration: selectedDurationMinutes,
+                      onSelected: (duration) {
+                        setState(() {
+                          selectedDurationMinutes = duration;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _DurationButton(
+                      duration: 90,
+                      selectedDuration: selectedDurationMinutes,
+                      onSelected: (duration) {
+                        setState(() {
+                          selectedDurationMinutes = duration;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _DurationButton(
+                      duration: 120,
+                      selectedDuration: selectedDurationMinutes,
+                      onSelected: (duration) {
+                        setState(() {
+                          selectedDurationMinutes = duration;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                if (startTime != null && endTime != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '종료 시간: ${DateFormat('HH:mm').format(endTime!)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
                     ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
@@ -438,47 +469,11 @@ class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet
       if (time != null) {
         setState(() {
           startTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-          // 시작 시간이 변경되면 종료 시간 초기화
-          endTime = null;
         });
       }
     }
   }
 
-  Future<void> _selectEndTime() async {
-    if (startTime == null) return;
-
-    final date = await showDatePicker(
-      context: context,
-      initialDate: startTime!,
-      firstDate: startTime!,
-      lastDate: startTime!.add(const Duration(days: 1)),
-    );
-
-    if (date != null && mounted) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(startTime!.add(const Duration(hours: 1))),
-      );
-
-      if (time != null) {
-        final proposedEndTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-        
-        if (proposedEndTime.isAfter(startTime!)) {
-          setState(() {
-            endTime = proposedEndTime;
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('종료 시간은 시작 시간보다 늦어야 합니다.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
 
   Future<void> _submitAppointment() async {
     if (!_canSubmit()) return;
@@ -519,5 +514,50 @@ class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet
         });
       }
     }
+  }
+}
+
+class _DurationButton extends StatelessWidget {
+  final int duration;
+  final int selectedDuration;
+  final ValueChanged<int> onSelected;
+
+  const _DurationButton({
+    required this.duration,
+    required this.selectedDuration,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = duration == selectedDuration;
+    
+    return Expanded(
+      child: InkWell(
+        onTap: () => onSelected(duration),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.orange : Colors.white,
+            border: Border.all(
+              color: isSelected ? Colors.orange : Colors.grey[300]!,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              duration >= 60 
+                ? '${duration ~/ 60}시간${duration % 60 > 0 ? ' ${duration % 60}분' : ''}'
+                : '${duration}분',
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

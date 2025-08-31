@@ -11,22 +11,20 @@ class MemberDashboardView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: Colors.grey[50],
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          title: const Text(
-            '피트프로',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
-            ),
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          '피트프로',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C3E50),
           ),
-          actions: [
+        ),
+        actions: [
             IconButton(
               icon: const Icon(Icons.notifications_outlined),
               onPressed: () {},
@@ -55,22 +53,8 @@ class MemberDashboardView extends ConsumerWidget {
               ),
             ),
           ],
-          bottom: const TabBar(
-            labelColor: Color(0xFF2C3E50),
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: Color(0xFF2C3E50),
-            tabs: [
-              Tab(text: '피트프로'),
-              Tab(text: '피트트랙'),
-            ],
-          ),
         ),
-        body: const TabBarView(
-          children: [
-            _FitProTab(),
-            _FitTrackTab(),
-          ],
-        ),
+        body: const _FitProTab(),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: 0,
           onTap: (index) {
@@ -95,8 +79,7 @@ class MemberDashboardView extends ConsumerWidget {
             BottomNavigationBarItem(icon: Icon(Icons.person), label: '프로필'),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -477,7 +460,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                     final nextSession = schedules.first;
                     final startTime = DateTime.parse(nextSession.startTime);
                     final endTime = DateTime.parse(nextSession.endTime);
-                    final timeText = '${DateFormat('a h:mm', 'ko').format(startTime)} - ${DateFormat('h:mm').format(endTime)}';
+                    final timeText = '${DateFormat('a h:mm', 'ko_KR').format(startTime)} - ${DateFormat('h:mm', 'ko_KR').format(endTime)}';
                     
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -692,278 +675,3 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
   }
 }
 
-class _FitTrackTab extends StatelessWidget {
-  const _FitTrackTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Exercise Summary Card
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '운동 요약',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('2025년 7월', style: TextStyle(fontSize: 14)),
-                        const SizedBox(width: 4),
-                        Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // Time frame buttons
-                SizedBox(
-                  height: 35,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _buildTimeButton('하루', true),
-                      _buildTimeButton('주간', false),
-                      _buildTimeButton('월간', false),
-                      _buildTimeButton('연간', false),
-                      _buildTimeButton('전체', false),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Progress
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '오늘, 8월 3일',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    Text(
-                      '목표대비 87%',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: 0.87,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
-                  minHeight: 6,
-                ),
-                
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStat('운동시간', '52분'),
-                    _buildStat('운동횟수', '8개'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Today's Exercises
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '오늘의 운동',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.filter_list, size: 20),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '벤치프레스',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF2C3E50),
-                        ),
-                      ),
-                      Text(
-                        '오전 8:30',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Center(
-                  child: TextButton(
-                    onPressed: () => context.push('/workout-record'),
-                    child: const Text('모든 운동 보기'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Quick Actions
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '빠른 바로가기',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildQuickAction(
-                      Icons.calendar_month,
-                      'PT\n예약',
-                      () => context.push('/pt-schedule'),
-                    ),
-                    _buildQuickAction(
-                      Icons.fitness_center,
-                      '운동\n시작',
-                      () => context.push('/workout-record'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildQuickAction(Icons.bar_chart, '체성분\n기록', () {}),
-                    _buildQuickAction(Icons.group, '커뮤니티', () {}),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStat(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimeButton(String text, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      child: TextButton(
-        onPressed: () {},
-        style: TextButton.styleFrom(
-          backgroundColor: isSelected ? const Color(0xFF2C3E50) : Colors.grey[200],
-          foregroundColor: isSelected ? Colors.white : Colors.grey[700],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          minimumSize: const Size(60, 35),
-        ),
-        child: Text(text, style: const TextStyle(fontSize: 12)),
-      ),
-    );
-  }
-
-  Widget _buildQuickAction(IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 24, color: const Color(0xFF2C3E50)),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF2C3E50)),
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -17,6 +17,7 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
   final List<RoutineExercise> _routineExercises = [];
   List<Map<String, dynamic>> _availableExercises = [];
   bool _isLoading = false;
+  final Map<int, bool> _expandedCards = {};
 
   @override
   void initState() {
@@ -47,10 +48,11 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
     if (_availableExercises.isEmpty) return;
 
     setState(() {
+      final newIndex = _routineExercises.length;
       _routineExercises.add(
         RoutineExercise(
           exerciseId: _availableExercises.first['id'],
-          order: _routineExercises.length + 1,
+          order: newIndex + 1,
           routineSets: [
             RoutineSet(
               order: 1,
@@ -60,12 +62,26 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
           ],
         ),
       );
+      _expandedCards[newIndex] = true; // 새로 추가된 카드는 기본적으로 펼쳐진 상태
     });
   }
 
   void _removeExercise(int index) {
     setState(() {
       _routineExercises.removeAt(index);
+      _expandedCards.remove(index);
+      // 인덱스 재정렬
+      final newExpandedCards = <int, bool>{};
+      _expandedCards.forEach((key, value) {
+        if (key > index) {
+          newExpandedCards[key - 1] = value;
+        } else if (key < index) {
+          newExpandedCards[key] = value;
+        }
+      });
+      _expandedCards.clear();
+      _expandedCards.addAll(newExpandedCards);
+      
       for (int i = 0; i < _routineExercises.length; i++) {
         _routineExercises[i] = _routineExercises[i].copyWith(order: i + 1);
       }
@@ -334,72 +350,178 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
           (e) => e['id'] == exercise.exerciseId,
           orElse: () => {'name': '알 수 없는 운동'},
         )['name'];
+    
+    final isExpanded = _expandedCards[exerciseIndex] ?? false;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: exercise.exerciseId,
-                    decoration: const InputDecoration(
-                      labelText: '운동 선택',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: _availableExercises
-                        .map(
-                          (e) => DropdownMenuItem<int>(
-                            value: e['id'],
-                            child: Text(e['name']),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _routineExercises[exerciseIndex] =
-                              exercise.copyWith(exerciseId: value);
-                        });
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: () => _removeExercise(exerciseIndex),
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  '세트',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () => _addSet(exerciseIndex),
-                  icon: const Icon(Icons.add),
-                  label: const Text('세트 추가'),
-                ),
-              ],
-            ),
-            ...List.generate(
-              exercise.routineSets.length,
-              (setIndex) => _buildSetRow(exerciseIndex, setIndex),
-            ),
-          ],
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Colors.grey.shade200,
+          width: 1,
         ),
+      ),
+      child: Column(
+        children: [
+          // 헤더 부분 (항상 보이는 부분)
+          InkWell(
+            onTap: () {
+              setState(() {
+                _expandedCards[exerciseIndex] = !isExpanded;
+              });
+            },
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isExpanded ? Colors.grey.shade50 : Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: const Radius.circular(12),
+                  bottom: isExpanded ? Radius.zero : const Radius.circular(12),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // 순서 표시
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C3E50),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${exerciseIndex + 1}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // 운동명
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          exerciseName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                        if (!isExpanded) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '${exercise.routineSets.length}세트',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  // 삭제 버튼
+                  IconButton(
+                    onPressed: () => _removeExercise(exerciseIndex),
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  ),
+                  // 펼치기/접기 아이콘
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey.shade600,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // 세부 내용 (펼쳐졌을 때만 보이는 부분)
+          if (isExpanded)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 운동 선택 드롭다운
+                    DropdownButtonFormField<int>(
+                      value: exercise.exerciseId,
+                      decoration: const InputDecoration(
+                        labelText: '운동 선택',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      items: _availableExercises
+                          .map(
+                            (e) => DropdownMenuItem<int>(
+                              value: e['id'],
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _routineExercises[exerciseIndex] =
+                                exercise.copyWith(exerciseId: value);
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // 세트 섹션
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                '세트 정보',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: () => _addSet(exerciseIndex),
+                                icon: const Icon(Icons.add_circle_outline, size: 20),
+                                label: const Text('세트 추가'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: const Color(0xFF2C3E50),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ...List.generate(
+                            exercise.routineSets.length,
+                            (setIndex) => _buildSetRow(exerciseIndex, setIndex),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -407,67 +529,129 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
   Widget _buildSetRow(int exerciseIndex, int setIndex) {
     final set = _routineExercises[exerciseIndex].routineSets[setIndex];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
       child: Row(
         children: [
-          SizedBox(
-            width: 50,
-            child: Text(
-              '${set.order}세트',
-              style: const TextStyle(fontWeight: FontWeight.w500),
+          // 세트 번호
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextFormField(
-              initialValue: set.weight.toString(),
-              decoration: const InputDecoration(
-                labelText: '무게(kg)',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Center(
+              child: Text(
+                '${set.order}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                final weight = double.tryParse(value) ?? 0;
-                setState(() {
-                  final exercise = _routineExercises[exerciseIndex];
-                  final sets = List<RoutineSet>.from(exercise.routineSets);
-                  sets[setIndex] = sets[setIndex].copyWith(weight: weight);
-                  _routineExercises[exerciseIndex] =
-                      exercise.copyWith(routineSets: sets);
-                });
-              },
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
+          // 무게 입력
           Expanded(
-            child: TextFormField(
-              initialValue: set.reps.toString(),
-              decoration: const InputDecoration(
-                labelText: '횟수',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              ),
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                final reps = int.tryParse(value) ?? 0;
-                setState(() {
-                  final exercise = _routineExercises[exerciseIndex];
-                  final sets = List<RoutineSet>.from(exercise.routineSets);
-                  sets[setIndex] = sets[setIndex].copyWith(reps: reps);
-                  _routineExercises[exerciseIndex] =
-                      exercise.copyWith(routineSets: sets);
-                });
-              },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '무게 (kg)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  initialValue: set.weight.toString(),
+                  decoration: InputDecoration(
+                    hintText: '0',
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    final weight = double.tryParse(value) ?? 0;
+                    setState(() {
+                      final exercise = _routineExercises[exerciseIndex];
+                      final sets = List<RoutineSet>.from(exercise.routineSets);
+                      sets[setIndex] = sets[setIndex].copyWith(weight: weight);
+                      _routineExercises[exerciseIndex] =
+                          exercise.copyWith(routineSets: sets);
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 횟수 입력
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '횟수',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  initialValue: set.reps.toString(),
+                  decoration: InputDecoration(
+                    hintText: '0',
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    final reps = int.tryParse(value) ?? 0;
+                    setState(() {
+                      final exercise = _routineExercises[exerciseIndex];
+                      final sets = List<RoutineSet>.from(exercise.routineSets);
+                      sets[setIndex] = sets[setIndex].copyWith(reps: reps);
+                      _routineExercises[exerciseIndex] =
+                          exercise.copyWith(routineSets: sets);
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 8),
+          // 삭제 버튼
           IconButton(
             onPressed: _routineExercises[exerciseIndex].routineSets.length > 1
                 ? () => _removeSet(exerciseIndex, setIndex)
                 : null,
-            icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+            icon: Icon(
+              Icons.remove_circle_outline,
+              color: _routineExercises[exerciseIndex].routineSets.length > 1
+                  ? Colors.red.shade400
+                  : Colors.grey.shade300,
+              size: 20,
+            ),
           ),
         ],
       ),

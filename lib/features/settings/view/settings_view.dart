@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/auth/model/user_model.dart';
+import '../viewmodel/settings_viewmodel.dart';
 
 class SettingsView extends ConsumerWidget {
   const SettingsView({super.key});
@@ -73,15 +74,16 @@ class SettingsView extends ConsumerWidget {
             context,
             '계정 설정',
             [
-              _buildSettingItem(
-                context,
-                Icons.person,
-                '프로필 수정',
-                () {
-                  // 임시로 모든 사용자를 트레이너로 가정하고 프로필 편집 페이지로 이동
-                  context.push('/trainer-profile-edit');
-                },
-              ),
+              // 트레이너인 경우에만 프로필 수정 메뉴 표시
+              if (user?.userType.name == 'trainer')
+                _buildSettingItem(
+                  context,
+                  Icons.person,
+                  '프로필 수정',
+                  () {
+                    context.push('/trainer-profile-edit');
+                  },
+                ),
               _buildSettingItem(
                 context,
                 Icons.lock,
@@ -96,6 +98,42 @@ class SettingsView extends ConsumerWidget {
                 '연락처 수정',
                 () {
                   _showChangePhoneDialog(context);
+                },
+              ),
+            ],
+          ),
+          _buildSection(
+            context,
+            '개인정보 설정',
+            [
+              Consumer(
+                builder: (context, ref, _) {
+                  final workoutLogAccessAsync = ref.watch(workoutLogAccessProvider);
+                  return workoutLogAccessAsync.when(
+                    data: (isOpen) => _buildSwitchItem(
+                      context,
+                      Icons.visibility,
+                      '운동일지 공개',
+                      isOpen,
+                      (value) {
+                        ref.read(workoutLogAccessProvider.notifier).toggleWorkoutLogAccess(value);
+                      },
+                    ),
+                    loading: () => ListTile(
+                      leading: const Icon(Icons.visibility),
+                      title: const Text('운동일지 공개'),
+                      trailing: const CircularProgressIndicator(),
+                    ),
+                    error: (_, __) => _buildSwitchItem(
+                      context,
+                      Icons.visibility,
+                      '운동일지 공개',
+                      false,
+                      (value) {
+                        ref.read(workoutLogAccessProvider.notifier).toggleWorkoutLogAccess(value);
+                      },
+                    ),
+                  );
                 },
               ),
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:pt_service/core/router/app_router.dart';
 import 'package:pt_service/core/theme/app_theme.dart';
 import 'package:pt_service/core/services/session_service.dart';
@@ -9,6 +10,9 @@ import 'package:pt_service/features/auth/repository/api_auth_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize date formatting for Korean locale
+  await initializeDateFormatting('ko_KR', null);
   
   // Load environment variables
   await dotenv.load(fileName: ".env");

@@ -597,10 +597,10 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue[50] ?? Colors.blue.withValues(alpha: 0.1),
+                color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.blue[200] ?? Colors.blue.withValues(alpha: 0.3),
+                  color: Colors.grey[300] ?? Colors.grey.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -609,56 +609,46 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.work_outline, color: Colors.blue),
+                      Icon(Icons.work_outline, color: Colors.black87),
                       SizedBox(width: 8),
                       Text(
                         '경력 사항',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue,
+                          color: Colors.black87,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  ...trainer.workExperiences.map((experience) => Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.blue[100] ?? Colors.blue.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
+                  ...trainer.workExperiences.map((experience) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          experience.workName,
+                          '• ${experience.workName}',
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black87,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${experience.workPosition} at ${experience.workPlace}',
+                          '  ${experience.workPosition} - ${experience.workPlace}',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600] ?? Colors.grey,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
-                          '${experience.workStart} - ${experience.workEnd ?? 'Present'}',
+                          '  ${experience.workStart} ~ ${experience.workEnd ?? '현재'}',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                             color: Colors.grey[500] ?? Colors.grey,
-                            fontStyle: FontStyle.italic,
                           ),
                         ),
                       ],
@@ -675,10 +665,10 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.purple[50] ?? Colors.purple.withValues(alpha: 0.1),
+                color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.purple[200] ?? Colors.purple.withValues(alpha: 0.3),
+                  color: Colors.grey[300] ?? Colors.grey.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -687,56 +677,46 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.school_outlined, color: Colors.purple),
+                      Icon(Icons.school_outlined, color: Colors.black87),
                       SizedBox(width: 8),
                       Text(
-                        'Education',
+                        '학력',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.purple,
+                          color: Colors.black87,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  ...trainer.educations.map((education) => Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.purple[100] ?? Colors.purple.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
+                  ...trainer.educations.map((education) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          education.schoolName,
+                          '• ${education.schoolName}',
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black87,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${education.degree} in ${education.educationName}',
+                          '  ${education.educationName} ${education.degree}',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600] ?? Colors.grey,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
-                          '${education.startDate} - ${education.endDate ?? 'Present'}',
+                          '  ${education.startDate} ~ ${education.endDate ?? '재학중'}',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                             color: Colors.grey[500] ?? Colors.grey,
-                            fontStyle: FontStyle.italic,
                           ),
                         ),
                       ],
@@ -751,10 +731,10 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green[50] ?? Colors.green.withValues(alpha: 0.1),
+                color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.green[200] ?? Colors.green.withValues(alpha: 0.3),
+                  color: Colors.grey[300] ?? Colors.grey.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -763,14 +743,14 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.person_outline, color: Colors.green),
+                      Icon(Icons.person_outline, color: Colors.black87),
                       SizedBox(width: 8),
                       Text(
                         '자기소개',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.green,
+                          color: Colors.black87,
                         ),
                       ),
                     ],

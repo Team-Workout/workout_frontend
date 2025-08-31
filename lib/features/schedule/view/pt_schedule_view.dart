@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:pt_service/features/pt_schedule/model/pt_schedule_models.dart';
 import 'package:pt_service/features/pt_schedule/viewmodel/pt_schedule_viewmodel.dart';
 import 'package:pt_service/features/pt_schedule/widget/schedule_change_request_dialog.dart';
@@ -8,6 +7,7 @@ import 'package:pt_service/features/pt_contract/widget/pt_session_create_dialog.
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/auth/model/user_model.dart';
 import 'package:intl/intl.dart';
+import '../widget/weekly_timetable_widget.dart';
 
 class PTScheduleView extends ConsumerStatefulWidget {
   const PTScheduleView({super.key});
@@ -17,20 +17,26 @@ class PTScheduleView extends ConsumerStatefulWidget {
 }
 
 class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _selectedWeek = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = DateTime.now();
-    // 현재 달의 스케줄 로드
+    // 현재 주의 스케줄 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(ptScheduleViewModelProvider.notifier)
-          .loadMonthlySchedule(month: _focusedDay, status: 'SCHEDULED');
+      _loadWeeklySchedule();
     });
+  }
+  
+  void _loadWeeklySchedule() {
+    final mondayOfWeek = _selectedWeek.subtract(Duration(days: _selectedWeek.weekday - 1));
+    final sundayOfWeek = mondayOfWeek.add(const Duration(days: 6));
+    
+    ref.read(ptScheduleViewModelProvider.notifier).loadWeeklySchedule(
+      startDate: mondayOfWeek,
+      endDate: sundayOfWeek,
+      status: 'SCHEDULED',
+    );
   }
 
   @override
@@ -40,218 +46,121 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PT 일정 관리'),
+        title: const Text('PT 일정 시간표'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref
-                  .read(ptScheduleViewModelProvider.notifier)
-                  .loadMonthlySchedule(month: _focusedDay, status: 'SCHEDULED');
-            },
+            onPressed: _loadWeeklySchedule,
           ),
         ],
       ),
       body: Column(
         children: [
-          Card(
-            margin: const EdgeInsets.all(16),
-            child: TableCalendar<PtSchedule>(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              calendarFormat: _calendarFormat,
-              selectedDayPredicate: (day) {
-                return isSameDay(_selectedDay, day);
-              },
-              eventLoader: (day) {
-                return schedulesAsync.when(
-                  data: (schedules) {
-                    final eventsForDay = schedules.where((schedule) {
-                      final scheduleDate = DateTime.parse(schedule.startTime);
-                      return isSameDay(scheduleDate, day);
-                    }).toList();
-
-                    if (eventsForDay.isNotEmpty) {
-                      print(
-                          '📅 ${day.toString().substring(0, 10)}에 ${eventsForDay.length}개 일정 있음');
-                    }
-
-                    return eventsForDay;
+          // 주 선택 컨트롤
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedWeek = _selectedWeek.subtract(const Duration(days: 7));
+                    });
+                    _loadWeeklySchedule();
                   },
-                  loading: () => [],
-                  error: (_, __) => [],
-                );
-              },
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              calendarStyle: CalendarStyle(
-                outsideDaysVisible: false,
-                markerDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
+                  icon: const Icon(Icons.chevron_left),
                 ),
-                selectedDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedWeek,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _selectedWeek = picked;
+                      });
+                      _loadWeeklySchedule();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${DateFormat('yyyy년 M월').format(_selectedWeek)} ${(_selectedWeek.day / 7).ceil()}주차',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
-                todayDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary,
-                  shape: BoxShape.circle,
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedWeek = _selectedWeek.add(const Duration(days: 7));
+                    });
+                    _loadWeeklySchedule();
+                  },
+                  icon: const Icon(Icons.chevron_right),
                 ),
-              ),
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: true,
-                titleCentered: true,
-              ),
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-              },
-              onFormatChanged: (format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              },
-              onPageChanged: (focusedDay) {
-                setState(() {
-                  _focusedDay = focusedDay;
-                });
-                // 달 변경 시 새로운 달의 스케줄 로드
-                ref
-                    .read(ptScheduleViewModelProvider.notifier)
-                    .loadMonthlySchedule(month: focusedDay, status: 'SCHEDULED');
-              },
+              ],
             ),
           ),
+          // 오늘로 돌아가기 버튼
+          if (_selectedWeek.difference(DateTime.now()).inDays.abs() > 7)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _selectedWeek = DateTime.now();
+                  });
+                  _loadWeeklySchedule();
+                },
+                icon: const Icon(Icons.today),
+                label: const Text('오늘로 돌아가기'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 40),
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          // 시간표 위젯
           Expanded(
             child: schedulesAsync.when(
-              data: (schedules) => _buildScheduleList(schedules),
+              data: (schedules) => WeeklyTimetableWidget(
+                schedules: schedules,
+                selectedWeek: _selectedWeek,
+                onScheduleTap: (schedule) => _showScheduleDetail(context, schedule),
+                onScheduleAction: (schedule, action) => _handleScheduleAction(context, schedule, action),
+              ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(
-                child: Text('오류가 발생했습니다: $error'),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text('오류가 발생했습니다: $error'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadWeeklySchedule,
+                      child: const Text('다시 시도'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildScheduleList(List<PtSchedule> allSchedules) {
-    final selectedSchedules = allSchedules.where((schedule) {
-      if (_selectedDay == null) return false;
-      final scheduleDate = DateTime.parse(schedule.startTime);
-      return isSameDay(scheduleDate, _selectedDay!);
-    }).toList();
-
-    selectedSchedules.sort((a, b) =>
-        DateTime.parse(a.startTime).compareTo(DateTime.parse(b.startTime)));
-
-    if (selectedSchedules.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.event_busy,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _selectedDay != null
-                  ? '${DateFormat('M월 d일').format(_selectedDay!)}에 예약된 PT가 없습니다'
-                  : '날짜를 선택해주세요',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: selectedSchedules.length,
-      itemBuilder: (context, index) {
-        final schedule = selectedSchedules[index];
-        final startTime = DateTime.parse(schedule.startTime);
-        final endTime = DateTime.parse(schedule.endTime);
-        final timeText =
-            '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime)}';
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor:
-                  _getStatusColor(schedule.status).withOpacity(0.2),
-              child: Icon(
-                _getStatusIcon(schedule.status),
-                color: _getStatusColor(schedule.status),
-              ),
-            ),
-            title: Text(
-              ref.watch(currentUserProvider)?.userType.name == 'trainer'
-                  ? schedule.memberName
-                  : schedule.trainerName,
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(timeText),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      _getStatusText(schedule.status),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _getStatusColor(schedule.status),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (schedule.hasChangeRequest == true) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: schedule.changeRequestBy == 'member'
-                              ? Colors.blue
-                              : schedule.changeRequestBy == 'trainer'
-                                  ? Colors.purple
-                                  : Colors.orange,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          schedule.changeRequestBy == 'member'
-                              ? '회원 요청'
-                              : schedule.changeRequestBy == 'trainer'
-                                  ? '트레이너 요청'
-                                  : '변경요청',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-            trailing: _buildTrailingWidget(schedule),
-            onTap: () {
-              _showScheduleDetail(context, schedule);
-            },
-          ),
-        );
-      },
     );
   }
 
@@ -350,6 +259,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
         _showScheduleChangeRequestDialog(context, schedule, isTrainer: false);
         break;
       case 'trainer_request_change':
+        print('🔄 [UI] 트레이너 시간 변경 요청 다이얼로그 호출');
         _showScheduleChangeRequestDialog(context, schedule, isTrainer: true);
         break;
       case 'approve_change':
@@ -405,6 +315,8 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                   status == 'COMPLETED' ? Colors.green : Colors.orange,
             ),
           );
+          // 시간표 새로고침
+          _loadWeeklySchedule();
         }
       } catch (error) {
         if (context.mounted) {
@@ -422,12 +334,16 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   void _showScheduleChangeRequestDialog(
       BuildContext context, PtSchedule schedule,
       {required bool isTrainer}) {
+    print('🔄 [UI] showDialog 호출 시작');
     showDialog(
       context: context,
-      builder: (context) => ScheduleChangeRequestDialog(
-        schedule: schedule,
-        isTrainerRequest: isTrainer,
-      ),
+      builder: (context) {
+        print('🔄 [UI] ScheduleChangeRequestDialog 생성');
+        return ScheduleChangeRequestDialog(
+          schedule: schedule,
+          isTrainerRequest: isTrainer,
+        );
+      },
     );
   }
 
@@ -501,6 +417,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
               backgroundColor: Colors.green,
             ),
           );
+          _loadWeeklySchedule();
         }
       } catch (error) {
         if (context.mounted) {
@@ -552,6 +469,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
               backgroundColor: Colors.orange,
             ),
           );
+          _loadWeeklySchedule();
         }
       } catch (error) {
         if (context.mounted) {
@@ -635,6 +553,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
               backgroundColor: Colors.green,
             ),
           );
+          _loadWeeklySchedule();
         }
       } catch (error) {
         if (context.mounted) {
@@ -685,6 +604,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
               backgroundColor: Colors.orange,
             ),
           );
+          _loadWeeklySchedule();
         }
       } catch (error) {
         if (context.mounted) {
@@ -742,11 +662,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
               backgroundColor: Colors.green,
             ),
           );
-
-          // Refresh the schedule list
-          ref
-              .read(ptScheduleViewModelProvider.notifier)
-              .loadMonthlySchedule(month: _focusedDay, status: 'SCHEDULED');
+          _loadWeeklySchedule();
         }
       } catch (error) {
         if (context.mounted) {

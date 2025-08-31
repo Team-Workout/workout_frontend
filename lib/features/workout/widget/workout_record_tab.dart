@@ -18,7 +18,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
   final _exerciseNameController = TextEditingController();
   final _memoController = TextEditingController();
   final List<WorkoutSet> _currentSets = [];
-  
+
   Map<int, bool> _editingStates = {};
   Map<int, Map<String, TextEditingController>> _editControllers = {};
   Map<int, bool> _expandedStates = {}; // 운동 카드 펼침/접힘 상태
@@ -51,7 +51,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // 접기/펼치기 가능한 입력 폼
           Container(
             decoration: BoxDecoration(
@@ -77,16 +77,19 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: _isFormExpanded ? const Color(0xFFF8F9FA) : Colors.transparent,
-                      borderRadius: _isFormExpanded 
-                          ? const BorderRadius.vertical(top: Radius.circular(12))
+                      color: _isFormExpanded
+                          ? const Color(0xFFF8F9FA)
+                          : Colors.transparent,
+                      borderRadius: _isFormExpanded
+                          ? const BorderRadius.vertical(
+                              top: Radius.circular(12))
                           : BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          _isFormExpanded 
-                              ? Icons.keyboard_arrow_up 
+                          _isFormExpanded
+                              ? Icons.keyboard_arrow_up
                               : Icons.keyboard_arrow_down,
                           color: const Color(0xFF6C757D),
                         ),
@@ -104,11 +107,14 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                         GestureDetector(
                           onTap: _showRoutineSelector,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: const Color(0xFF28A745).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0xFF28A745).withOpacity(0.3)),
+                              border: Border.all(
+                                  color:
+                                      const Color(0xFF28A745).withOpacity(0.3)),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
@@ -135,15 +141,15 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                     ),
                   ),
                 ),
-                
+
                 // 입력 폼 (펼쳤을 때만 보임)
                 if (_isFormExpanded) _buildInputForm(),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // 오늘의 운동 섹션
           const Text(
             "오늘의 운동",
@@ -154,7 +160,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // 운동 목록
           if (widget.viewModel.exercises.isEmpty)
             Container(
@@ -231,11 +237,12 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                 borderSide: const BorderSide(color: Color(0xFF0D6EFD)),
               ),
               contentPadding: const EdgeInsets.all(16),
-              suffixIcon: const Icon(Icons.fitness_center, color: Color(0xFFADB5BD)),
+              suffixIcon:
+                  const Icon(Icons.fitness_center, color: Color(0xFFADB5BD)),
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // 세트 목록
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -251,7 +258,8 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
               GestureDetector(
                 onTap: _addSet,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0D6EFD),
                     borderRadius: BorderRadius.circular(6),
@@ -276,7 +284,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // 개별 세트들
           if (_currentSets.isEmpty)
             Container(
@@ -297,12 +305,13 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
               ),
             )
           else
-            ...List.generate(_currentSets.length, (index) => _buildSetRow(index)),
+            ...List.generate(
+                _currentSets.length, (index) => _buildSetRow(index)),
           const SizedBox(height: 20),
-          
+
           // 메모 필드
           const Text(
-            '메모 (선택사항)',
+            '메모',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -329,11 +338,12 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                 borderSide: const BorderSide(color: Color(0xFF0D6EFD)),
               ),
               contentPadding: const EdgeInsets.all(16),
-              suffixIcon: const Icon(Icons.note_alt_outlined, color: Color(0xFFADB5BD)),
+              suffixIcon:
+                  const Icon(Icons.note_alt_outlined, color: Color(0xFFADB5BD)),
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Add Exercise Button (ElevatedButton 대신 Container 사용!)
           GestureDetector(
             onTap: () async {
@@ -371,7 +381,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
   Widget _buildExerciseCard(exercise, int index) {
     final isEditing = _editingStates[index] ?? false;
     final isExpanded = _expandedStates[index] ?? true; // 기본적으로 펼쳐진 상태
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -379,10 +389,12 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE9ECEF)),
       ),
-      child: isEditing ? _buildEditForm(exercise, index) : _buildViewCard(exercise, index, isExpanded),
+      child: isEditing
+          ? _buildEditForm(exercise, index)
+          : _buildViewCard(exercise, index, isExpanded),
     );
   }
-  
+
   Widget _buildViewCard(exercise, int index, bool isExpanded) {
     return Column(
       children: [
@@ -393,7 +405,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: isExpanded ? const Color(0xFFF8F9FA) : Colors.transparent,
-              borderRadius: isExpanded 
+              borderRadius: isExpanded
                   ? const BorderRadius.vertical(top: Radius.circular(12))
                   : BorderRadius.circular(12),
             ),
@@ -403,8 +415,8 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                   children: [
                     // 펼침/접힘 아이콘
                     Icon(
-                      isExpanded 
-                          ? Icons.keyboard_arrow_up 
+                      isExpanded
+                          ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
                       color: const Color(0xFF6C757D),
                       size: 20,
@@ -413,8 +425,8 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                     // 운동 이름
                     Expanded(
                       child: Text(
-                        exercise.nameController.text.isNotEmpty 
-                            ? exercise.nameController.text 
+                        exercise.nameController.text.isNotEmpty
+                            ? exercise.nameController.text
                             : '운동 ${index + 1}',
                         style: const TextStyle(
                           fontSize: 18,
@@ -426,7 +438,8 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                     // 세트 수 요약 (접힌 상태에서만 표시)
                     if (!isExpanded && exercise.sets.isNotEmpty) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0D6EFD).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -472,20 +485,19 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
             ),
           ),
         ),
-        
+
         // 펼쳐진 상태에서만 보이는 상세 정보 (애니메이션 적용)
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 200),
-          crossFadeState: isExpanded 
-              ? CrossFadeState.showSecond 
-              : CrossFadeState.showFirst,
+          crossFadeState:
+              isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
           firstChild: const SizedBox.shrink(),
           secondChild: _buildExpandedContent(exercise),
         ),
       ],
     );
   }
-  
+
   Widget _buildExpandedContent(exercise) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -579,7 +591,8 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFE3F2FD),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: const Color(0xFFBBDEFB)),
+                              border:
+                                  Border.all(color: const Color(0xFFBBDEFB)),
                             ),
                             child: Row(
                               children: [
@@ -645,10 +658,10 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
       ),
     );
   }
-  
+
   Widget _buildEditForm(exercise, int index) {
     final controllers = _editControllers[index]!;
-    
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -695,7 +708,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // 운동 이름
           const Text(
             '운동 이름',
@@ -727,7 +740,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // 세트 편집
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -743,7 +756,8 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
               GestureDetector(
                 onTap: () => _addEditSet(index),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0D6EFD),
                     borderRadius: BorderRadius.circular(6),
@@ -768,7 +782,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // 편집 중인 세트들
           if (exercise.sets.isEmpty)
             Container(
@@ -789,12 +803,13 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
               ),
             )
           else
-            ...List.generate(exercise.sets.length, (setIndex) => _buildEditSetRow(exercise, setIndex)),
+            ...List.generate(exercise.sets.length,
+                (setIndex) => _buildEditSetRow(exercise, setIndex)),
           const SizedBox(height: 16),
-          
+
           // 메모 필드
           const Text(
-            '메모 (선택사항)',
+            '메모',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -828,55 +843,54 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
     );
   }
 
-
   // 유효성 검사 함수
   String? _validateExercise() {
     // 운동명 검사
     if (_exerciseNameController.text.trim().isEmpty) {
       return '운동명을 입력해주세요.';
     }
-    
+
     // 세트 개수 검사
     if (_currentSets.isEmpty) {
       return '최소 1개 이상의 세트를 추가해주세요.';
     }
-    
+
     // 각 세트의 무게/횟수 검사
     for (int i = 0; i < _currentSets.length; i++) {
       final set = _currentSets[i];
-      
+
       // 횟수 검사
       if (set.repsController.text.trim().isEmpty) {
         return '${i + 1}번째 세트의 횟수를 입력해주세요.';
       }
-      
+
       final reps = int.tryParse(set.repsController.text.trim());
       if (reps == null || reps <= 0) {
         return '${i + 1}번째 세트의 횟수는 1 이상의 숫자여야 합니다.';
       }
-      
+
       if (reps > 1000) {
         return '${i + 1}번째 세트의 횟수는 1000 이하여야 합니다.';
       }
-      
+
       // 무게 검사
       if (set.weightController.text.trim().isEmpty) {
         return '${i + 1}번째 세트의 무게를 입력해주세요.';
       }
-      
+
       final weight = double.tryParse(set.weightController.text.trim());
       if (weight == null || weight < 0) {
         return '${i + 1}번째 세트의 무게는 0 이상의 숫자여야 합니다.';
       }
-      
+
       if (weight > 1000) {
         return '${i + 1}번째 세트의 무게는 1000kg 이하여야 합니다.';
       }
     }
-    
+
     return null; // 유효성 검사 통과
   }
-  
+
   Future<void> _addExercise() async {
     // 유효성 검사 수행
     final validationError = _validateExercise();
@@ -902,17 +916,17 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
       }
       return;
     }
-    
+
     // 유효성 검사 통과 시 운동 추가
     try {
       // 새 운동을 ViewModel에 추가
       widget.viewModel.addExercise();
-      
+
       // 방금 추가된 운동에 입력된 정보 설정
       final lastExercise = widget.viewModel.exercises.last;
       lastExercise.nameController.text = _exerciseNameController.text;
       lastExercise.memoController.text = _memoController.text;
-      
+
       // 세트 정보 복사
       for (var set in _currentSets) {
         lastExercise.addSet();
@@ -921,10 +935,10 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
         newSet.weightController.text = set.weightController.text;
         newSet.memoController.text = set.memoController.text;
       }
-      
+
       // API로 운동 기록 저장
       await widget.viewModel.saveWorkoutToAPI();
-      
+
       // 성공 메시지 표시
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -945,7 +959,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
           ),
         );
       }
-      
+
       // 입력 필드 초기화
       _exerciseNameController.clear();
       _memoController.clear();
@@ -953,7 +967,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
         set.dispose();
       }
       _currentSets.clear();
-      
+
       // 폼 접기
       setState(() {
         _isFormExpanded = false;
@@ -998,12 +1012,12 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
       'name': TextEditingController(text: exercise.nameController.text),
       'memo': TextEditingController(text: exercise.memoController.text),
     };
-    
+
     setState(() {
       _editingStates[index] = true;
     });
   }
-  
+
   void _cancelEditing(int index) {
     // 컨트롤러 정리
     final controllers = _editControllers[index];
@@ -1011,34 +1025,34 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
       controllers.values.forEach((controller) => controller.dispose());
       _editControllers.remove(index);
     }
-    
+
     setState(() {
       _editingStates[index] = false;
     });
   }
-  
+
   void _saveEditing(exercise, int index) {
     final controllers = _editControllers[index]!;
-    
+
     // 실제 운동 데이터에 변경사항 적용
     exercise.nameController.text = controllers['name']!.text;
     exercise.memoController.text = controllers['memo']!.text;
-    
+
     // 컨트롤러 정리
     controllers.values.forEach((controller) => controller.dispose());
     _editControllers.remove(index);
-    
+
     setState(() {
       _editingStates[index] = false;
     });
   }
-  
+
   void _addSet() {
     setState(() {
       _currentSets.add(WorkoutSet());
     });
   }
-  
+
   Widget _buildSetRow(int index) {
     final set = _currentSets[index];
     return Container(
@@ -1100,15 +1114,18 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                         hintStyle: const TextStyle(color: Color(0xFFADB5BD)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDEE2E6)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDEE2E6)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFF0D6EFD)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF0D6EFD)),
                         ),
                         contentPadding: const EdgeInsets.all(12),
                       ),
@@ -1132,9 +1149,11 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: set.weightController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')), // 숫자와 소수점만 허용
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*')), // 숫자와 소수점만 허용
                         LengthLimitingTextInputFormatter(6), // 최대 6자리 (999.99)
                       ],
                       decoration: InputDecoration(
@@ -1142,15 +1161,18 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                         hintStyle: const TextStyle(color: Color(0xFFADB5BD)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDEE2E6)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDEE2E6)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFF0D6EFD)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF0D6EFD)),
                         ),
                         contentPadding: const EdgeInsets.all(12),
                         suffixText: 'kg',
@@ -1168,7 +1190,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
           const SizedBox(height: 12),
           // 세트별 메모 필드 추가
           const Text(
-            '세트 메모 (선택사항)',
+            '세트 메모',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -1194,29 +1216,29 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                 borderSide: const BorderSide(color: Color(0xFF0D6EFD)),
               ),
               contentPadding: const EdgeInsets.all(12),
-              suffixIcon: const Icon(Icons.note_alt_outlined, 
-                color: Color(0xFFADB5BD), size: 18),
+              suffixIcon: const Icon(Icons.note_alt_outlined,
+                  color: Color(0xFFADB5BD), size: 18),
             ),
           ),
         ],
       ),
     );
   }
-  
+
   void _removeSet(int index) {
     setState(() {
       _currentSets[index].dispose();
       _currentSets.removeAt(index);
     });
   }
-  
+
   void _addEditSet(int exerciseIndex) {
     final exercise = widget.viewModel.exercises[exerciseIndex];
     setState(() {
       exercise.addSet();
     });
   }
-  
+
   Widget _buildEditSetRow(exercise, int setIndex) {
     final set = exercise.sets[setIndex];
     return Container(
@@ -1278,15 +1300,18 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                         hintStyle: const TextStyle(color: Color(0xFFADB5BD)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDEE2E6)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDEE2E6)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFF0D6EFD)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF0D6EFD)),
                         ),
                         contentPadding: const EdgeInsets.all(12),
                       ),
@@ -1310,9 +1335,11 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: set.weightController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')), // 숫자와 소수점만 허용
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*')), // 숫자와 소수점만 허용
                         LengthLimitingTextInputFormatter(6), // 최대 6자리 (999.99)
                       ],
                       decoration: InputDecoration(
@@ -1320,15 +1347,18 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                         hintStyle: const TextStyle(color: Color(0xFFADB5BD)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDEE2E6)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDEE2E6)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFF0D6EFD)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF0D6EFD)),
                         ),
                         contentPadding: const EdgeInsets.all(12),
                         suffixText: 'kg',
@@ -1346,7 +1376,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
           const SizedBox(height: 12),
           // 편집 모드에서도 세트별 메모 필드 추가
           const Text(
-            '세트 메모 (선택사항)',
+            '세트 메모',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -1372,24 +1402,25 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
                 borderSide: const BorderSide(color: Color(0xFF0D6EFD)),
               ),
               contentPadding: const EdgeInsets.all(12),
-              suffixIcon: const Icon(Icons.note_alt_outlined, 
-                color: Color(0xFFADB5BD), size: 18),
+              suffixIcon: const Icon(Icons.note_alt_outlined,
+                  color: Color(0xFFADB5BD), size: 18),
             ),
           ),
         ],
       ),
     );
   }
-  
+
   void _removeEditSet(exercise, int setIndex) {
     setState(() {
       exercise.removeSet(setIndex);
     });
   }
-  
+
   void _toggleCardExpansion(int index) {
     setState(() {
-      _expandedStates[index] = !(_expandedStates[index] ?? true); // 기본값이 true이므로 동일하게
+      _expandedStates[index] =
+          !(_expandedStates[index] ?? true); // 기본값이 true이므로 동일하게
     });
   }
 
@@ -1448,9 +1479,9 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
     try {
       // 내 루틴 목록 불러오기
       final routines = await widget.viewModel.getMyRoutines();
-      
+
       if (!mounted) return;
-      
+
       if (routines.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1529,7 +1560,8 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
               child: ListTile(
                 leading: const CircleAvatar(
                   backgroundColor: Color(0xFF28A745),
-                  child: Icon(Icons.fitness_center, color: Colors.white, size: 18),
+                  child:
+                      Icon(Icons.fitness_center, color: Colors.white, size: 18),
                 ),
                 title: Text(
                   routine.name,
@@ -1583,7 +1615,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
   // 루틴을 템플릿으로 선택
   void _selectRoutineAsTemplate(RoutineResponse routine) async {
     Navigator.of(context).pop(); // 다이얼로그 닫기
-    
+
     try {
       // 확인 다이얼로그 표시
       final bool? confirmed = await showDialog<bool>(
@@ -1622,7 +1654,7 @@ class _WorkoutRecordTabState extends State<WorkoutRecordTab> {
       if (confirmed == true) {
         // 루틴을 운동기록으로 변환
         await widget.viewModel.loadRoutineAsTemplate(routine);
-        
+
         // 성공 메시지
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

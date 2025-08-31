@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../model/pt_schedule_models.dart';
 import '../viewmodel/pt_schedule_viewmodel.dart';
+import '../../pt_contract/viewmodel/pt_contract_viewmodel.dart';
 
 class ScheduleChangeRequestDialog extends ConsumerStatefulWidget {
   final PtSchedule schedule;
@@ -22,6 +23,7 @@ class ScheduleChangeRequestDialog extends ConsumerStatefulWidget {
 class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequestDialog> {
   late DateTime _newStartDateTime;
   late DateTime _newEndDateTime;
+  late int _selectedDurationMinutes;
   bool _isLoading = false;
 
   @override
@@ -36,6 +38,7 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
     // 기본값을 현재 시간에서 1시간 후로 설정
     _newStartDateTime = originalStart;
     _newEndDateTime = originalEnd;
+    _selectedDurationMinutes = originalEnd.difference(originalStart).inMinutes;
   }
 
   @override
@@ -138,6 +141,65 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
             
             const SizedBox(height: 16),
             
+            // 소요 시간 선택
+            const Text(
+              '소요 시간',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _DurationButton(
+                  duration: 30,
+                  selectedDuration: _selectedDurationMinutes,
+                  onSelected: (duration) {
+                    setState(() {
+                      _selectedDurationMinutes = duration;
+                      _newEndDateTime = _newStartDateTime.add(Duration(minutes: duration));
+                    });
+                  },
+                ),
+                const SizedBox(width: 8),
+                _DurationButton(
+                  duration: 60,
+                  selectedDuration: _selectedDurationMinutes,
+                  onSelected: (duration) {
+                    setState(() {
+                      _selectedDurationMinutes = duration;
+                      _newEndDateTime = _newStartDateTime.add(Duration(minutes: duration));
+                    });
+                  },
+                ),
+                const SizedBox(width: 8),
+                _DurationButton(
+                  duration: 90,
+                  selectedDuration: _selectedDurationMinutes,
+                  onSelected: (duration) {
+                    setState(() {
+                      _selectedDurationMinutes = duration;
+                      _newEndDateTime = _newStartDateTime.add(Duration(minutes: duration));
+                    });
+                  },
+                ),
+                const SizedBox(width: 8),
+                _DurationButton(
+                  duration: 120,
+                  selectedDuration: _selectedDurationMinutes,
+                  onSelected: (duration) {
+                    setState(() {
+                      _selectedDurationMinutes = duration;
+                      _newEndDateTime = _newStartDateTime.add(Duration(minutes: duration));
+                    });
+                  },
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -185,11 +247,15 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
   }
 
   Future<void> _selectNewDateTime() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final initialDate = _newStartDateTime.isBefore(today) ? today : _newStartDateTime;
+    
     final date = await showDatePicker(
       context: context,
-      initialDate: _newStartDateTime,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
+      initialDate: initialDate,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 30)),
     );
 
     if (date != null) {
@@ -199,9 +265,6 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
       );
 
       if (time != null) {
-        final originalDuration = DateTime.parse(widget.schedule.endTime)
-            .difference(DateTime.parse(widget.schedule.startTime));
-        
         final newStartDateTime = DateTime(
           date.year,
           date.month,
@@ -212,7 +275,7 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
         
         setState(() {
           _newStartDateTime = newStartDateTime;
-          _newEndDateTime = newStartDateTime.add(originalDuration);
+          _newEndDateTime = newStartDateTime.add(Duration(minutes: _selectedDurationMinutes));
         });
       }
     }
@@ -224,17 +287,22 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
     });
 
     try {
+      print('🔄 [SCHEDULE_CHANGE] 시간 변경 요청 시작');
+      print('🔄 [SCHEDULE_CHANGE] 트레이너 요청: ${widget.isTrainerRequest}');
+      print('🔄 [SCHEDULE_CHANGE] 새 시작시간: $_newStartDateTime');
+      print('🔄 [SCHEDULE_CHANGE] 새 종료시간: $_newEndDateTime');
+      
       if (widget.isTrainerRequest) {
-        await ref.read(ptScheduleViewModelProvider.notifier).trainerRequestScheduleChange(
+        await ref.read(ptContractViewModelProvider.notifier).trainerRequestScheduleChange(
           appointmentId: widget.schedule.appointmentId,
-          newStartTime: _newStartDateTime,
-          newEndTime: _newEndDateTime,
+          newStartTime: _newStartDateTime.toIso8601String(),
+          newEndTime: _newEndDateTime.toIso8601String(),
         );
       } else {
-        await ref.read(ptScheduleViewModelProvider.notifier).requestScheduleChange(
+        await ref.read(ptContractViewModelProvider.notifier).requestScheduleChange(
           appointmentId: widget.schedule.appointmentId,
-          newStartTime: _newStartDateTime,
-          newEndTime: _newEndDateTime,
+          newStartTime: _newStartDateTime.toIso8601String(),
+          newEndTime: _newEndDateTime.toIso8601String(),
         );
       }
 
@@ -274,5 +342,50 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
 
   String _formatTime(DateTime dateTime) {
     return DateFormat('HH:mm').format(dateTime);
+  }
+}
+
+class _DurationButton extends StatelessWidget {
+  final int duration;
+  final int selectedDuration;
+  final ValueChanged<int> onSelected;
+
+  const _DurationButton({
+    required this.duration,
+    required this.selectedDuration,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = duration == selectedDuration;
+    
+    return Expanded(
+      child: InkWell(
+        onTap: () => onSelected(duration),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue : Colors.white,
+            border: Border.all(
+              color: isSelected ? Colors.blue : Colors.grey[300]!,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              duration >= 60 
+                ? '${duration ~/ 60}시간${duration % 60 > 0 ? ' ${duration % 60}분' : ''}'
+                : '${duration}분',
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
