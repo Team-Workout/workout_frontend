@@ -22,6 +22,60 @@ class WeeklyTimetableWidget extends StatefulWidget {
 
 class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
   bool _isCompactMode = false;
+  
+  // 스크롤 컨트롤러들
+  late ScrollController _horizontalController;
+  late ScrollController _verticalController;
+  late ScrollController _headerHorizontalController;
+  late ScrollController _timeVerticalController;
+
+  @override
+  void initState() {
+    super.initState();
+    _horizontalController = ScrollController();
+    _verticalController = ScrollController();
+    _headerHorizontalController = ScrollController();
+    _timeVerticalController = ScrollController();
+    
+    // 가로 스크롤 동기화
+    _horizontalController.addListener(() {
+      if (_headerHorizontalController.hasClients && 
+          _headerHorizontalController.offset != _horizontalController.offset) {
+        _headerHorizontalController.jumpTo(_horizontalController.offset);
+      }
+    });
+    
+    _headerHorizontalController.addListener(() {
+      if (_horizontalController.hasClients && 
+          _horizontalController.offset != _headerHorizontalController.offset) {
+        _horizontalController.jumpTo(_headerHorizontalController.offset);
+      }
+    });
+    
+    // 세로 스크롤 동기화
+    _verticalController.addListener(() {
+      if (_timeVerticalController.hasClients && 
+          _timeVerticalController.offset != _verticalController.offset) {
+        _timeVerticalController.jumpTo(_verticalController.offset);
+      }
+    });
+    
+    _timeVerticalController.addListener(() {
+      if (_verticalController.hasClients && 
+          _verticalController.offset != _timeVerticalController.offset) {
+        _verticalController.jumpTo(_timeVerticalController.offset);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _horizontalController.dispose();
+    _verticalController.dispose();
+    _headerHorizontalController.dispose();
+    _timeVerticalController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,253 +184,216 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
             ),
           ),
           
-          // 시간표 본체
+          // 시간표 본체 - 고정 헤더와 사이드바가 있는 구조
           Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: _isCompactMode ? 700 : 900,
-                child: Column(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final timeColumnWidth = _isCompactMode ? 50.0 : 60.0;
+                final headerHeight = 50.0;
+                final cellWidth = _isCompactMode ? 90.0 : 120.0;
+                final rowHeight = _isCompactMode ? 60.0 : 80.0;
+                
+                return Stack(
                   children: [
-                    // 요일 헤더
-                    Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade300, width: 2),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          // 시간 열 헤더
-                          Container(
-                            width: _isCompactMode ? 50 : 60,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              border: Border(
-                                right: BorderSide(color: Colors.grey.shade300),
-                              ),
-                            ),
-                            child: Text(
-                              '시간',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: _isCompactMode ? 10 : 12,
-                              ),
+                    // 메인 스크롤 영역 (시간표 데이터)
+                    Positioned(
+                      left: timeColumnWidth,
+                      top: headerHeight,
+                      right: 0,
+                      bottom: 0,
+                      child: SingleChildScrollView(
+                        controller: _horizontalController,
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: cellWidth * 7,
+                          child: SingleChildScrollView(
+                            controller: _verticalController,
+                            child: Column(
+                              children: timeSlots.map((hour) {
+                                return Container(
+                                  height: rowHeight,
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(color: Colors.grey.shade200),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: List.generate(7, (dayIndex) {
+                                      final daySchedules = schedulesByDay[dayIndex]!
+                                          .where((schedule) {
+                                        final startTime = DateTime.parse(schedule.startTime);
+                                        return startTime.hour == hour;
+                                      }).toList();
+                                      
+                                      return Container(
+                                        width: cellWidth,
+                                        padding: EdgeInsets.all(_isCompactMode ? 1 : 2),
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            right: BorderSide(color: Colors.grey.shade200),
+                                          ),
+                                        ),
+                                        child: daySchedules.isEmpty
+                                            ? const SizedBox()
+                                            : Column(
+                                                children: daySchedules.map((schedule) {
+                                                  return Expanded(
+                                                    child: _buildScheduleItem(schedule),
+                                                  );
+                                                }).toList(),
+                                              ),
+                                      );
+                                    }),
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           ),
-                          // 요일 헤더들
-                          ...List.generate(7, (index) {
-                            final date = mondayOfWeek.add(Duration(days: index));
-                            final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
-                            final isToday = DateFormat('yyyy-MM-dd').format(date) == 
-                                           DateFormat('yyyy-MM-dd').format(DateTime.now());
-                            final hasSchedule = schedulesByDay[index]!.isNotEmpty;
-                            
-                            return Container(
-                              width: _isCompactMode ? 90 : 120,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: isToday 
-                                    ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
-                                    : hasSchedule 
-                                        ? Colors.blue.shade50
-                                        : Colors.white,
-                                border: Border(
-                                  right: BorderSide(color: Colors.grey.shade300),
-                                ),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    weekdays[index],
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: _isCompactMode ? 12 : 14,
-                                      color: isToday ? Theme.of(context).colorScheme.primary : Colors.black,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${date.day}일',
-                                    style: TextStyle(
-                                      fontSize: _isCompactMode ? 10 : 12,
-                                      color: isToday ? Theme.of(context).colorScheme.primary : Colors.grey,
-                                    ),
-                                  ),
-                                  if (hasSchedule && _isCompactMode)
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 2),
-                                      width: 6,
-                                      height: 6,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
+                        ),
                       ),
                     ),
                     
-                    // 시간표 그리드
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: timeSlots.map((hour) {
-                            return Container(
-                              height: _isCompactMode ? 60 : 80,
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(color: Colors.grey.shade200),
+                    // 고정 요일 헤더
+                    Positioned(
+                      left: timeColumnWidth,
+                      top: 0,
+                      right: 0,
+                      height: headerHeight,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300, width: 2),
+                          ),
+                        ),
+                        child: SingleChildScrollView(
+                          controller: _headerHorizontalController,
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: List.generate(7, (index) {
+                              final date = mondayOfWeek.add(Duration(days: index));
+                              final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+                              final isToday = DateFormat('yyyy-MM-dd').format(date) == 
+                                             DateFormat('yyyy-MM-dd').format(DateTime.now());
+                              final hasSchedule = schedulesByDay[index]!.isNotEmpty;
+                              
+                              return Container(
+                                width: cellWidth,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: isToday 
+                                      ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+                                      : hasSchedule 
+                                          ? Colors.blue.shade50
+                                          : Colors.white,
+                                  border: Border(
+                                    right: BorderSide(color: Colors.grey.shade300),
+                                  ),
                                 ),
-                              ),
-                              child: Row(
-                                children: [
-                                  // 시간 표시
-                                  Container(
-                                    width: _isCompactMode ? 50 : 60,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade50,
-                                      border: Border(
-                                        right: BorderSide(color: Colors.grey.shade300),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      weekdays[index],
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: _isCompactMode ? 12 : 14,
+                                        color: isToday ? Theme.of(context).colorScheme.primary : Colors.black,
                                       ),
                                     ),
-                                    child: Text(
-                                      '${hour.toString().padLeft(2, '0')}:00',
+                                    Text(
+                                      '${date.day}일',
                                       style: TextStyle(
                                         fontSize: _isCompactMode ? 10 : 12,
-                                        fontWeight: FontWeight.w500,
+                                        color: isToday ? Theme.of(context).colorScheme.primary : Colors.grey,
                                       ),
                                     ),
-                                  ),
-                                  // 각 요일의 셀
-                                  ...List.generate(7, (dayIndex) {
-                                    final daySchedules = schedulesByDay[dayIndex]!
-                                        .where((schedule) {
-                                      final startTime = DateTime.parse(schedule.startTime);
-                                      return startTime.hour == hour;
-                                    }).toList();
-                                    
-                                    return Container(
-                                      width: _isCompactMode ? 90 : 120,
-                                      padding: EdgeInsets.all(_isCompactMode ? 1 : 2),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          right: BorderSide(color: Colors.grey.shade200),
+                                    if (hasSchedule && _isCompactMode)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 2),
+                                        width: 6,
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          shape: BoxShape.circle,
                                         ),
                                       ),
-                                      child: daySchedules.isEmpty
-                                          ? const SizedBox()
-                                          : Column(
-                                              children: daySchedules.map((schedule) {
-                                                final startTime = DateTime.parse(schedule.startTime);
-                                                final endTime = DateTime.parse(schedule.endTime);
-                                                final duration = endTime.difference(startTime).inMinutes;
-                                                
-                                                return Expanded(
-                                                  child: GestureDetector(
-                                                    onTap: () => _showScheduleMenu(context, schedule),
-                                                    child: Container(
-                                                      margin: EdgeInsets.all(_isCompactMode ? 0.5 : 1),
-                                                      padding: EdgeInsets.all(_isCompactMode ? 2 : 4),
-                                                      decoration: BoxDecoration(
-                                                        color: _getScheduleColor(schedule.status),
-                                                        borderRadius: BorderRadius.circular(_isCompactMode ? 3 : 4),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: Colors.black.withOpacity(0.1),
-                                                            blurRadius: _isCompactMode ? 1 : 2,
-                                                            offset: const Offset(0, 1),
-                                                          ),
-                                                        ],
-                                                        border: schedule.hasChangeRequest == true
-                                                            ? Border.all(
-                                                                color: Colors.orange,
-                                                                width: 2,
-                                                              )
-                                                            : null,
-                                                      ),
-                                                      child: _isCompactMode
-                                                          ? Center(
-                                                              child: Column(
-                                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                                children: [
-                                                                  Text(
-                                                                    schedule.memberName.length > 3 
-                                                                        ? '${schedule.memberName.substring(0, 3)}..'
-                                                                        : schedule.memberName,
-                                                                    style: const TextStyle(
-                                                                      fontSize: 9,
-                                                                      fontWeight: FontWeight.bold,
-                                                                      color: Colors.white,
-                                                                    ),
-                                                                    textAlign: TextAlign.center,
-                                                                  ),
-                                                                  if (duration != 60)
-                                                                    Text(
-                                                                      '${duration}분',
-                                                                      style: const TextStyle(
-                                                                        fontSize: 8,
-                                                                        color: Colors.white70,
-                                                                      ),
-                                                                    ),
-                                                                ],
-                                                              ),
-                                                            )
-                                                          : Column(
-                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                              children: [
-                                                                Text(
-                                                                  schedule.memberName,
-                                                                  style: const TextStyle(
-                                                                    fontSize: 11,
-                                                                    fontWeight: FontWeight.bold,
-                                                                    color: Colors.white,
-                                                                  ),
-                                                                  maxLines: 1,
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                ),
-                                                                Text(
-                                                                  '${DateFormat('HH:mm').format(startTime)}-${DateFormat('HH:mm').format(endTime)}',
-                                                                  style: const TextStyle(
-                                                                    fontSize: 10,
-                                                                    color: Colors.white70,
-                                                                  ),
-                                                                ),
-                                                                if (duration > 30)
-                                                                  Text(
-                                                                    '${duration}분',
-                                                                    style: const TextStyle(
-                                                                      fontSize: 9,
-                                                                      color: Colors.white60,
-                                                                    ),
-                                                                  ),
-                                                              ],
-                                                            ),
-                                                    ),
-                                                  ),
-                                                );
-                                              }).toList(),
-                                            ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // 고정 시간축
+                    Positioned(
+                      left: 0,
+                      top: headerHeight,
+                      width: timeColumnWidth,
+                      bottom: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            right: BorderSide(color: Colors.grey.shade300, width: 2),
+                          ),
+                        ),
+                        child: SingleChildScrollView(
+                          controller: _timeVerticalController,
+                          child: Column(
+                            children: timeSlots.map((hour) {
+                              return Container(
+                                height: rowHeight,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  border: Border(
+                                    bottom: BorderSide(color: Colors.grey.shade200),
+                                  ),
+                                ),
+                                child: Text(
+                                  '${hour.toString().padLeft(2, '0')}:00',
+                                  style: TextStyle(
+                                    fontSize: _isCompactMode ? 10 : 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // 좌상단 모서리 (시간 헤더)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      width: timeColumnWidth,
+                      height: headerHeight,
+                      child: Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          border: Border(
+                            right: BorderSide(color: Colors.grey.shade300, width: 2),
+                            bottom: BorderSide(color: Colors.grey.shade300, width: 2),
+                          ),
+                        ),
+                        child: Text(
+                          '시간',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: _isCompactMode ? 10 : 12,
+                          ),
                         ),
                       ),
                     ),
                   ],
-                ),
-              ),
+                );
+              },
             ),
           ),
           
@@ -403,6 +420,95 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
     );
   }
   
+  Widget _buildScheduleItem(PtSchedule schedule) {
+    final startTime = DateTime.parse(schedule.startTime);
+    final endTime = DateTime.parse(schedule.endTime);
+    final duration = endTime.difference(startTime).inMinutes;
+    
+    return GestureDetector(
+      onTap: () => _showScheduleMenu(context, schedule),
+      child: Container(
+        margin: EdgeInsets.all(_isCompactMode ? 0.5 : 1),
+        padding: EdgeInsets.all(_isCompactMode ? 2 : 4),
+        decoration: BoxDecoration(
+          color: _getScheduleColor(schedule.status),
+          borderRadius: BorderRadius.circular(_isCompactMode ? 3 : 4),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: _isCompactMode ? 1 : 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+          border: schedule.hasChangeRequest == true
+              ? Border.all(
+                  color: Colors.orange,
+                  width: 2,
+                )
+              : null,
+        ),
+        child: _isCompactMode
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      schedule.memberName.length > 3 
+                          ? '${schedule.memberName.substring(0, 3)}..'
+                          : schedule.memberName,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (duration != 60)
+                      Text(
+                        '${duration}분',
+                        style: const TextStyle(
+                          fontSize: 8,
+                          color: Colors.white70,
+                        ),
+                      ),
+                  ],
+                ),
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    schedule.memberName,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '${DateFormat('HH:mm').format(startTime)}-${DateFormat('HH:mm').format(endTime)}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  if (duration > 30)
+                    Text(
+                      '${duration}분',
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: Colors.white60,
+                      ),
+                    ),
+                ],
+              ),
+      ),
+    );
+  }
+
   Widget _buildLegendItem(String label, Color color) {
     return Row(
       children: [

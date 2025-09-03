@@ -7,6 +7,7 @@ import 'package:pt_service/core/router/app_router.dart';
 import 'package:pt_service/core/theme/app_theme.dart';
 import 'package:pt_service/core/services/session_service.dart';
 import 'package:pt_service/features/auth/repository/api_auth_repository.dart';
+import 'package:pt_service/features/sync/viewmodel/sync_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,11 +36,35 @@ void main() async {
   );
 }
 
-class WorkoutApp extends ConsumerWidget {
+class WorkoutApp extends ConsumerStatefulWidget {
   const WorkoutApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WorkoutApp> createState() => _WorkoutAppState();
+}
+
+class _WorkoutAppState extends ConsumerState<WorkoutApp> {
+  @override
+  void initState() {
+    super.initState();
+    // 앱 시작 후 동기화 수행
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _performInitialSync();
+    });
+  }
+
+  Future<void> _performInitialSync() async {
+    try {
+      print('Starting master data sync...');
+      await ref.read(syncNotifierProvider.notifier).performSync();
+      print('Master data sync completed');
+    } catch (e) {
+      print('Master data sync failed: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     
     return MaterialApp.router(

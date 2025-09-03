@@ -40,15 +40,15 @@ class WorkoutApiService {
     }
   }
 
-  // 운동 목록 조회 API (exerciseId를 위한 운동 목록)
-  Future<List<Map<String, dynamic>>> getExerciseList() async {
-    try {
-      final response = await _apiService.get('/exercises');
-      return List<Map<String, dynamic>>.from(response.data);
-    } catch (e) {
-      throw Exception('운동 목록 조회 실패: 서버 오류가 발생했습니다.');
-    }
-  }
+  // 운동 목록 조회 API (deprecated - 동기화된 마스터 데이터 사용)
+  // Future<List<Map<String, dynamic>>> getExerciseList() async {
+  //   try {
+  //     final response = await _apiService.get('/exercises');
+  //     return List<Map<String, dynamic>>.from(response.data);
+  //   } catch (e) {
+  //     throw Exception('운동 목록 조회 실패: 서버 오류가 발생했습니다.');
+  //   }
+  // }
 
   // 월별 운동 일지 목록 조회
   Future<List<Map<String, dynamic>>> getWorkoutLogsByMonth(

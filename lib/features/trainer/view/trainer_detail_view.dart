@@ -8,7 +8,7 @@ import '../../pt_offerings/view/pt_offerings_list_view.dart';
 class TrainerDetailView extends ConsumerStatefulWidget {
   final int trainerId;
   final TrainerProfile? trainer; // optional fallback data
-  
+
   const TrainerDetailView({
     super.key,
     required this.trainerId,
@@ -51,7 +51,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
 
       final repository = ref.read(trainerRepositoryProvider);
       final profile = await repository.getTrainerProfileById(widget.trainerId);
-      
+
       setState(() {
         _trainerProfile = profile;
         _isLoading = false;
@@ -183,7 +183,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
       );
     }
 
-    // Safe access to trainer profile  
+    // Safe access to trainer profile
     final trainer = _trainerProfile;
     if (trainer == null) {
       return Scaffold(
@@ -195,7 +195,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
         ),
       );
     }
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -283,13 +283,6 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                             }
                           }),
                           const SizedBox(width: 8),
-                          const Text(
-                            '4.8 (리뷰 124개)',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
                         ],
                       ),
                     ],
@@ -298,7 +291,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
               ],
             ),
           ),
-          
+
           // Specialties Section
           if (trainer.specialties.isNotEmpty) ...[
             Container(
@@ -318,34 +311,38 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
-                    children: trainer.specialties.map((specialty) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50] ?? Colors.blue.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.blue[200] ?? Colors.blue.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        specialty,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.blue[700] ?? Colors.blue,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    )).toList(),
+                    children: trainer.specialties
+                        .map((specialty) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50] ??
+                                    Colors.blue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.blue[200] ??
+                                      Colors.blue.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                specialty,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.blue[700] ?? Colors.blue,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ))
+                        .toList(),
                   ),
                 ],
               ),
             ),
           ],
-          
+
           // Tab Bar
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -363,7 +360,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
               ],
             ),
           ),
-          
+
           // Tab Bar View
           Expanded(
             child: TabBarView(
@@ -383,7 +380,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
 
   Widget _buildCertificationsTab() {
     final trainer = _trainerProfile!;
-    
+
     // Use real API data
     if (trainer.certifications.isEmpty) {
       return const Center(
@@ -489,7 +486,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
 
   Widget _buildAwardsTab() {
     final trainer = _trainerProfile!;
-    
+
     if (trainer.awards.isEmpty) {
       return const Center(
         child: Column(
@@ -521,7 +518,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
         ),
       );
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(20),
       physics: const AlwaysScrollableScrollPhysics(),
@@ -586,7 +583,7 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
 
   Widget _buildExperienceTab() {
     final trainer = _trainerProfile!;
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -623,42 +620,42 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                   ),
                   const SizedBox(height: 12),
                   ...trainer.workExperiences.map((experience) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '• ${experience.workName}',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '• ${experience.workName}',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '  ${experience.workPosition} - ${experience.workPlace}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600] ?? Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '  ${experience.workStart} ~ ${experience.workEnd ?? '현재'}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[500] ?? Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '  ${experience.workPosition} - ${experience.workPlace}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600] ?? Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '  ${experience.workStart} ~ ${experience.workEnd ?? '현재'}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[500] ?? Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
+                      )),
                 ],
               ),
             ),
           ],
-          
+
           // Education Section
           if (trainer.educations.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -691,43 +688,44 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                   ),
                   const SizedBox(height: 12),
                   ...trainer.educations.map((education) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '• ${education.schoolName}',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '• ${education.schoolName}',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '  ${education.educationName} ${education.degree}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600] ?? Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '  ${education.startDate} ~ ${education.endDate ?? '재학중'}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[500] ?? Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '  ${education.educationName} ${education.degree}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600] ?? Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '  ${education.startDate} ~ ${education.endDate ?? '재학중'}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[500] ?? Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
+                      )),
                 ],
               ),
             ),
           ],
           const SizedBox(height: 16),
-          if (trainer.introduction != null && trainer.introduction!.isNotEmpty) ...[
+          if (trainer.introduction != null &&
+              trainer.introduction!.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(

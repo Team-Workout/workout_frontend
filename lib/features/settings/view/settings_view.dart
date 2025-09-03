@@ -1,16 +1,38 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/auth/model/user_model.dart';
+import 'package:pt_service/features/sync/viewmodel/sync_viewmodel.dart';
+import 'package:pt_service/core/config/api_config.dart';
+import 'package:pt_service/core/services/api_service.dart';
 import '../viewmodel/settings_viewmodel.dart';
 
-class SettingsView extends ConsumerWidget {
+class SettingsView extends ConsumerStatefulWidget {
   const SettingsView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends ConsumerState<SettingsView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(profileImageProvider.notifier).loadProfileImage();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final profileImageAsync = ref.watch(profileImageProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -25,17 +47,69 @@ class SettingsView extends ConsumerWidget {
             ),
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Text(
-                    user?.name.substring(0, 1) ?? 'U',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                Stack(
+                  children: [
+                    Consumer(
+                      builder: (context, ref, _) {
+                        return profileImageAsync.when(
+                          data: (profileImage) {
+                            if (profileImage?.profileImageUrl != null && profileImage!.profileImageUrl.isNotEmpty) {
+                              return _buildProfileImageAvatar(profileImage.profileImageUrl, user?.name);
+                            } else {
+                              return CircleAvatar(
+                                radius: 40,
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                child: Text(
+                                  user?.name.substring(0, 1) ?? 'U',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          loading: () => CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            child: const CircularProgressIndicator(color: Colors.white),
+                          ),
+                          error: (_, __) => CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            child: Text(
+                              user?.name.substring(0, 1) ?? 'U',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
+                    Positioned(
+                      bottom: -2,
+                      right: -2,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: IconButton(
+                          iconSize: 14,
+                          padding: EdgeInsets.zero,
+                          onPressed: () => _showImagePickerOptions(context, ref),
+                          icon: const Icon(Icons.camera_alt, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -234,6 +308,56 @@ class SettingsView extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 32),
+          _buildSection(
+            context,
+            '개발자 도구',
+            [
+              _buildSettingItem(
+                context,
+                Icons.sync,
+                '마스터 데이터 동기화',
+                () {
+                  _performMasterDataSync(context, ref);
+                },
+              ),
+              _buildSettingItem(
+                context,
+                Icons.clear_all,
+                '캐시 초기화',
+                () {
+                  _clearMasterDataCache(context, ref);
+                },
+              ),
+              Consumer(
+                builder: (context, ref, _) {
+                  final syncState = ref.watch(syncNotifierProvider);
+                  return ListTile(
+                    leading: const Icon(Icons.info_outline),
+                    title: const Text('동기화 상태'),
+                    subtitle: Text(_getSyncStatusText(syncState)),
+                    trailing: syncState.isLoading 
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          syncState.isCompleted 
+                            ? Icons.check_circle 
+                            : syncState.error != null 
+                              ? Icons.error 
+                              : Icons.help_outline,
+                          color: syncState.isCompleted 
+                            ? Colors.green 
+                            : syncState.error != null 
+                              ? Colors.red 
+                              : Colors.grey,
+                        ),
+                  );
+                },
+              ),
+            ],
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: OutlinedButton.icon(
@@ -675,5 +799,280 @@ class SettingsView extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  void _showImagePickerOptions(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  '프로필 사진 변경',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('카메라로 촬영'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera, ref);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('갤러리에서 선택'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery, ref);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.cancel, color: Colors.red),
+                title: const Text(
+                  '취소',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source, WidgetRef ref) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+
+      if (pickedFile != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('이미지를 업로드 중입니다...')),
+          );
+        }
+        
+        await ref.read(profileImageProvider.notifier).uploadProfileImage(pickedFile);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('프로필 사진이 변경되었습니다')),
+          );
+        }
+      }
+    } catch (e) {
+      print('Image picker error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('프로필 사진 변경에 실패했습니다: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Widget _buildProfileImageAvatar(String imageUrl, String? userName) {
+    // 상대 경로인 경우 baseUrl을 붙여서 완전한 URL로 만들기
+    String fullImageUrl = imageUrl;
+    if (!imageUrl.startsWith('http')) {
+      final baseUrl = ApiConfig.baseUrl.replaceAll('/api', '');
+      fullImageUrl = '$baseUrl${imageUrl.startsWith('/') ? '' : '/'}$imageUrl';
+    }
+
+    print('Loading profile image from: $fullImageUrl');
+
+    // 인증이 필요한 이미지인지 확인하기 위해 FutureBuilder 사용
+    return FutureBuilder<Uint8List?>(
+      future: _loadAuthenticatedImage(fullImageUrl),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircleAvatar(
+            radius: 40,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+          );
+        }
+
+        if (snapshot.hasData && snapshot.data != null) {
+          return CircleAvatar(
+            radius: 40,
+            backgroundImage: MemoryImage(snapshot.data!),
+            backgroundColor: Colors.grey[200],
+          );
+        }
+
+        // 에러 발생 시 또는 데이터가 없을 때 기본 아바타
+        return CircleAvatar(
+          radius: 40,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          child: Text(
+            userName?.substring(0, 1) ?? 'U',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<Uint8List?> _loadAuthenticatedImage(String imageUrl) async {
+    try {
+      final dio = ref.read(dioProvider);
+      print('Attempting to load image with authentication: $imageUrl');
+      
+      final response = await dio.get(
+        imageUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+        ),
+      );
+      
+      print('Image loaded successfully, bytes: ${response.data.length}');
+      return Uint8List.fromList(response.data);
+    } catch (e) {
+      print('Failed to load authenticated image: $e');
+      
+      // 인증 실패 시 일반 NetworkImage로 시도 (public 이미지일 가능성)
+      try {
+        final response = await HttpClient().getUrl(Uri.parse(imageUrl));
+        final httpResponse = await response.close();
+        if (httpResponse.statusCode == 200) {
+          final bytes = await consolidateHttpClientResponseBytes(httpResponse);
+          print('Image loaded via fallback method');
+          return bytes;
+        }
+      } catch (fallbackError) {
+        print('Fallback image loading also failed: $fallbackError');
+      }
+      
+      return null;
+    }
+  }
+
+  /// 마스터 데이터 동기화 수행
+  void _performMasterDataSync(BuildContext context, WidgetRef ref) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('마스터 데이터 동기화를 시작합니다...'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+
+      await ref.read(syncNotifierProvider.notifier).performSync();
+      
+      if (context.mounted) {
+        final syncState = ref.read(syncNotifierProvider);
+        
+        if (syncState.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('동기화 실패: ${syncState.error}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(syncState.message ?? '동기화가 완료되었습니다.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('동기화 중 오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// 마스터 데이터 캐시 초기화
+  void _clearMasterDataCache(BuildContext context, WidgetRef ref) async {
+    try {
+      // 확인 다이얼로그 표시
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('캐시 초기화'),
+            content: const Text('모든 마스터 데이터 캐시를 초기화하시겠습니까?\n다음 앱 실행 시 새로 동기화됩니다.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('취소'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('초기화'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirmed == true) {
+        await ref.read(syncNotifierProvider.notifier).clearCache();
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('마스터 데이터 캐시가 초기화되었습니다.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('캐시 초기화 중 오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// 동기화 상태 텍스트 반환
+  String _getSyncStatusText(SyncState syncState) {
+    if (syncState.isLoading) {
+      return '동기화 중...';
+    } else if (syncState.error != null) {
+      return '동기화 실패';
+    } else if (syncState.isCompleted) {
+      if (syncState.updatedCategories.isNotEmpty) {
+        return '동기화 완료 (업데이트: ${syncState.updatedCategories.join(', ')})';
+      } else {
+        return '모든 데이터가 최신 버전';
+      }
+    } else {
+      return '동기화 대기 중';
+    }
   }
 }

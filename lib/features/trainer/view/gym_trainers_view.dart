@@ -269,21 +269,6 @@ class _GymTrainersViewState extends ConsumerState<GymTrainersView> {
                             ),
                           ),
                         ),
-                        Row(
-                          children: [
-                            const Icon(Icons.star,
-                                color: Colors.amber, size: 18),
-                            const SizedBox(width: 4),
-                            const Text(
-                              '4.8', // 기본값, 나중에 API에서 평점 데이터가 있으면 사용
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                     const SizedBox(height: 4),

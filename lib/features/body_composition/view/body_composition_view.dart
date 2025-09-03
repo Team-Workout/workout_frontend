@@ -1,8 +1,16 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../core/config/api_config.dart';
+import '../../../core/services/api_service.dart';
 import '../model/body_composition_model.dart';
+import '../model/body_image_model.dart';
 import '../viewmodel/body_composition_viewmodel.dart';
 
 class BodyCompositionView extends ConsumerStatefulWidget {
@@ -92,6 +100,8 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                   _buildBodyCompositionChart(compositions),
                   const SizedBox(height: 24),
                   _buildDataListSection(compositions),
+                  const SizedBox(height: 24),
+                  _buildBodyImagesSection(),
                   const SizedBox(height: 24),
                   _buildKeyMeasurements(),
                   const SizedBox(height: 24),
@@ -394,9 +404,22 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     double maxWeight =
         sortedData.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
     
-    // Set Y-axis range for better visibility
-    double minY = 0; // Always start from 0kg
-    double maxY = (maxWeight * 1.1).ceilToDouble(); // 10% padding on top, rounded up
+    // Set Y-axis range for better visibility with smart padding
+    double weightRange = maxWeight - minWeight;
+    double padding = weightRange > 5 ? weightRange * 0.1 : 2; // 10% padding or minimum 2kg
+    
+    double minY = (minWeight - padding).floorToDouble();
+    double maxY = (maxWeight + padding).ceilToDouble();
+    
+    // Ensure minimum range for very stable weights
+    if (maxY - minY < 3) {
+      double center = (minY + maxY) / 2;
+      minY = center - 1.5;
+      maxY = center + 1.5;
+    }
+    
+    // Ensure minY is not negative (weights can't be negative)
+    minY = minY < 0 ? 0 : minY;
 
     return LineChart(
       LineChartData(
@@ -1353,4 +1376,1039 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
       ),
     );
   }
+
+  Widget _buildBodyImagesSection() {
+    final bodyImagesAsync = ref.watch(bodyImagesProvider);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6366F1).withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '몸사진 기록',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1F36),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => _showBodyImageUploadDialog(),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            '사진 추가',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          bodyImagesAsync.when(
+            data: (images) {
+              if (images.isEmpty) {
+                return Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB),
+                      style: BorderStyle.solid,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.photo_camera_outlined,
+                        size: 40,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '아직 등록된 몸사진이 없습니다',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // 날짜별로 그룹화
+              final groupedImages = <String, List<BodyImageResponse>>{};
+              for (final image in images) {
+                groupedImages.putIfAbsent(image.recordDate, () => []).add(image);
+              }
+
+              final sortedDates = groupedImages.keys.toList()
+                ..sort((a, b) => b.compareTo(a)); // 최신 날짜부터
+
+              return Column(
+                children: sortedDates.map((date) {
+                  final imagesForDate = groupedImages[date]!;
+                  return _buildDateImageGroup(date, imagesForDate);
+                }).toList(),
+              );
+            },
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            error: (error, _) => Container(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                '몸사진을 불러오는데 실패했습니다: $error',
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateImageGroup(String date, List<BodyImageResponse> images) {
+    final formattedDate = DateFormat('yyyy년 M월 d일').format(DateTime.parse(date));
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            formattedDate,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF374151),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 100,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: images.length,
+              itemBuilder: (context, index) {
+                return _buildBodyImageItem(images[index]);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBodyImageItem(BodyImageResponse image) {
+    return Container(
+      width: 100,
+      height: 100,
+      margin: const EdgeInsets.only(right: 8),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: FutureBuilder<Uint8List?>(
+              future: _loadAuthenticatedBodyImage(image.fileUrl),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  );
+                }
+
+                if (snapshot.hasData && snapshot.data != null) {
+                  return GestureDetector(
+                    onTap: () => _showBodyImageFullScreen(image, snapshot.data!),
+                    child: Image.memory(
+                      snapshot.data!,
+                      fit: BoxFit.cover,
+                      width: 100,
+                      height: 100,
+                    ),
+                  );
+                }
+
+                return Container(
+                  color: Colors.grey[200],
+                  child: Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey[400],
+                  ),
+                );
+              },
+            ),
+          ),
+          // 삭제 버튼
+          Positioned(
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: () => _showDeleteImageDialog(image),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<Uint8List?> _loadAuthenticatedBodyImage(String imageUrl) async {
+    try {
+      // 상대 경로인 경우 baseUrl을 붙여서 완전한 URL로 만들기
+      String fullImageUrl = imageUrl;
+      if (!imageUrl.startsWith('http')) {
+        final baseUrl = ApiConfig.baseUrl.replaceAll('/api', '');
+        fullImageUrl = '$baseUrl${imageUrl.startsWith('/') ? '' : '/'}$imageUrl';
+      }
+
+      final dio = ref.read(dioProvider);
+      final response = await dio.get(
+        fullImageUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+        ),
+      );
+      
+      return Uint8List.fromList(response.data);
+    } catch (e) {
+      print('Failed to load body image: $e');
+      
+      // 인증 실패 시 일반 HTTP 클라이언트로 시도
+      try {
+        String fullImageUrl = imageUrl;
+        if (!imageUrl.startsWith('http')) {
+          final baseUrl = ApiConfig.baseUrl.replaceAll('/api', '');
+          fullImageUrl = '$baseUrl${imageUrl.startsWith('/') ? '' : '/'}$imageUrl';
+        }
+        
+        final response = await HttpClient().getUrl(Uri.parse(fullImageUrl));
+        final httpResponse = await response.close();
+        if (httpResponse.statusCode == 200) {
+          final bytes = await consolidateHttpClientResponseBytes(httpResponse);
+          return bytes;
+        }
+      } catch (fallbackError) {
+        print('Fallback body image loading also failed: $fallbackError');
+      }
+      
+      return null;
+    }
+  }
+
+  void _showBodyImageUploadDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _BodyImageUploadDialog(),
+    );
+  }
+
+  void _showBodyImageFullScreen(BodyImageResponse image, Uint8List imageData) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(
+                    imageData,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 40,
+              left: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '촬영일: ${DateFormat('yyyy년 M월 d일').format(DateTime.parse(image.recordDate))}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (image.originalFileName.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '파일명: ${image.originalFileName}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteImageDialog(BodyImageResponse image) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('사진 삭제'),
+          content: const Text('정말로 이 사진을 삭제하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('취소'),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.red, Color(0xFFDC2626)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _deleteBodyImage(image);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Text(
+                      '삭제',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteBodyImage(BodyImageResponse image) async {
+    try {
+      await ref.read(bodyImageNotifierProvider.notifier).deleteBodyImage(image.fileId);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('사진이 성공적으로 삭제되었습니다.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // 목록 새로고침
+        ref.invalidate(bodyImagesProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = '사진 삭제에 실패했습니다';
+        
+        if (e.toString().contains('인증되지 않은')) {
+          errorMessage = '로그인이 필요합니다.';
+        } else if (e.toString().contains('권한이 없습니다')) {
+          errorMessage = '해당 사진을 삭제할 권한이 없습니다.';
+        } else if (e.toString().contains('존재하지 않는')) {
+          errorMessage = '존재하지 않는 사진입니다.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+}
+
+class _BodyImageUploadDialog extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_BodyImageUploadDialog> createState() => _BodyImageUploadDialogState();
+}
+
+class _BodyImageUploadDialogState extends ConsumerState<_BodyImageUploadDialog> {
+  List<XFile> selectedImages = [];
+  DateTime selectedDate = DateTime.now();
+  final ImagePicker _picker = ImagePicker();
+  bool isUploading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '몸사진 업로드',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1A1F36),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // 날짜 선택
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, color: Color(0xFF6366F1)),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          '촬영 날짜',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          DateFormat('yyyy년 M월 d일').format(selectedDate),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1F2937),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDate,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now(),
+                              );
+                              if (date != null) {
+                                setState(() {
+                                  selectedDate = date;
+                                });
+                              }
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              child: Text(
+                                '변경',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // 이미지 선택 버튼들
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6366F1).withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => _pickImages(ImageSource.camera),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.camera_alt, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                '카메라',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.grey[700]!, Colors.grey[800]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => _pickImages(ImageSource.gallery),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.photo_library, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                '갤러리',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // 선택된 이미지 미리보기
+            if (selectedImages.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '선택된 이미지',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  FutureBuilder<double>(
+                    future: _calculateTotalSize(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final totalMB = snapshot.data!;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: totalMB > 20 
+                                ? Colors.red.withOpacity(0.1)
+                                : totalMB > 10
+                                    ? Colors.orange.withOpacity(0.1)
+                                    : Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '총 ${totalMB.toStringAsFixed(1)}MB',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: totalMB > 20 
+                                  ? Colors.red
+                                  : totalMB > 10
+                                      ? Colors.orange
+                                      : Colors.green,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: selectedImages.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      width: 80,
+                      margin: const EdgeInsets.only(right: 8),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    File(selectedImages[index].path),
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        selectedImages.removeAt(index);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 10,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          FutureBuilder<double>(
+                            future: _getImageSize(selectedImages[index]),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return Text(
+                                  '${snapshot.data!.toStringAsFixed(1)}MB',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[600],
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            
+            // 액션 버튼들
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: isUploading ? null : () => Navigator.of(context).pop(),
+                  child: const Text('취소'),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: isUploading || selectedImages.isEmpty
+                        ? null
+                        : const LinearGradient(
+                            colors: [Color(0xFF10B981), Color(0xFF059669)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    color: isUploading || selectedImages.isEmpty
+                        ? Colors.grey[300]
+                        : null,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: isUploading || selectedImages.isEmpty
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: const Color(0xFF10B981).withOpacity(0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: isUploading || selectedImages.isEmpty ? null : _uploadImages,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        child: isUploading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                '업로드',
+                                style: TextStyle(
+                                  color: isUploading || selectedImages.isEmpty
+                                      ? Colors.grey[600]
+                                      : Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImages(ImageSource source) async {
+    try {
+      if (source == ImageSource.gallery) {
+        // 갤러리에서 여러 이미지 선택 (더 강한 압축)
+        final images = await _picker.pickMultiImage(
+          imageQuality: 40, // 이미지 품질을 40%로 강력 압축
+        );
+        if (images.isNotEmpty) {
+          // 파일 크기 확인 및 필터링
+          final validImages = <XFile>[];
+          for (final image in images) {
+            final file = File(image.path);
+            final fileSizeInMB = await file.length() / (1024 * 1024); // MB 단위
+            
+            print('Gallery image: ${image.name}, Size: ${fileSizeInMB.toStringAsFixed(2)}MB');
+            
+            if (fileSizeInMB > 1) { // 1MB 제한으로 더욱 강화
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${image.name}은(는) 크기가 1MB를 초과합니다 (${fileSizeInMB.toStringAsFixed(1)}MB)')),
+                );
+              }
+            } else {
+              validImages.add(image);
+            }
+          }
+          
+          if (validImages.isNotEmpty) {
+            setState(() {
+              selectedImages.addAll(validImages);
+            });
+          }
+        }
+      } else {
+        // 카메라에서 한 장 촬영 (매우 강한 압축 적용)
+        final image = await _picker.pickImage(
+          source: source,
+          imageQuality: 30, // 카메라 이미지는 30% 품질로 매우 강력 압축
+          maxWidth: 1024,   // 최대 너비 1024px로 축소
+          maxHeight: 1024,  // 최대 높이 1024px로 축소
+        );
+        if (image != null) {
+          final file = File(image.path);
+          final fileSizeInMB = await file.length() / (1024 * 1024);
+          
+          print('Camera image: ${image.name}, Size: ${fileSizeInMB.toStringAsFixed(2)}MB');
+          
+          if (fileSizeInMB > 1) { // 1MB 제한
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('촬영된 이미지가 1MB를 초과합니다 (${fileSizeInMB.toStringAsFixed(1)}MB)')),
+              );
+            }
+          } else {
+            setState(() {
+              selectedImages.add(image);
+            });
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('이미지 선택에 실패했습니다: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadImages() async {
+    if (selectedImages.isEmpty) return;
+
+    // 업로드 전 전체 크기 체크
+    double totalSizeInMB = 0;
+    for (final image in selectedImages) {
+      final file = File(image.path);
+      final sizeInMB = await file.length() / (1024 * 1024);
+      totalSizeInMB += sizeInMB;
+    }
+
+    // 총 크기가 20MB를 초과하면 경고
+    if (totalSizeInMB > 20) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('선택된 이미지들의 총 크기가 ${totalSizeInMB.toStringAsFixed(1)}MB입니다. 20MB 이하로 줄여주세요.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      isUploading = true;
+    });
+
+    try {
+      final dateString = selectedDate.toIso8601String().split('T')[0];
+      
+      // 개별 이미지 크기 확인 및 로그
+      for (int i = 0; i < selectedImages.length; i++) {
+        final file = File(selectedImages[i].path);
+        final sizeInMB = await file.length() / (1024 * 1024);
+        print('Image ${i + 1}: ${selectedImages[i].name}, Size: ${sizeInMB.toStringAsFixed(2)}MB');
+      }
+      
+      print('Total upload size: ${totalSizeInMB.toStringAsFixed(2)}MB');
+      
+      await ref.read(bodyImageNotifierProvider.notifier).uploadBodyImages(
+        images: selectedImages,
+        date: dateString,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('몸사진이 성공적으로 업로드되었습니다!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // 목록 새로고침
+        ref.invalidate(bodyImagesProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = '업로드에 실패했습니다';
+        
+        if (e.toString().contains('413')) {
+          errorMessage = '파일 크기가 너무 큽니다. 더 작은 이미지를 선택하거나 압축해주세요.';
+        } else if (e.toString().contains('Maximum upload size exceeded')) {
+          errorMessage = '서버의 최대 업로드 크기를 초과했습니다. 이미지를 더 압축해주세요.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isUploading = false;
+        });
+      }
+    }
+  }
+
+  Future<double> _getImageSize(XFile image) async {
+    final file = File(image.path);
+    final sizeInBytes = await file.length();
+    return sizeInBytes / (1024 * 1024); // MB 단위로 변환
+  }
+
+  Future<double> _calculateTotalSize() async {
+    double totalSize = 0;
+    for (final image in selectedImages) {
+      totalSize += await _getImageSize(image);
+    }
+    return totalSize;
+  }
+
 }

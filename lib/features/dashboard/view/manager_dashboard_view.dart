@@ -11,7 +11,7 @@ class ManagerDashboardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('관장 대시보드'),
@@ -42,8 +42,8 @@ class ManagerDashboardView extends ConsumerWidget {
             Text(
               '센터 운영 현황을 한눈에 확인하세요',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
             const SizedBox(height: 24),
             GridView.count(
@@ -128,8 +128,16 @@ class ManagerDashboardView extends ConsumerWidget {
                                 showTitles: true,
                                 interval: 1,
                                 getTitlesWidget: (value, meta) {
-                                  const months = ['1월', '2월', '3월', '4월', '5월', '6월'];
-                                  if (value.toInt() >= 0 && value.toInt() < months.length) {
+                                  const months = [
+                                    '1월',
+                                    '2월',
+                                    '3월',
+                                    '4월',
+                                    '5월',
+                                    '6월'
+                                  ];
+                                  if (value.toInt() >= 0 &&
+                                      value.toInt() < months.length) {
                                     return Text(
                                       months[value.toInt()],
                                       style: const TextStyle(fontSize: 12),
@@ -240,7 +248,8 @@ class ManagerDashboardView extends ConsumerWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: 3,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final trainers = [
                         {
@@ -263,7 +272,7 @@ class ManagerDashboardView extends ConsumerWidget {
                         },
                       ];
                       final trainer = trainers[index];
-                      
+
                       return ListTile(
                         leading: CircleAvatar(
                           child: Text(
@@ -272,20 +281,8 @@ class ManagerDashboardView extends ConsumerWidget {
                           ),
                         ),
                         title: Text(trainer['name']!),
-                        subtitle: Text('회원 ${trainer['members']} • 이번달 ${trainer['sessions']}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.star, color: Colors.amber, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              trainer['rating']!,
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                        subtitle: Text(
+                            '회원 ${trainer['members']} • 이번달 ${trainer['sessions']}'),
                         onTap: () {},
                       );
                     },
@@ -334,7 +331,7 @@ class ManagerDashboardView extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildLegendItem(String label, Color color) {
     return Row(
       children: [
@@ -351,7 +348,7 @@ class ManagerDashboardView extends ConsumerWidget {
       ],
     );
   }
-  
+
   Widget _buildDrawer(BuildContext context, WidgetRef ref) {
     return Drawer(
       child: ListView(

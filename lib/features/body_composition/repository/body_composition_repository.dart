@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import '../model/body_composition_model.dart';
+import '../model/body_image_model.dart';
 
 class BodyCompositionRepository {
   final Dio _dio;
@@ -189,6 +191,147 @@ class BodyCompositionRepository {
       throw Exception('Failed to delete body composition: ${e.message}');
     } catch (e) {
       throw Exception('Failed to delete body composition: $e');
+    }
+  }
+
+  /// 몸사진 업로드
+  Future<List<BodyImageResponse>> uploadBodyImages({
+    required List<XFile> images,
+    required String date,
+  }) async {
+    try {
+      print('=== Body Images Upload Debug ===');
+      print('Uploading ${images.length} images for date: $date');
+
+      final formData = FormData();
+      
+      // 날짜 추가
+      formData.fields.add(MapEntry('date', date));
+      
+      // 이미지 파일들 추가 (프로필 이미지 업로드 방식과 동일하게)
+      for (final imageFile in images) {
+        // 파일 확장자와 MIME 타입 확인
+        final String fileName = imageFile.name.toLowerCase();
+        String mimeType;
+        
+        if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
+          mimeType = 'image/jpeg';
+        } else if (fileName.endsWith('.png')) {
+          mimeType = 'image/png';
+        } else if (fileName.endsWith('.webp')) {
+          mimeType = 'image/webp';
+        } else {
+          throw Exception('지원하지 않는 이미지 형식입니다. JPG, PNG, WebP만 가능합니다.');
+        }
+
+        formData.files.add(MapEntry(
+          'images',
+          MultipartFile.fromFileSync(
+            imageFile.path,
+            filename: imageFile.name,
+            contentType: DioMediaType.parse(mimeType),
+          ),
+        ));
+        print('Added image: ${imageFile.name} with MIME type: $mimeType');
+      }
+
+      final response = await _dio.post(
+        '/common/members/me/body-images',
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+
+      print('Body images upload success: ${response.statusCode} - ${response.data}');
+
+      if (response.data is List) {
+        return (response.data as List)
+            .map((item) => BodyImageResponse.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      print('=== Body Images Upload Error ===');
+      if (e is DioException) {
+        print('Status code: ${e.response?.statusCode}');
+        print('Response data: ${e.response?.data}');
+      }
+      print('Upload error: $e');
+      throw Exception('몸사진 업로드 실패: $e');
+    }
+  }
+
+  /// 기간별 몸사진 조회
+  Future<List<BodyImageResponse>> getBodyImages({
+    required String startDate,
+    required String endDate,
+  }) async {
+    try {
+      print('=== Body Images Get Debug ===');
+      print('Getting body images from $startDate to $endDate');
+
+      final response = await _dio.get(
+        '/common/members/me/body-images',
+        queryParameters: {
+          'startDate': startDate,
+          'endDate': endDate,
+        },
+      );
+
+      print('Body images get success: ${response.statusCode} - ${response.data}');
+
+      if (response.data is List) {
+        return (response.data as List)
+            .map((item) => BodyImageResponse.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      print('=== Body Images Get Error ===');
+      if (e is DioException) {
+        print('Status code: ${e.response?.statusCode}');
+        print('Response data: ${e.response?.data}');
+        
+        if (e.response?.statusCode == 404) {
+          print('No body images found for the specified period');
+          return []; // 404는 이미지가 없다는 의미이므로 빈 리스트 반환
+        }
+      }
+      print('Get body images error: $e');
+      throw Exception('몸사진 조회 실패: $e');
+    }
+  }
+
+  /// 몸사진 삭제
+  Future<void> deleteBodyImage(int fileId) async {
+    try {
+      print('=== Body Image Delete Debug ===');
+      print('Deleting body image with ID: $fileId');
+
+      final response = await _dio.delete('/common/file/$fileId');
+
+      print('Body image delete success: ${response.statusCode}');
+    } catch (e) {
+      print('=== Body Image Delete Error ===');
+      if (e is DioException) {
+        print('Status code: ${e.response?.statusCode}');
+        print('Response data: ${e.response?.data}');
+        
+        if (e.response?.statusCode == 401) {
+          throw Exception('인증되지 않은 사용자입니다.');
+        } else if (e.response?.statusCode == 403) {
+          throw Exception('해당 파일을 삭제할 권한이 없습니다.');
+        } else if (e.response?.statusCode == 404) {
+          throw Exception('존재하지 않는 파일입니다.');
+        }
+      }
+      print('Delete body image error: $e');
+      throw Exception('몸사진 삭제 실패: $e');
     }
   }
 }

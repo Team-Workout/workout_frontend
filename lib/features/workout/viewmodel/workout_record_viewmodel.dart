@@ -76,19 +76,9 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
   }
 
   Future<void> _loadAvailableExercises() async {
-    try {
-      _availableExercises = await _apiService.getExerciseList();
-      notifyListeners();
-    } catch (e) {
-      // API가 없거나 실패한 경우 기본 운동 목록 제공
-      _availableExercises = [
-        {'id': 1, 'name': '벤치프레스'},
-        {'id': 2, 'name': '스쿼트'},
-        {'id': 3, 'name': '데드리프트'},
-        {'id': 4, 'name': '풀업'},
-        {'id': 5, 'name': '딥스'},
-      ];
-    }
+    // 더 이상 API를 직접 호출하지 않고, 자동완성 필드가 동기화된 데이터를 사용함
+    _availableExercises = []; // 빈 배열로 설정 (자동완성 필드에서 동기화된 데이터 사용)
+    notifyListeners();
   }
 
   void initializeListeners() {

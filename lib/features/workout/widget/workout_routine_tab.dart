@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
 import '../model/routine_models.dart';
+import '../../../common/widgets/exercise_autocomplete_field.dart';
+import '../../../features/sync/model/sync_models.dart';
 
-class WorkoutRoutineTab extends StatefulWidget {
+class WorkoutRoutineTab extends ConsumerStatefulWidget {
   final WorkoutRecordViewmodel viewModel;
 
   const WorkoutRoutineTab({super.key, required this.viewModel});
 
   @override
-  State<WorkoutRoutineTab> createState() => _WorkoutRoutineTabState();
+  ConsumerState<WorkoutRoutineTab> createState() => _WorkoutRoutineTabState();
 }
 
-class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
+class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final List<RoutineExercise> _routineExercises = [];
   List<Map<String, dynamic>> _availableExercises = [];
   bool _isLoading = false;
   final Map<int, bool> _expandedCards = {};
+  
+  // 각 운동별 자동완성 컨트롤러와 선택된 운동 정보
+  final Map<int, TextEditingController> _exerciseControllers = {};
+  final Map<int, Exercise?> _selectedExercises = {};
 
   @override
   void initState() {
@@ -25,33 +32,35 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
     _loadAvailableExercises();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    // 모든 운동 컨트롤러 해제
+    for (final controller in _exerciseControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
   Future<void> _loadAvailableExercises() async {
     setState(() => _isLoading = true);
-    try {
-      final exercises = await widget.viewModel.workoutApiService.getExerciseList();
-      _availableExercises = exercises;
-    } catch (e) {
-      _availableExercises = [
-        {'id': 1, 'name': '벤치프레스'},
-        {'id': 2, 'name': '스쿼트'},
-        {'id': 3, 'name': '데드리프트'},
-        {'id': 4, 'name': '덤벨 플라이'},
-      ];
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('운동 목록 로드 실패: $e')),
-      );
-    }
+    // 더 이상 API를 직접 호출하지 않고, 자동완성 필드가 동기화된 데이터를 사용함
+    _availableExercises = []; // 빈 배열로 설정 (자동완성 필드에서 동기화된 데이터 사용)
     setState(() => _isLoading = false);
   }
 
   void _addExercise() {
-    if (_availableExercises.isEmpty) return;
-
     setState(() {
       final newIndex = _routineExercises.length;
+      
+      // 새로운 운동용 컨트롤러 생성
+      _exerciseControllers[newIndex] = TextEditingController();
+      _selectedExercises[newIndex] = null;
+      
       _routineExercises.add(
         RoutineExercise(
-          exerciseId: _availableExercises.first['id'],
+          exerciseId: 0, // 선택되지 않은 상태
           order: newIndex + 1,
           routineSets: [
             RoutineSet(
@@ -70,8 +79,17 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
     setState(() {
       _routineExercises.removeAt(index);
       _expandedCards.remove(index);
+      
+      // 컨트롤러 정리
+      _exerciseControllers[index]?.dispose();
+      _exerciseControllers.remove(index);
+      _selectedExercises.remove(index);
+      
       // 인덱스 재정렬
       final newExpandedCards = <int, bool>{};
+      final newControllers = <int, TextEditingController>{};
+      final newSelectedExercises = <int, Exercise?>{};
+      
       _expandedCards.forEach((key, value) {
         if (key > index) {
           newExpandedCards[key - 1] = value;
@@ -79,8 +97,29 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
           newExpandedCards[key] = value;
         }
       });
+      
+      _exerciseControllers.forEach((key, value) {
+        if (key > index) {
+          newControllers[key - 1] = value;
+        } else if (key < index) {
+          newControllers[key] = value;
+        }
+      });
+      
+      _selectedExercises.forEach((key, value) {
+        if (key > index) {
+          newSelectedExercises[key - 1] = value;
+        } else if (key < index) {
+          newSelectedExercises[key] = value;
+        }
+      });
+      
       _expandedCards.clear();
       _expandedCards.addAll(newExpandedCards);
+      _exerciseControllers.clear();
+      _exerciseControllers.addAll(newControllers);
+      _selectedExercises.clear();
+      _selectedExercises.addAll(newSelectedExercises);
       
       for (int i = 0; i < _routineExercises.length; i++) {
         _routineExercises[i] = _routineExercises[i].copyWith(order: i + 1);
@@ -130,9 +169,17 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
       return;
     }
 
-    // 각 운동의 세트 검증
+    // 각 운동의 선택 및 세트 검증
     for (int i = 0; i < _routineExercises.length; i++) {
       final exercise = _routineExercises[i];
+      
+      // 운동이 선택되었는지 확인
+      if (_selectedExercises[i] == null || exercise.exerciseId == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${i + 1}번째 운동을 선택해주세요')),
+        );
+        return;
+      }
       
       if (exercise.routineSets.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -193,13 +240,6 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
       _descriptionController.clear();
       _routineExercises.clear();
     });
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
   }
 
   @override
@@ -345,11 +385,8 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
 
   Widget _buildExerciseCard(int exerciseIndex) {
     final exercise = _routineExercises[exerciseIndex];
-    final exerciseName = _availableExercises
-        .firstWhere(
-          (e) => e['id'] == exercise.exerciseId,
-          orElse: () => {'name': '알 수 없는 운동'},
-        )['name'];
+    final selectedExercise = _selectedExercises[exerciseIndex];
+    final exerciseName = selectedExercise?.name ?? '운동을 선택해주세요';
     
     final isExpanded = _expandedCards[exerciseIndex] ?? false;
 
@@ -452,27 +489,28 @@ class _WorkoutRoutineTabState extends State<WorkoutRoutineTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 운동 선택 드롭다운
-                    DropdownButtonFormField<int>(
-                      value: exercise.exerciseId,
-                      decoration: const InputDecoration(
-                        labelText: '운동 선택',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      items: _availableExercises
-                          .map(
-                            (e) => DropdownMenuItem<int>(
-                              value: e['id'],
-                              child: Text(e['name']),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
+                    // 운동 선택 자동완성 필드
+                    ExerciseAutocompleteField(
+                      controller: _exerciseControllers[exerciseIndex],
+                      labelText: '운동 선택',
+                      hintText: '운동 이름을 입력하세요',
+                      initialValue: _selectedExercises[exerciseIndex]?.name,
+                      onExerciseSelected: (selectedExercise) {
+                        setState(() {
+                          _selectedExercises[exerciseIndex] = selectedExercise;
+                          _routineExercises[exerciseIndex] = exercise.copyWith(
+                            exerciseId: selectedExercise.exerciseId,
+                          );
+                        });
+                      },
+                      onTextChanged: (text) {
+                        // 텍스트가 변경되었지만 정확한 운동이 선택되지 않았을 때
+                        if (_selectedExercises[exerciseIndex]?.name != text) {
                           setState(() {
-                            _routineExercises[exerciseIndex] =
-                                exercise.copyWith(exerciseId: value);
+                            _selectedExercises[exerciseIndex] = null;
+                            _routineExercises[exerciseIndex] = exercise.copyWith(
+                              exerciseId: 0, // 선택되지 않은 상태
+                            );
                           });
                         }
                       },

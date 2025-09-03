@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/services/api_service.dart';
 import '../model/body_composition_model.dart';
+import '../model/body_image_model.dart';
 import '../repository/body_composition_repository.dart';
 
 final bodyCompositionRepositoryProvider = Provider<BodyCompositionRepository>((ref) {
@@ -144,4 +146,72 @@ final bodyCompositionNotifierProvider =
     StateNotifierProvider<BodyCompositionNotifier, AsyncValue<List<BodyComposition>>>((ref) {
   final repository = ref.watch(bodyCompositionRepositoryProvider);
   return BodyCompositionNotifier(repository);
+});
+
+// 몸사진 관련 Provider들
+final bodyImagesProvider = FutureProvider<List<BodyImageResponse>>((ref) async {
+  final repository = ref.watch(bodyCompositionRepositoryProvider);
+  final dateRange = ref.watch(dateRangeProvider);
+  
+  final startDate = dateRange.startDate.toIso8601String().split('T')[0];
+  final endDate = dateRange.endDate.toIso8601String().split('T')[0];
+  
+  return await repository.getBodyImages(
+    startDate: startDate,
+    endDate: endDate,
+  );
+});
+
+class BodyImageNotifier extends StateNotifier<AsyncValue<List<BodyImageResponse>>> {
+  final BodyCompositionRepository repository;
+
+  BodyImageNotifier(this.repository) : super(const AsyncValue.loading());
+
+  Future<void> loadBodyImages({String? startDate, String? endDate}) async {
+    state = const AsyncValue.loading();
+    try {
+      final defaultEndDate = DateTime.now();
+      final defaultStartDate = defaultEndDate.subtract(const Duration(days: 30));
+      
+      final images = await repository.getBodyImages(
+        startDate: startDate ?? defaultStartDate.toIso8601String().split('T')[0],
+        endDate: endDate ?? defaultEndDate.toIso8601String().split('T')[0],
+      );
+      state = AsyncValue.data(images);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> uploadBodyImages({
+    required List<XFile> images,
+    required String date,
+  }) async {
+    try {
+      await repository.uploadBodyImages(
+        images: images,
+        date: date,
+      );
+      // 업로드 후 목록 새로고침
+      await loadBodyImages();
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<void> deleteBodyImage(int fileId) async {
+    try {
+      await repository.deleteBodyImage(fileId);
+      // 삭제 후 목록 새로고침
+      await loadBodyImages();
+    } catch (e) {
+      throw e;
+    }
+  }
+}
+
+final bodyImageNotifierProvider = 
+    StateNotifierProvider<BodyImageNotifier, AsyncValue<List<BodyImageResponse>>>((ref) {
+  final repository = ref.watch(bodyCompositionRepositoryProvider);
+  return BodyImageNotifier(repository);
 });

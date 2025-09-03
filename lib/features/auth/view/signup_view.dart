@@ -342,10 +342,6 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         Expanded(
                           child: _buildGenderButton('\uc5ec\uc131'),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildGenderButton('\uae30\ud0c0'),
-                        ),
                       ],
                     ),
                   ],
@@ -421,8 +417,6 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                 genderInEnglish = 'Male';
                               } else if (_selectedGender == '\uc5ec\uc131') {
                                 genderInEnglish = 'Female';
-                              } else if (_selectedGender == '\uae30\ud0c0') {
-                                genderInEnglish = 'Other';
                               }
                               
                               ref.read(authViewModelProvider.notifier).signup(

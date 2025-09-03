@@ -343,55 +343,41 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
         
         const SizedBox(height: 16),
         
-        // Reservation Menu Card
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '예약 관리',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
+        // Reservation Menu Card - 가로로 1:1:1 비율로 배치
+        Container(
+          height: 120,
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildLargeReservationButton(
+                  context,
+                  Icons.calendar_today,
+                  'PT 약속목록',
+                  const Color(0xFF3498DB),
+                  () => context.push('/reservation-requests'),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildReservationAction(
-                      Icons.event_note,
-                      'PT 약속 요청',
-                      Colors.blue,
-                      () => context.push('/reservation-requests'),
-                    ),
-                    _buildReservationAction(
-                      Icons.fitness_center,
-                      'PT 계약 목록',
-                      Colors.green,
-                      () => context.push('/pt-contracts'),
-                    ),
-                  ],
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildLargeReservationButton(
+                  context,
+                  Icons.description,
+                  '계약목록',
+                  const Color(0xFF27AE60),
+                  () => context.push('/pt-contracts'),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildReservationAction(
-                      Icons.history,
-                      '나의 신청 내역',
-                      Colors.purple,
-                      () => context.push('/my-appointment-requests'),
-                    ),
-                  ],
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildLargeReservationButton(
+                  context,
+                  Icons.history,
+                  '나의 신청 내역',
+                  const Color(0xFF8E44AD),
+                  () => context.push('/my-appointment-requests'),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         
@@ -564,32 +550,49 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
     );
   }
 
-  Widget _buildReservationAction(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildLargeReservationButton(
+      BuildContext context, IconData icon, String label, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 28, color: color),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              color,
+              color.withValues(alpha: 0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF2C3E50),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: Colors.white,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

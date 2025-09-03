@@ -41,6 +41,9 @@ dependencies:
   
   # Date
   table_calendar: ^3.1.2
+  
+  # Image Picker
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
