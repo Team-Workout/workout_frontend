@@ -176,20 +176,13 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white,
-            Colors.grey.shade50,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
         border: Border.all(
@@ -197,84 +190,80 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
           width: 1,
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with gradient
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.blue.shade600,
-                    Colors.blue.shade400,
-                  ],
+            // Clean header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.fitness_center_outlined,
+                    color: Colors.grey[700],
+                    size: 18,
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.fitness_center,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          offering.title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        offering.title,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
-                        if (offering.trainerName != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '${offering.trainerName} 트레이너',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 14,
-                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (offering.trainerName != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '${offering.trainerName} 트레이너',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 13,
                           ),
-                        ],
+                        ),
                       ],
+                    ],
+                  ),
+                ),
+                if (widget.isTrainerView)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: Colors.red[400],
+                        size: 18,
+                      ),
+                      onPressed: () => _deleteOffering(offering),
+                      tooltip: '삭제',
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
                     ),
                   ),
-                  if (widget.isTrainerView)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.white, size: 20),
-                        onPressed: () => _deleteOffering(offering),
-                        tooltip: '삭제',
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
             
             // Content
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(top: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -294,20 +283,18 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildModernInfoItem(
-                          icon: Icons.payments,
+                        child: _buildCleanInfoItem(
+                          icon: Icons.payments_outlined,
                           label: '가격',
                           value: '₩${_formatPrice(offering.price)}',
-                          color: Colors.green,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: _buildModernInfoItem(
-                          icon: Icons.fitness_center,
+                        child: _buildCleanInfoItem(
+                          icon: Icons.fitness_center_outlined,
                           label: '세션',
                           value: '${offering.totalSessions}회',
-                          color: Colors.orange,
                         ),
                       ),
                     ],
@@ -317,7 +304,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
-                      child: _buildModernBookingButton(offering),
+                      child: _buildCleanBookingButton(offering),
                     ),
                   ],
                 ],
@@ -329,19 +316,18 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     );
   }
 
-  Widget _buildModernInfoItem({
+  Widget _buildCleanInfoItem({
     required IconData icon,
     required String label,
     required String value,
-    required Color color,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: Colors.grey[200]!,
           width: 1,
         ),
       ),
@@ -350,14 +336,14 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: color),
+              Icon(icon, size: 14, color: Colors.grey[600]),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -365,10 +351,10 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
-              color: Colors.grey[800],
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -376,46 +362,41 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     );
   }
 
-  Widget _buildModernBookingButton(PtOffering offering) {
+  Widget _buildCleanBookingButton(PtOffering offering) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.purple.shade600,
-            Colors.purple.shade400,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           onTap: () => _bookPtOffering(offering),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.calendar_today,
+                  Icons.calendar_today_outlined,
                   color: Colors.white,
-                  size: 18,
+                  size: 16,
                 ),
                 const SizedBox(width: 8),
                 const Text(
                   '예약하기',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],

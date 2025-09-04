@@ -9,6 +9,8 @@ import 'package:pt_service/features/pt_offerings/viewmodel/pt_offering_viewmodel
 import 'package:pt_service/features/pt_applications/viewmodel/pt_application_viewmodel.dart';
 import 'package:pt_service/features/pt_schedule/viewmodel/pt_schedule_viewmodel.dart';
 import 'package:pt_service/features/pt_schedule/repository/pt_schedule_repository.dart';
+import '../../../features/trainer_clients/view/trainer_clients_list_view.dart';
+import '../../../core/theme/brand_colors.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'trainer_dashboard_view.g.dart';
@@ -85,10 +87,14 @@ class TrainerDashboardView extends ConsumerStatefulWidget {
   ConsumerState<TrainerDashboardView> createState() => _TrainerDashboardViewState();
 }
 
-class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
+class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> 
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    
     // 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(currentUserProvider);
@@ -99,6 +105,12 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
         ref.read(todayScheduleViewModelProvider.notifier).loadTodaySchedule();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -170,121 +182,63 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
             ),
             const SizedBox(height: 8),
             Text(
-              '오늘의 PT 일정과 회원 관리 현황입니다',
+              '이번 주 PT 일정을 한눈에 확인해보세요',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.grey[600],
               ),
             ),
             const SizedBox(height: 24),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.95,
-              children: [
-                DashboardCard(
-                  title: '오늘의 PT',
-                  value: todayPtCount > 0 ? '$todayPtCount건' : '일정 없음',
-                  icon: Icons.calendar_today,
-                  color: Colors.blue,
-                  onTap: () {
-                    context.push('/pt-schedule');
-                  },
-                ),
-                DashboardCard(
-                  title: 'PT 신청',
-                  value: pendingApplicationsCount > 0 
-                      ? '$pendingApplicationsCount건 대기' 
-                      : '대기 없음',
-                  icon: Icons.assignment,
-                  color: Colors.green,
-                  onTap: () {
-                    context.push('/pt-applications');
-                  },
-                ),
-                DashboardCard(
-                  title: '이번 달 수업',
-                  value: monthlyPtCount > 0 ? '${monthlyPtCount}건' : '수업 없음',
-                  icon: Icons.fitness_center,
-                  color: Colors.orange,
-                  onTap: () {
-                    context.push('/my-appointment-requests');
-                  },
-                ),
-                DashboardCard(
-                  title: 'PT 상품 관리',
-                  value: ptOfferingsCount > 0 
-                      ? '$ptOfferingsCount개 상품' 
-                      : '상품 없음',
-                  icon: Icons.shopping_bag,
-                  color: Colors.purple,
-                  onTap: () {
-                    context.push('/pt-offerings');
-                  },
-                ),
-                DashboardCard(
-                  title: 'PT 약속 생성',
-                  value: '회원 약속 생성',
-                  icon: Icons.add_circle,
-                  color: Colors.orange,
-                  onTap: () {
-                    context.push('/reservation-recommendations');
-                  },
-                ),
-                DashboardCard(
-                  title: 'PT 약속 관리',
-                  value: '예약된 일정',
-                  icon: Icons.schedule,
-                  color: Colors.purple,
-                  onTap: () {
-                    context.push('/pt-schedule');
-                  },
-                ),
-                DashboardCard(
-                  title: 'PT 계약',
-                  value: '계약 관리',
-                  icon: Icons.assignment_turned_in,
-                  color: Colors.teal,
-                  onTap: () {
-                    context.push('/pt-contracts');
-                  },
-                ),
-                DashboardCard(
-                  title: '약속 승인',
-                  value: '회원 요청 승인',
-                  icon: Icons.check_circle,
-                  color: Colors.green,
-                  onTap: () {
-                    context.push('/appointment-confirmation');
-                  },
-                ),
-                DashboardCard(
-                  title: 'PT 신청 내역',
-                  value: '전체 신청 관리',
-                  icon: Icons.history,
-                  color: Colors.deepPurple,
-                  onTap: () {
-                    context.push('/my-appointment-requests');
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
+            
+            // 📊 이번 주 PT 현황 차트 (맨 위로 이동)
             Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '이번 주 PT 현황',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '이번 주 PT 현황',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '일별 수업 스케줄',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '이번 달: ${monthlyPtCount}건',
+                            style: TextStyle(
+                              color: Colors.blue[700],
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
-                      height: 200,
+                      height: 240,
                       child: weeklyStatsAsync.when(
                         data: (weeklyStats) {
                           final maxY = weeklyStats.isEmpty ? 10.0 : (weeklyStats.reduce((a, b) => a > b ? a : b) + 2).toDouble();
@@ -311,12 +265,19 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                                 bottomTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
+                                    reservedSize: 32,
                                     getTitlesWidget: (value, meta) {
                                       const days = ['월', '화', '수', '목', '금', '토', '일'];
                                       if (value.toInt() >= 0 && value.toInt() < days.length) {
-                                        return Text(
-                                          days[value.toInt()],
-                                          style: const TextStyle(fontSize: 14),
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 12),
+                                          child: Text(
+                                            days[value.toInt()],
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
                                         );
                                       }
                                       return const Text('');
@@ -326,12 +287,25 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                                 leftTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
-                                    interval: maxY > 10 ? (maxY / 5).ceilToDouble() : 2,
+                                    reservedSize: 40,
+                                    interval: maxY > 10 ? (maxY / 3).ceilToDouble() : (maxY > 5 ? 2 : 1),
                                     getTitlesWidget: (value, meta) {
-                                      return Text(
-                                        value.toInt().toString(),
-                                        style: const TextStyle(fontSize: 12),
-                                      );
+                                      if (value == 0) return const SizedBox();
+                                      // 실제 데이터 값만 표시
+                                      final intValue = value.toInt();
+                                      if (intValue <= maxY.toInt()) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: Text(
+                                            intValue.toString(),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox();
                                     },
                                   ),
                                 ),
@@ -342,20 +316,36 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                                   sideTitles: SideTitles(showTitles: false),
                                 ),
                               ),
-                              borderData: FlBorderData(
-                                show: false,
+                              gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                                horizontalInterval: maxY > 10 ? (maxY / 3).ceilToDouble() : (maxY > 5 ? 2 : 1),
+                                getDrawingHorizontalLine: (value) {
+                                  return FlLine(
+                                    color: Colors.grey[200]!,
+                                    strokeWidth: 1,
+                                  );
+                                },
                               ),
+                              borderData: FlBorderData(show: false),
                               barGroups: weeklyStats.asMap().entries.map((entry) {
                                 return BarChartGroupData(
                                   x: entry.key,
                                   barRods: [
                                     BarChartRodData(
                                       toY: entry.value.toDouble(),
-                                      color: Colors.blue,
-                                      width: 20,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.blue[300]!,
+                                          Colors.blue[600]!,
+                                        ],
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                      ),
+                                      width: 24,
                                       borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(4),
-                                        topRight: Radius.circular(4),
+                                        topLeft: Radius.circular(6),
+                                        topRight: Radius.circular(6),
                                       ),
                                     )
                                   ],
@@ -369,7 +359,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error_outline, color: Colors.red),
+                              Icon(Icons.error_outline, color: Colors.red[300], size: 32),
                               const SizedBox(height: 8),
                               Text(
                                 '차트를 불러올 수 없습니다',
@@ -384,6 +374,8 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                 ),
               ),
             ),
+            
+            // 📅 오늘의 PT 일정
             const SizedBox(height: 24),
             Card(
               child: Column(
@@ -483,8 +475,237 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                 ],
               ),
             ),
+            
+            // 📋 카테고리별 관리 메뉴
+            const SizedBox(height: 24),
+            Text(
+              '관리 메뉴',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // 탭 바
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    labelColor: Colors.black,
+                    unselectedLabelColor: Colors.grey[600],
+                    indicatorColor: Colors.black,
+                    indicatorWeight: 3,
+                    labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.normal,
+                      fontSize: 14,
+                    ),
+                    tabs: const [
+                      Tab(
+                        icon: Icon(Icons.calendar_today, size: 20),
+                        text: '일정 관리',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.people, size: 20),
+                        text: '회원 관리',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.fitness_center, size: 20),
+                        text: 'PT 운영',
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 400,
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildScheduleManagementTab(),
+                        _buildMemberManagementTab(),
+                        _buildPtOperationTab(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  // 📅 일정 관리 탭
+  Widget _buildScheduleManagementTab() {
+    final todayPtCount = ref.watch(todayScheduleViewModelProvider).whenOrNull(
+      data: (schedules) => schedules.length,
+    ) ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.0,
+        children: [
+          DashboardCard(
+            title: '오늘의 PT',
+            value: todayPtCount > 0 ? '$todayPtCount건' : '일정 없음',
+            icon: Icons.calendar_today,
+            color: Colors.blue,
+            onTap: () {
+              context.push('/pt-schedule');
+            },
+          ),
+          DashboardCard(
+            title: 'PT 약속 생성',
+            value: '새 약속 생성',
+            icon: Icons.add_circle,
+            color: BrandColors.primaryGreen,
+            onTap: () {
+              context.push('/reservation-recommendations');
+            },
+          ),
+          DashboardCard(
+            title: 'PT 약속 관리',
+            value: '예약된 일정',
+            icon: Icons.schedule,
+            color: Colors.orange,
+            onTap: () {
+              context.push('/pt-schedule');
+            },
+          ),
+          DashboardCard(
+            title: '약속 승인',
+            value: '회원 요청 승인',
+            icon: Icons.check_circle,
+            color: Colors.teal,
+            onTap: () {
+              context.push('/appointment-confirmation');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 👥 회원 관리 탭
+  Widget _buildMemberManagementTab() {
+    final pendingApplicationsCount = ref.watch(ptApplicationProvider).whenOrNull(
+      data: (applications) => applications.length,
+    ) ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.0,
+        children: [
+          DashboardCard(
+            title: '내 회원 관리',
+            value: '회원 현황 확인',
+            icon: Icons.people,
+            color: BrandColors.primaryBlue, // 브랜드 컬러 적용
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TrainerClientsListView(),
+                ),
+              );
+            },
+          ),
+          DashboardCard(
+            title: 'PT 신청',
+            value: pendingApplicationsCount > 0 
+                ? '$pendingApplicationsCount건 대기' 
+                : '대기 없음',
+            icon: Icons.assignment,
+            color: pendingApplicationsCount > 0 ? BrandColors.error : BrandColors.primaryGreen,
+            onTap: () {
+              context.push('/pt-applications');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 📊 PT 운영 탭  
+  Widget _buildPtOperationTab() {
+    final monthlyPtCount = ref.watch(monthlyPtCountProvider).whenOrNull(
+      data: (count) => count,
+    ) ?? 0;
+    
+    final ptOfferingsCount = ref.watch(ptOfferingProvider).whenOrNull(
+      data: (offerings) => offerings.length,
+    ) ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.0,
+        children: [
+          DashboardCard(
+            title: 'PT 상품 관리',
+            value: ptOfferingsCount > 0 
+                ? '$ptOfferingsCount개 상품' 
+                : '상품 없음',
+            icon: Icons.shopping_bag,
+            color: Colors.purple,
+            onTap: () {
+              context.push('/pt-offerings');
+            },
+          ),
+          DashboardCard(
+            title: 'PT 계약',
+            value: '계약 관리',
+            icon: Icons.assignment_turned_in,
+            color: Colors.teal,
+            onTap: () {
+              context.push('/pt-contracts');
+            },
+          ),
+          DashboardCard(
+            title: '이번 달 수업',
+            value: monthlyPtCount > 0 ? '${monthlyPtCount}건' : '수업 없음',
+            icon: Icons.fitness_center,
+            color: Colors.orange,
+            onTap: () {
+              context.push('/my-appointment-requests');
+            },
+          ),
+          DashboardCard(
+            title: 'PT 신청 내역',
+            value: '전체 신청 관리',
+            icon: Icons.history,
+            color: Colors.deepPurple,
+            onTap: () {
+              context.push('/my-appointment-requests');
+            },
+          ),
+        ],
       ),
     );
   }

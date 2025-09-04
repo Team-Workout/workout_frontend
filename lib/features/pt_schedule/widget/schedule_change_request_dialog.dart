@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import '../model/pt_schedule_models.dart';
 import '../viewmodel/pt_schedule_viewmodel.dart';
 import '../../pt_contract/viewmodel/pt_contract_viewmodel.dart';
+import '../../../common/widgets/simple_time_picker.dart';
 
 class ScheduleChangeRequestDialog extends ConsumerStatefulWidget {
   final PtSchedule schedule;
@@ -259,9 +260,10 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
     );
 
     if (date != null) {
-      final time = await showTimePicker(
+      final time = await showSimpleTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_newStartDateTime),
+        title: '시작 시간 선택',
       );
 
       if (time != null) {

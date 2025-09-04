@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../pt_contract/model/pt_contract_models.dart';
 import '../../pt_contract/viewmodel/pt_contract_viewmodel.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../common/widgets/simple_time_picker.dart';
 
 class ReservationRequestView extends ConsumerStatefulWidget {
   const ReservationRequestView({super.key});
@@ -461,9 +462,10 @@ class _ProposeAppointmentSheetState extends ConsumerState<_ProposeAppointmentShe
     );
 
     if (date != null && mounted) {
-      final time = await showTimePicker(
+      final time = await showSimpleTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
+        title: 'PT 시간 선택',
       );
 
       if (time != null) {

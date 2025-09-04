@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodel/trainer_viewmodel.dart';
 import '../model/trainer_model.dart';
+import '../../../services/image_cache_manager.dart';
+import 'trainer_detail_view.dart';
 
 class TrainersView extends ConsumerStatefulWidget {
   const TrainersView({super.key});
@@ -22,6 +25,15 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // 헬스장 ID 1로 트레이너 목록 로드 (실제로는 로그인한 사용자의 헬스장 ID를 사용해야 함)
+    Future.microtask(() {
+      ref.read(trainerProfileViewModelProvider.notifier).loadTrainersByGymId(1);
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -29,7 +41,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
 
   @override
   Widget build(BuildContext context) {
-    final trainersState = ref.watch(trainerViewModelProvider);
+    final trainersState = ref.watch(trainerProfileViewModelProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -80,7 +92,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                     ),
                   ),
                   onChanged: (value) {
-                    ref.read(trainerViewModelProvider.notifier).searchTrainers(value);
+                    ref.read(trainerProfileViewModelProvider.notifier).searchTrainers(value);
                   },
                 ),
                 const SizedBox(height: 16),
@@ -107,7 +119,8 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                             setState(() {
                               selectedCategory = category;
                             });
-                            ref.read(trainerViewModelProvider.notifier).filterByCategory(category);
+                            // TODO: 카테고리 필터링 구현 필요
+                            // ref.read(trainerProfileViewModelProvider.notifier).filterByCategory(category);
                           },
                           backgroundColor: Colors.grey[200],
                           selectedColor: Colors.black87,
@@ -139,22 +152,6 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                 return ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    if (trainers.any((t) => t.isFeatured)) ...[
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 12),
-                        child: Text(
-                          'Featured Trainer',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      ...trainers
-                          .where((t) => t.isFeatured)
-                          .map((trainer) => _buildFeaturedTrainerCard(trainer)),
-                      const SizedBox(height: 24),
-                    ],
                     const Padding(
                       padding: EdgeInsets.only(bottom: 12),
                       child: Text(
@@ -165,9 +162,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                         ),
                       ),
                     ),
-                    ...trainers
-                        .where((t) => !t.isFeatured)
-                        .map((trainer) => _buildTrainerCard(trainer)),
+                    ...trainers.map((trainer) => _buildTrainerCard(trainer)),
                   ],
                 );
               },
@@ -210,24 +205,46 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
     );
   }
 
-  Widget _buildFeaturedTrainerCard(Trainer trainer) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
+  Widget _buildTrainerCard(TrainerProfile trainer) {
+    return FutureBuilder<String?>(
+      future: trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty
+          ? ImageCacheManager().getCachedImage(
+              imageUrl: trainer.profileImageUrl!,
+              cacheKey: 'trainer_${trainer.trainerId}',
+              type: ImageType.profile,
+            )
+          : Future.value(null),
+      builder: (context, snapshot) {
+        return GestureDetector(
+          onTap: () {
+            // 트레이너 상세 페이지로 이동
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TrainerDetailView(
+                  trainerId: trainer.trainerId,
+                  trainer: trainer, // 캐시된 데이터 전달
+                ),
+              ),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
             height: 200,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -250,11 +267,16 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                       CircleAvatar(
                         radius: 30,
                         backgroundColor: Colors.white,
-                        child: Icon(
-                          Icons.person,
-                          size: 30,
-                          color: Colors.grey[600],
-                        ),
+                        backgroundImage: snapshot.hasData && snapshot.data != null
+                            ? FileImage(File(snapshot.data!))
+                            : null,
+                        child: snapshot.hasData && snapshot.data != null
+                            ? null
+                            : Icon(
+                                Icons.person,
+                                size: 30,
+                                color: Colors.grey[600],
+                              ),
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -270,7 +292,9 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                             ),
                           ),
                           Text(
-                            trainer.specialization,
+                            trainer.specialties.isNotEmpty 
+                                ? trainer.specialties.take(2).join(', ')
+                                : '전문 분야',
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
@@ -281,23 +305,27 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                     ],
                   ),
                 ),
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${trainer.rating} (${trainer.reviewCount} reviews)',
+                // 자격증 개수 표시
+                if (trainer.certifications.isNotEmpty)
+                  Positioned(
+                    bottom: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '자격증 ${trainer.certifications.length}개',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 14,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -306,179 +334,92 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 8,
-                  children: trainer.tags.map((tag) {
-                    return Chip(
-                      label: Text(
-                        tag,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      backgroundColor: Colors.grey[200],
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  trainer.description,
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 14,
-                    height: 1.5,
+                // 전문 분야 표시
+                if (trainer.specialties.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    children: trainer.specialties.map((specialty) {
+                      return Chip(
+                        label: Text(
+                          specialty,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        backgroundColor: Colors.grey[200],
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      );
+                    }).toList(),
                   ),
-                ),
+                const SizedBox(height: 12),
+                if (trainer.introduction != null && trainer.introduction!.isNotEmpty)
+                  Text(
+                    trainer.introduction!,
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '\$${trainer.pricePerSession} / session',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    // 자격증과 경력 정보 표시
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (trainer.workExperiences.isNotEmpty)
+                            Text(
+                              '경력 ${trainer.workExperiences.length}개',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          if (trainer.certifications.isNotEmpty)
+                            Text(
+                              '자격증 ${trainer.certifications.length}개',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // 트레이너 상세 페이지로 이동
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TrainerDetailView(
+                              trainerId: trainer.trainerId,
+                              trainer: trainer,
+                            ),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black87,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
+                          horizontal: 20,
+                          vertical: 10,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: const Text(
-                        'Book Now',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrainerCard(Trainer trainer) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.grey[200],
-            child: Icon(
-              Icons.person,
-              size: 30,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      trainer.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          trainer.rating?.toString() ?? '0',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  trainer.specialization,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: trainer.tags.take(2).map((tag) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        tag,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '\$${trainer.pricePerSession} / session',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.black87,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      child: const Text(
-                        'Select',
+                        '프로필 보기',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -487,8 +428,11 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
               ],
             ),
           ),
-        ],
-      ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

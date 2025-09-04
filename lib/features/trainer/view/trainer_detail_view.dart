@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../model/trainer_model.dart';
 import '../repository/trainer_repository.dart';
+import '../viewmodel/trainer_viewmodel.dart';
+import '../../../services/image_cache_manager.dart';
 import '../../pt_offerings/view/pt_offerings_list_view.dart';
 
 class TrainerDetailView extends ConsumerStatefulWidget {
@@ -49,6 +52,19 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
         return;
       }
 
+      // 먼저 캐시된 데이터 확인
+      final viewModel = ref.read(trainerProfileViewModelProvider.notifier);
+      final cachedProfile = viewModel.getCachedTrainerById(widget.trainerId);
+      
+      if (cachedProfile != null) {
+        _trainerProfile = cachedProfile;
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // 캐시에 없으면 API 호출
       final repository = ref.read(trainerRepositoryProvider);
       final profile = await repository.getTrainerProfileById(widget.trainerId);
 
@@ -231,15 +247,31 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                // Profile Avatar
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.grey[200] ?? const Color(0xFFEEEEEE),
-                  child: Icon(
-                    Icons.person,
-                    size: 30,
-                    color: Colors.grey[600] ?? Colors.grey,
-                  ),
+                // Profile Avatar with cached image
+                FutureBuilder<String?>(
+                  future: trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty
+                      ? ImageCacheManager().getCachedImage(
+                          imageUrl: trainer.profileImageUrl!,
+                          cacheKey: 'trainer_${trainer.trainerId}',
+                          type: ImageType.profile,
+                        )
+                      : Future.value(null),
+                  builder: (context, snapshot) {
+                    return CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.grey[200] ?? const Color(0xFFEEEEEE),
+                      backgroundImage: snapshot.hasData && snapshot.data != null
+                          ? FileImage(File(snapshot.data!))
+                          : null,
+                      child: snapshot.hasData && snapshot.data != null
+                          ? null
+                          : Icon(
+                              Icons.person,
+                              size: 30,
+                              color: Colors.grey[600] ?? Colors.grey,
+                            ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 16),
                 // Trainer Info
@@ -265,26 +297,6 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                       ),
                       const SizedBox(height: 8),
                       // Rating
-                      Row(
-                        children: [
-                          ...List.generate(5, (index) {
-                            if (index < 4) {
-                              return const Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 16,
-                              );
-                            } else {
-                              return const Icon(
-                                Icons.star_half,
-                                color: Colors.amber,
-                                size: 16,
-                              );
-                            }
-                          }),
-                          const SizedBox(width: 8),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -771,69 +783,6 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
     );
   }
 
-  void _showBookingDialog(TrainerProfile trainer) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Book Session with ${trainer.name}'),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Would you like to book a training session?',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Session Rate: \$65/hour',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF3498DB),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Booking request sent to ${trainer.name}!'),
-                    backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3498DB),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'Confirm Booking',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Widget _buildPtOfferingsTab() {
     return PtOfferingsListView(

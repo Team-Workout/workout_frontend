@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/services/api_service.dart';
+import '../../../services/image_cache_manager.dart';
 import '../model/body_composition_model.dart';
 import '../model/body_image_model.dart';
 import '../viewmodel/body_composition_viewmodel.dart';
@@ -1565,36 +1566,69 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: FutureBuilder<Uint8List?>(
-              future: _loadAuthenticatedBodyImage(image.fileUrl),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Container(
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  );
-                }
-
-                if (snapshot.hasData && snapshot.data != null) {
+            child: FutureBuilder<String?>(
+              future: ImageCacheManager().getCachedImage(
+                imageUrl: image.fileUrl,
+                cacheKey: 'body_${image.fileId}',
+                type: ImageType.body,
+              ),
+              builder: (context, cacheSnapshot) {
+                if (cacheSnapshot.hasData && cacheSnapshot.data != null) {
+                  // 캐시된 이미지가 있으면 파일로 로드
                   return GestureDetector(
-                    onTap: () => _showBodyImageFullScreen(image, snapshot.data!),
-                    child: Image.memory(
-                      snapshot.data!,
+                    onTap: () {
+                      final cachedFile = File(cacheSnapshot.data!);
+                      cachedFile.readAsBytes().then((bytes) {
+                        _showBodyImageFullScreen(image, bytes);
+                      });
+                    },
+                    child: Image.file(
+                      File(cacheSnapshot.data!),
                       fit: BoxFit.cover,
                       width: 100,
                       height: 100,
                     ),
                   );
                 }
+                // 캐시가 없으면 기존 방식으로 로드
+                return FutureBuilder<Uint8List?>(
+                  future: _loadAuthenticatedBodyImage(image.fileUrl),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
 
-                return Container(
-                  color: Colors.grey[200],
-                  child: Icon(
-                    Icons.image_not_supported,
-                    color: Colors.grey[400],
-                  ),
+                    if (snapshot.hasData && snapshot.data != null) {
+                      // 이미지를 캐시에 저장
+                      ImageCacheManager().updateCachedImage(
+                        imageUrl: image.fileUrl,
+                        cacheKey: 'body_${image.fileId}',
+                        type: ImageType.body,
+                      );
+                      return GestureDetector(
+                        onTap: () => _showBodyImageFullScreen(image, snapshot.data!),
+                        child: Image.memory(
+                          snapshot.data!,
+                          fit: BoxFit.cover,
+                          width: 100,
+                          height: 100,
+                        ),
+                      );
+                    }
+
+                    return Container(
+                      color: Colors.grey[200],
+                      child: Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey[400],
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -1810,6 +1844,11 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
 
   Future<void> _deleteBodyImage(BodyImageResponse image) async {
     try {
+      // 캐시에서도 이미지 삭제
+      await ImageCacheManager().clearCachedImage(
+        cacheKey: 'body_${image.fileId}',
+        type: ImageType.body,
+      );
       await ref.read(bodyImageNotifierProvider.notifier).deleteBodyImage(image.fileId);
       
       if (mounted) {
