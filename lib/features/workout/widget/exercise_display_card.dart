@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/workout_record_models.dart';
+import '../../../core/theme/notion_colors.dart';
 
 class ExerciseDisplayCard extends StatelessWidget {
   final ExerciseRecord exercise;
@@ -17,7 +18,7 @@ class ExerciseDisplayCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: NotionColors.border),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -29,18 +30,14 @@ class ExerciseDisplayCard extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: NotionColors.black,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Text(
                     '${index + 1}',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: NotionColors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -57,7 +54,7 @@ class ExerciseDisplayCard extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
-                        color: Color(0xFF2C3E50),
+                        color: NotionColors.black,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -66,13 +63,13 @@ class ExerciseDisplayCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F4FD),
+                            color: NotionColors.gray100,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '${exercise.sets.length}세트',
                             style: const TextStyle(
-                              color: Color(0xFF2980B9),
+                              color: NotionColors.black,
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                             ),
@@ -82,13 +79,13 @@ class ExerciseDisplayCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5E8),
+                            color: NotionColors.gray100,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '총 ${exercise.sets.fold<int>(0, (sum, set) => sum + set.reps)}회',
                             style: const TextStyle(
-                              color: Color(0xFF27AE60),
+                              color: NotionColors.black,
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                             ),
@@ -100,13 +97,13 @@ class ExerciseDisplayCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3E8),
+                              color: NotionColors.gray100,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               '최고 ${exercise.sets.where((set) => set.weight != null).map((set) => set.weight!).reduce((a, b) => a > b ? a : b)}kg',
                               style: const TextStyle(
-                                color: Color(0xFFE67E22),
+                                color: NotionColors.black,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -127,7 +124,7 @@ class ExerciseDisplayCard extends StatelessWidget {
               Text(
                 '${exercise.sets.length}세트',
                 style: TextStyle(
-                  color: Colors.grey[700],
+                  color: NotionColors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -140,9 +137,9 @@ class ExerciseDisplayCard extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 6),
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: NotionColors.gray100,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(color: NotionColors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,14 +150,14 @@ class ExerciseDisplayCard extends StatelessWidget {
                             width: 20,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3498DB),
+                              color: NotionColors.black,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Center(
                               child: Text(
                                 '${setIndex + 1}',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: NotionColors.white,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -171,7 +168,7 @@ class ExerciseDisplayCard extends StatelessWidget {
                           Text(
                             '${set.reps}회',
                             style: const TextStyle(
-                              color: Color(0xFF2C3E50),
+                              color: NotionColors.black,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -181,13 +178,13 @@ class ExerciseDisplayCard extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE8F4FD),
+                                color: NotionColors.gray100,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 '${set.weight}kg',
                                 style: const TextStyle(
-                                  color: Color(0xFF2980B9),
+                                  color: NotionColors.black,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -203,16 +200,16 @@ class ExerciseDisplayCard extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF0F9FF),
+                            color: NotionColors.gray100,
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: const Color(0xFFBAE6FD)),
+                            border: Border.all(color: NotionColors.border),
                           ),
                           child: Row(
                             children: [
                               const Icon(
                                 Icons.note_alt_outlined,
                                 size: 12,
-                                color: Color(0xFF0369A1),
+                                color: NotionColors.black,
                               ),
                               const SizedBox(width: 4),
                               Expanded(
@@ -220,7 +217,7 @@ class ExerciseDisplayCard extends StatelessWidget {
                                   set.memo!,
                                   style: const TextStyle(
                                     fontSize: 10,
-                                    color: Color(0xFF0369A1),
+                                    color: NotionColors.black,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
@@ -241,9 +238,9 @@ class ExerciseDisplayCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FA),
+                color: NotionColors.gray100,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE9ECEF)),
+                border: Border.all(color: NotionColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +250,7 @@ class ExerciseDisplayCard extends StatelessWidget {
                       const Icon(
                         Icons.edit_note_outlined,
                         size: 14,
-                        color: Color(0xFF6C757D),
+                        color: NotionColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       const Text(
@@ -261,7 +258,7 @@ class ExerciseDisplayCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF6C757D),
+                          color: NotionColors.textSecondary,
                         ),
                       ),
                     ],
@@ -271,7 +268,7 @@ class ExerciseDisplayCard extends StatelessWidget {
                     exercise.memo!,
                     style: const TextStyle(
                       fontSize: 13,
-                      color: Color(0xFF495057),
+                      color: NotionColors.textSecondary,
                       height: 1.4,
                     ),
                   ),

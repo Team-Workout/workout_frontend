@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../model/pt_offering_model.dart';
 import '../viewmodel/pt_offering_viewmodel.dart';
+import '../../../core/theme/notion_colors.dart';
 
 class PtOfferingCreateView extends ConsumerStatefulWidget {
   const PtOfferingCreateView({super.key});
@@ -81,7 +82,10 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: NotionColors.gray50,
       appBar: AppBar(
+        backgroundColor: NotionColors.white,
+        foregroundColor: NotionColors.black,
         title: const Text('PT 상품 생성'),
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -107,7 +111,12 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Card(
+              Container(
+                decoration: BoxDecoration(
+                  color: NotionColors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: NotionColors.border),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -131,9 +140,6 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
                           if (value == null || value.trim().isEmpty) {
                             return '상품명을 입력해주세요.';
                           }
-                          if (value.trim().length < 5) {
-                            return '상품명은 5자 이상 입력해주세요.';
-                          }
                           return null;
                         },
                       ),
@@ -150,9 +156,6 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
                           if (value == null || value.trim().isEmpty) {
                             return '상품 설명을 입력해주세요.';
                           }
-                          if (value.trim().length < 10) {
-                            return '상품 설명은 10자 이상 입력해주세요.';
-                          }
                           return null;
                         },
                       ),
@@ -161,7 +164,12 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
                 ),
               ),
               const SizedBox(height: 16),
-              Card(
+              Container(
+                decoration: BoxDecoration(
+                  color: NotionColors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: NotionColors.border),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -243,21 +251,21 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: NotionColors.gray100,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(color: NotionColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue.shade700),
+                        Icon(Icons.info_outline, color: NotionColors.black),
                         const SizedBox(width: 8),
                         Text(
                           '안내사항',
                           style: TextStyle(
-                            color: Colors.blue.shade700,
+                            color: NotionColors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

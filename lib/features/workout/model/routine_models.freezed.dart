@@ -20,7 +20,7 @@ CreateRoutineRequest _$CreateRoutineRequestFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$CreateRoutineRequest {
-  String get name => throw _privateConstructorUsedError;
+  String? get name => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   List<RoutineExercise> get routineExercises =>
       throw _privateConstructorUsedError;
@@ -42,7 +42,7 @@ abstract class $CreateRoutineRequestCopyWith<$Res> {
       _$CreateRoutineRequestCopyWithImpl<$Res, CreateRoutineRequest>;
   @useResult
   $Res call(
-      {String name,
+      {String? name,
       String? description,
       List<RoutineExercise> routineExercises});
 }
@@ -63,15 +63,15 @@ class _$CreateRoutineRequestCopyWithImpl<$Res,
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? name = null,
+    Object? name = freezed,
     Object? description = freezed,
     Object? routineExercises = null,
   }) {
     return _then(_value.copyWith(
-      name: null == name
+      name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       description: freezed == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
@@ -93,7 +93,7 @@ abstract class _$$CreateRoutineRequestImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String name,
+      {String? name,
       String? description,
       List<RoutineExercise> routineExercises});
 }
@@ -111,15 +111,15 @@ class __$$CreateRoutineRequestImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? name = null,
+    Object? name = freezed,
     Object? description = freezed,
     Object? routineExercises = null,
   }) {
     return _then(_$CreateRoutineRequestImpl(
-      name: null == name
+      name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       description: freezed == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
@@ -136,7 +136,7 @@ class __$$CreateRoutineRequestImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$CreateRoutineRequestImpl implements _CreateRoutineRequest {
   const _$CreateRoutineRequestImpl(
-      {required this.name,
+      {this.name,
       this.description,
       required final List<RoutineExercise> routineExercises})
       : _routineExercises = routineExercises;
@@ -145,7 +145,7 @@ class _$CreateRoutineRequestImpl implements _CreateRoutineRequest {
       _$$CreateRoutineRequestImplFromJson(json);
 
   @override
-  final String name;
+  final String? name;
   @override
   final String? description;
   final List<RoutineExercise> _routineExercises;
@@ -199,7 +199,7 @@ class _$CreateRoutineRequestImpl implements _CreateRoutineRequest {
 
 abstract class _CreateRoutineRequest implements CreateRoutineRequest {
   const factory _CreateRoutineRequest(
-          {required final String name,
+          {final String? name,
           final String? description,
           required final List<RoutineExercise> routineExercises}) =
       _$CreateRoutineRequestImpl;
@@ -208,7 +208,7 @@ abstract class _CreateRoutineRequest implements CreateRoutineRequest {
       _$CreateRoutineRequestImpl.fromJson;
 
   @override
-  String get name;
+  String? get name;
   @override
   String? get description;
   @override

@@ -4,6 +4,7 @@ import '../viewmodel/workout_record_viewmodel.dart';
 import '../service/workout_api_service.dart';
 import '../service/local_storage_service.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/theme/notion_colors.dart';
 import '../widget/calendar_view.dart';
 import '../widget/workout_record_tab.dart';
 import '../widget/workout_routine_tab.dart';
@@ -54,22 +55,22 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: NotionColors.gray50,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: NotionColors.white,
           elevation: 0,
           title: const Text(
             '운동 관리',
             style: TextStyle(
-              color: Color(0xFF2C3E50),
+              color: NotionColors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
-          iconTheme: const IconThemeData(color: Color(0xFF2C3E50)),
+          iconTheme: const IconThemeData(color: NotionColors.black),
           bottom: const TabBar(
-            labelColor: Color(0xFF2C3E50),
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: Color(0xFF2C3E50),
+            labelColor: NotionColors.black,
+            unselectedLabelColor: NotionColors.textSecondary,
+            indicatorColor: NotionColors.black,
             tabs: [
               Tab(text: '운동 기록'),
               Tab(text: '달력 보기'),

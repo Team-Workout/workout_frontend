@@ -6,11 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/auth/model/user_model.dart';
 import 'package:pt_service/features/sync/viewmodel/sync_viewmodel.dart';
 import 'package:pt_service/core/config/api_config.dart';
 import 'package:pt_service/core/services/api_service.dart';
+import '../../../core/theme/notion_colors.dart';
+import '../../../services/image_cache_manager.dart';
 import '../viewmodel/settings_viewmodel.dart';
 
 class SettingsView extends ConsumerStatefulWidget {
@@ -21,6 +24,8 @@ class SettingsView extends ConsumerStatefulWidget {
 }
 
 class _SettingsViewState extends ConsumerState<SettingsView> {
+  final Map<String, Future<String?>> _imageCache = {};
+
   @override
   void initState() {
     super.initState();
@@ -35,15 +40,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final profileImageAsync = ref.watch(profileImageProvider);
 
     return Scaffold(
+      backgroundColor: NotionColors.gray50,
       appBar: AppBar(
-        title: const Text('설정'),
+        backgroundColor: NotionColors.white,
+        title: const Text('설정', style: TextStyle(color: NotionColors.black)),
       ),
       body: ListView(
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
+            decoration: const BoxDecoration(
+              color: NotionColors.white,
             ),
             child: Column(
               children: [
@@ -58,13 +65,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                             } else {
                               return CircleAvatar(
                                 radius: 40,
-                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                backgroundColor: NotionColors.black,
                                 child: Text(
                                   user?.name.substring(0, 1) ?? 'U',
                                   style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: NotionColors.white,
                                   ),
                                 ),
                               );
@@ -72,18 +79,18 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           },
                           loading: () => CircleAvatar(
                             radius: 40,
-                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor: NotionColors.black,
                             child: const CircularProgressIndicator(color: Colors.white),
                           ),
                           error: (_, __) => CircleAvatar(
                             radius: 40,
-                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor: NotionColors.black,
                             child: Text(
                               user?.name.substring(0, 1) ?? 'U',
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: NotionColors.white,
                               ),
                             ),
                           ),
@@ -97,15 +104,15 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: NotionColors.black,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
+                          border: Border.all(color: NotionColors.white, width: 1.5),
                         ),
                         child: IconButton(
                           iconSize: 14,
                           padding: EdgeInsets.zero,
                           onPressed: () => _showImagePickerOptions(context, ref),
-                          icon: const Icon(Icons.camera_alt, color: Colors.white),
+                          icon: const Icon(Icons.camera_alt, color: NotionColors.white),
                         ),
                       ),
                     ),
@@ -114,13 +121,15 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 const SizedBox(height: 16),
                 Text(
                   user?.name ?? '사용자',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: NotionColors.black,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   user?.email ?? '',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
+                        color: NotionColors.textSecondary,
                       ),
                 ),
                 const SizedBox(height: 8),
@@ -128,13 +137,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: NotionColors.black,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     _getUserTypeLabel(user?.userType.name),
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: NotionColors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -348,10 +357,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                               ? Icons.error 
                               : Icons.help_outline,
                           color: syncState.isCompleted 
-                            ? Colors.green 
+                            ? NotionColors.black 
                             : syncState.error != null 
-                              ? Colors.red 
-                              : Colors.grey,
+                              ? NotionColors.error 
+                              : NotionColors.textSecondary,
                         ),
                   );
                 },
@@ -364,13 +373,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               onPressed: () {
                 _showLogoutDialog(context, ref);
               },
-              icon: const Icon(Icons.logout, color: Colors.red),
+              icon: const Icon(Icons.logout, color: NotionColors.error),
               label: const Text(
                 '로그아웃',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: NotionColors.error),
               ),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.red),
+                side: const BorderSide(color: NotionColors.error),
               ),
             ),
           ),
@@ -402,13 +411,18 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: NotionColors.black,
                   fontWeight: FontWeight.bold,
                 ),
           ),
         ),
-        Card(
+        Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: NotionColors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: NotionColors.border),
+          ),
           child: Column(
             children: items,
           ),
@@ -792,7 +806,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               context.go('/login');
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: NotionColors.error,
             ),
             child: const Text('로그아웃'),
           ),
@@ -836,10 +850,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.cancel, color: Colors.red),
+                leading: const Icon(Icons.cancel, color: NotionColors.error),
                 title: const Text(
                   '취소',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: NotionColors.error),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -871,6 +885,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         
         await ref.read(profileImageProvider.notifier).uploadProfileImage(pickedFile);
         
+        // 이미지 캐시 클리어
+        _imageCache.clear();
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('프로필 사진이 변경되었습니다')),
@@ -897,30 +914,38 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
     print('Loading profile image from: $fullImageUrl');
 
-    // 인증이 필요한 이미지인지 확인하기 위해 FutureBuilder 사용
-    return FutureBuilder<Uint8List?>(
-      future: _loadAuthenticatedImage(fullImageUrl),
+    // 캐시 우선 로드 시도
+    final cacheKey = imageUrl.hashCode.toString();
+    
+    // Future를 캐시해서 rebuild 시에도 재실행 방지
+    _imageCache[fullImageUrl] ??= _loadProfileImageWithCache(fullImageUrl, cacheKey);
+    
+    return FutureBuilder<String?>(
+      future: _imageCache[fullImageUrl],
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircleAvatar(
             radius: 40,
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: NotionColors.black,
             child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
           );
         }
 
         if (snapshot.hasData && snapshot.data != null) {
+          // 캐시된 파일이 있으면 File로 로드
+          print('Loading profile image from cache: ${snapshot.data}');
           return CircleAvatar(
             radius: 40,
-            backgroundImage: MemoryImage(snapshot.data!),
-            backgroundColor: Colors.grey[200],
+            backgroundImage: FileImage(File(snapshot.data!)),
+            backgroundColor: NotionColors.gray200,
           );
         }
 
-        // 에러 발생 시 또는 데이터가 없을 때 기본 아바타
+        // 캐시가 없으면 기본 아바타 표시
+        print('No cached profile image found, showing default avatar');
         return CircleAvatar(
           radius: 40,
-          backgroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: NotionColors.black,
           child: Text(
             userName?.substring(0, 1) ?? 'U',
             style: const TextStyle(
@@ -974,7 +999,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('마스터 데이터 동기화를 시작합니다...'),
-          backgroundColor: Colors.blue,
+          backgroundColor: NotionColors.black,
         ),
       );
 
@@ -987,14 +1012,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('동기화 실패: ${syncState.error}'),
-              backgroundColor: Colors.red,
+              backgroundColor: NotionColors.error,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(syncState.message ?? '동기화가 완료되었습니다.'),
-              backgroundColor: Colors.green,
+              backgroundColor: NotionColors.black,
             ),
           );
         }
@@ -1042,7 +1067,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('마스터 데이터 캐시가 초기화되었습니다.'),
-              backgroundColor: Colors.green,
+              backgroundColor: NotionColors.black,
             ),
           );
         }
@@ -1073,6 +1098,34 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       }
     } else {
       return '동기화 대기 중';
+    }
+  }
+
+  Future<String?> _loadProfileImageWithCache(String fullImageUrl, String cacheKey) async {
+    try {
+      // 캐시 유효성 먼저 확인 (24시간)
+      final hasValidCache = await ImageCacheManager().hasValidCache(
+        cacheKey: cacheKey,
+        type: ImageType.profile,
+        maxAge: const Duration(hours: 24),
+      );
+      
+      if (hasValidCache) {
+        print('Using cached profile image');
+        final prefs = await SharedPreferences.getInstance();
+        return prefs.getString('profile_image_$cacheKey');
+      }
+      
+      // 캐시가 없거나 만료되었으면 새로 다운로드
+      print('Cache expired or not found, downloading fresh profile image');
+      return await ImageCacheManager().getCachedImage(
+        imageUrl: fullImageUrl,
+        cacheKey: cacheKey,
+        type: ImageType.profile,
+      );
+    } catch (e) {
+      print('Error loading profile image with cache: $e');
+      return null;
     }
   }
 }

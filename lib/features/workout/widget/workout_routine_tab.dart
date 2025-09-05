@@ -4,6 +4,7 @@ import '../viewmodel/workout_record_viewmodel.dart';
 import '../model/routine_models.dart';
 import '../../../common/widgets/exercise_autocomplete_field.dart';
 import '../../../features/sync/model/sync_models.dart';
+import '../../../core/theme/notion_colors.dart';
 
 class WorkoutRoutineTab extends ConsumerStatefulWidget {
   final WorkoutRecordViewmodel viewModel;
@@ -155,13 +156,6 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   }
 
   Future<void> _saveRoutine() async {
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('루틴 이름을 입력해주세요')),
-      );
-      return;
-    }
-
     if (_routineExercises.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('최소 하나의 운동을 추가해주세요')),
@@ -211,7 +205,9 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
 
     try {
       final request = CreateRoutineRequest(
-        name: _nameController.text.trim(),
+        name: _nameController.text.trim().isEmpty 
+            ? null 
+            : _nameController.text.trim(),
         description: _descriptionController.text.trim().isEmpty 
             ? null 
             : _descriptionController.text.trim(),
@@ -245,7 +241,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: NotionColors.gray50,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -265,7 +261,12 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   }
 
   Widget _buildBasicInfoSection() {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: NotionColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NotionColors.border),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -276,14 +277,14 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: NotionColors.black,
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: '루틴 이름 *',
+                labelText: '루틴 이름',
                 hintText: '예: 가슴/삼두 루틴',
                 border: OutlineInputBorder(),
               ),
@@ -305,7 +306,12 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   }
 
   Widget _buildExerciseSection() {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: NotionColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NotionColors.border),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -319,20 +325,14 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
+                    color: NotionColors.black,
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C3E50),
+                    color: NotionColors.black,
                     borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    border: Border.all(color: NotionColors.border),
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -344,11 +344,11 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.add, color: Colors.white),
+                            Icon(Icons.add, color: NotionColors.white),
                             SizedBox(width: 8),
                             Text(
                               '운동 추가',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                              style: TextStyle(color: NotionColors.white, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -366,7 +366,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   child: Text(
                     '운동을 추가해주세요',
                     style: TextStyle(
-                      color: Colors.grey,
+                      color: NotionColors.textSecondary,
                       fontSize: 16,
                     ),
                   ),
@@ -396,7 +396,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: Colors.grey.shade200,
+          color: NotionColors.border,
           width: 1,
         ),
       ),
@@ -413,7 +413,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isExpanded ? Colors.grey.shade50 : Colors.white,
+                color: isExpanded ? NotionColors.gray100 : NotionColors.white,
                 borderRadius: BorderRadius.vertical(
                   top: const Radius.circular(12),
                   bottom: isExpanded ? Radius.zero : const Radius.circular(12),
@@ -426,14 +426,14 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2C3E50),
+                      color: NotionColors.black,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
                       child: Text(
                         '${exerciseIndex + 1}',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: NotionColors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -450,7 +450,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C3E50),
+                            color: NotionColors.black,
                           ),
                         ),
                         if (!isExpanded) ...[
@@ -459,7 +459,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                             '${exercise.routineSets.length}세트',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey.shade600,
+                              color: NotionColors.textSecondary,
                             ),
                           ),
                         ],
@@ -469,12 +469,12 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   // 삭제 버튼
                   IconButton(
                     onPressed: () => _removeExercise(exerciseIndex),
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    icon: const Icon(Icons.delete_outline, color: NotionColors.error),
                   ),
                   // 펼치기/접기 아이콘
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.grey.shade600,
+                    color: NotionColors.textSecondary,
                   ),
                 ],
               ),
@@ -520,9 +520,9 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
+                        color: NotionColors.gray100,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(color: NotionColors.border),
                       ),
                       child: Column(
                         children: [
@@ -534,7 +534,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: Color(0xFF2C3E50),
+                                  color: NotionColors.black,
                                 ),
                               ),
                               TextButton.icon(
@@ -542,7 +542,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                                 icon: const Icon(Icons.add_circle_outline, size: 20),
                                 label: const Text('세트 추가'),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFF2C3E50),
+                                  foregroundColor: NotionColors.black,
                                 ),
                               ),
                             ],
@@ -571,9 +571,9 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NotionColors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: NotionColors.border),
       ),
       child: Row(
         children: [
@@ -582,7 +582,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: NotionColors.gray100,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -605,7 +605,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   '무게 (kg)',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: NotionColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -614,7 +614,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   decoration: InputDecoration(
                     hintText: '0',
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: NotionColors.gray100,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide.none,
@@ -646,7 +646,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   '횟수',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: NotionColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -655,7 +655,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   decoration: InputDecoration(
                     hintText: '0',
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: NotionColors.gray100,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide.none,
@@ -686,8 +686,8 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
             icon: Icon(
               Icons.remove_circle_outline,
               color: _routineExercises[exerciseIndex].routineSets.length > 1
-                  ? Colors.red.shade400
-                  : Colors.grey.shade300,
+                  ? NotionColors.error
+                  : NotionColors.border,
               size: 20,
             ),
           ),
@@ -704,19 +704,9 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF34495E), Color(0xFF2C3E50)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: NotionColors.black,
             borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: _isLoading ? Colors.grey.withOpacity(0.3) : const Color(0xFF2C3E50).withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: NotionColors.border),
           ),
           child: Center(
             child:
@@ -726,7 +716,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(NotionColors.white),
                     ),
                   )
                 : const Text(
@@ -734,7 +724,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: NotionColors.white,
                     ),
                   ),
           ),

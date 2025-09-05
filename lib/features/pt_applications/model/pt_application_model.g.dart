@@ -8,11 +8,11 @@ part of 'pt_application_model.dart';
 
 _$PtApplicationImpl _$$PtApplicationImplFromJson(Map<String, dynamic> json) =>
     _$PtApplicationImpl(
-      applicationId: (json['applicationId'] as num).toInt(),
+      applicationId: _parseApplicationId(json['applicationId']),
       memberName: json['memberName'] as String,
       trainerName: json['trainerName'] as String?,
       appliedAt: json['appliedAt'] as String,
-      totalSessions: (json['totalSessions'] as num?)?.toInt(),
+      totalSessions: _parseTotalSessions(json['totalSessions']),
       offeringTitle: json['offeringTitle'] as String?,
     );
 

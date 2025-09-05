@@ -13,6 +13,7 @@ import '../../../services/image_cache_manager.dart';
 import '../model/body_composition_model.dart';
 import '../model/body_image_model.dart';
 import '../viewmodel/body_composition_viewmodel.dart';
+import '../../../core/theme/notion_colors.dart';
 
 class BodyCompositionView extends ConsumerStatefulWidget {
   const BodyCompositionView({super.key});
@@ -45,15 +46,15 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     final bodyCompositions = ref.watch(bodyCompositionListProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: NotionColors.gray50,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.1),
-        title: const Text(
+        backgroundColor: NotionColors.white,
+        elevation: 0,
+        surfaceTintColor: NotionColors.white,
+        title: Text(
           '체성분 분석',
           style: TextStyle(
-            color: const Color(0xFF1A1F36),
+            color: NotionColors.black,
             fontSize: 22,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
@@ -64,11 +65,11 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withOpacity(0.1),
+                color: NotionColors.gray100,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.calendar_today,
-                  color: Color(0xFF6366F1), size: 20),
+              child: Icon(Icons.calendar_today,
+                  color: NotionColors.black, size: 20),
             ),
             onPressed: () => _showDateRangePickerDialog(),
           ),
@@ -96,6 +97,8 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                   const SizedBox(height: 20),
                   _buildGoalProgress(bodyStats),
                   const SizedBox(height: 24),
+                  _buildCombinedProgressSection(compositions),
+                  const SizedBox(height: 24),
                   _buildWeightTrendSection(compositions),
                   const SizedBox(height: 24),
                   _buildBodyCompositionChart(compositions),
@@ -117,35 +120,18 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
           child: Text('Error: $error'),
         ),
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6366F1).withOpacity(0.3),
-              spreadRadius: 1,
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showAddDataDialog(context),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          icon: const Icon(Icons.add_circle_outline, size: 24),
-          label: const Text(
-            '데이터 추가',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.3,
-            ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddDataDialog(context),
+        backgroundColor: NotionColors.black,
+        foregroundColor: NotionColors.white,
+        elevation: 2,
+        icon: const Icon(Icons.add, size: 24),
+        label: const Text(
+          '데이터 추가',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
           ),
         ),
       ),
@@ -315,6 +301,489 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
   Widget _buildGoalProgress(BodyStats? stats) {
     // Remove this section as it uses hardcoded goal data
     return const SizedBox.shrink();
+  }
+
+  // 🔥 NEW: 몸무게와 사진을 합친 타임라인 섹션
+  Widget _buildCombinedProgressSection(List<BodyComposition> compositions) {
+    final bodyImagesAsync = ref.watch(bodyImagesProvider);
+    
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: NotionColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NotionColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '나의 변화 기록',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: NotionColors.black,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: NotionColors.gray100,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '몸무게 + 사진',
+                  style: TextStyle(
+                    color: NotionColors.black,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          bodyImagesAsync.when(
+            data: (images) => _buildCombinedTimeline(compositions, images),
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            error: (error, _) => _buildWeightOnlyTimeline(compositions),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCombinedTimeline(List<BodyComposition> compositions, List<BodyImageResponse> images) {
+    // 데이터를 날짜순으로 합치기
+    final combinedData = <Map<String, dynamic>>[];
+    
+    // 체성분 데이터 추가
+    for (final comp in compositions) {
+      combinedData.add({
+        'type': 'weight',
+        'date': DateTime.parse(comp.measurementDate),
+        'weight': comp.weightKg,
+        'data': comp,
+      });
+    }
+    
+    // 사진 데이터 추가  
+    for (final img in images) {
+      combinedData.add({
+        'type': 'photo',
+        'date': DateTime.parse(img.recordDate),
+        'data': img,
+      });
+    }
+    
+    // 날짜순 정렬 (최신순)
+    combinedData.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+    
+    if (combinedData.isEmpty) {
+      return _buildEmptyState();
+    }
+    
+    return Column(
+      children: [
+        // 최근 3개월 요약 차트
+        SizedBox(
+          height: 120,
+          child: _buildMiniWeightChart(compositions),
+        ),
+        const SizedBox(height: 20),
+        Divider(thickness: 1, color: NotionColors.border),
+        const SizedBox(height: 16),
+        // 타임라인
+        ...combinedData.take(10).map((item) => _buildTimelineItem(item)).toList(),
+        if (combinedData.length > 10)
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: TextButton(
+              onPressed: () => _showAllProgressHistory(combinedData),
+              child: Text(
+                '전체 기록 보기 (${combinedData.length}개)',
+                style: TextStyle(
+                  color: NotionColors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+  
+  Widget _buildTimelineItem(Map<String, dynamic> item) {
+    final date = item['date'] as DateTime;
+    final type = item['type'] as String;
+    final dateFormat = DateFormat('MM/dd');
+    final timeFormat = DateFormat('HH:mm');
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 날짜 및 시간
+          SizedBox(
+            width: 60,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dateFormat.format(date),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: NotionColors.black,
+                  ),
+                ),
+                Text(
+                  timeFormat.format(date),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: NotionColors.gray500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 타임라인 라인
+          Column(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: type == 'weight' ? NotionColors.black : NotionColors.gray500,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              Container(
+                width: 2,
+                height: 40,
+                color: NotionColors.border,
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          // 내용
+          Expanded(
+            child: type == 'weight' 
+                ? _buildWeightTimelineCard(item['data'] as BodyComposition, item['weight'] as double)
+                : _buildPhotoTimelineCard(item['data'] as BodyImageResponse),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildWeightTimelineCard(BodyComposition comp, double weight) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: NotionColors.gray100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: NotionColors.border,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.monitor_weight_outlined,
+            color: NotionColors.black,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '체중 기록',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: NotionColors.black,
+                  ),
+                ),
+                Text(
+                  '${weight.toStringAsFixed(1)}kg',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: NotionColors.black,
+                  ),
+                ),
+                Text(
+                  '근육량: ${comp.muscleMassKg.toStringAsFixed(1)}kg',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: NotionColors.gray500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildPhotoTimelineCard(BodyImageResponse image) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: NotionColors.gray100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: NotionColors.border,
+        ),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              width: 40,
+              height: 40,
+              color: NotionColors.gray200,
+              child: FutureBuilder<Uint8List?>(
+                future: _loadAuthenticatedBodyImage(image.fileUrl),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data != null) {
+                    return Image.memory(
+                      snapshot.data!,
+                      fit: BoxFit.cover,
+                    );
+                  } else {
+                    return Icon(
+                      Icons.photo_outlined,
+                      color: NotionColors.gray500,
+                      size: 20,
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '사진 기록',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: NotionColors.black,
+                  ),
+                ),
+                Text(
+                  image.originalFileName.isNotEmpty
+                      ? image.originalFileName
+                      : '몸 사진',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: NotionColors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () async {
+              final imageData = await _loadAuthenticatedBodyImage(image.fileUrl);
+              if (imageData != null) {
+                _showBodyImageFullScreen(image, imageData);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Icon(
+                Icons.fullscreen,
+                color: Color(0xFF6366F1),
+                size: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildMiniWeightChart(List<BodyComposition> compositions) {
+    if (compositions.length < 2) {
+      return const Center(
+        child: Text(
+          '차트를 표시하려면 최소 2개의 체중 기록이 필요합니다',
+          style: TextStyle(color: Color(0xFF6B7280)),
+        ),
+      );
+    }
+    
+    return LineChart(
+      LineChartData(
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        lineBarsData: [
+          LineChartBarData(
+            spots: compositions.asMap().entries.map((entry) {
+              return FlSpot(entry.key.toDouble(), entry.value.weightKg);
+            }).toList(),
+            isCurved: true,
+            color: NotionColors.black,
+            barWidth: 2,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 3,
+                color: NotionColors.black,
+                strokeColor: NotionColors.white,
+                strokeWidth: 2,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: NotionColors.gray100,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildWeightOnlyTimeline(List<BodyComposition> compositions) {
+    return Column(
+      children: [
+        const Icon(
+          Icons.info_outline,
+          color: Color(0xFF6B7280),
+          size: 20,
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          '사진 데이터를 불러오는 중입니다.\n체중 기록만 표시됩니다.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF6B7280),
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 120,
+          child: _buildMiniWeightChart(compositions),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.timeline_outlined,
+              color: Color(0xFF6366F1),
+              size: 40,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '아직 기록이 없습니다',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF374151),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '체중과 사진을 기록해서\n나의 변화를 확인해보세요!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _showAllProgressHistory(List<Map<String, dynamic>> allData) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.8,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '전체 변화 기록',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: allData.length,
+                  itemBuilder: (context, index) => _buildTimelineItem(allData[index]),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildWeightTrendSection(List<BodyComposition> compositions) {
@@ -2449,5 +2918,6 @@ class _BodyImageUploadDialogState extends ConsumerState<_BodyImageUploadDialog> 
     }
     return totalSize;
   }
+
 
 }

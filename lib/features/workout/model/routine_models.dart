@@ -6,7 +6,7 @@ part 'routine_models.g.dart';
 @freezed
 class CreateRoutineRequest with _$CreateRoutineRequest {
   const factory CreateRoutineRequest({
-    required String name,
+    String? name,
     String? description,
     required List<RoutineExercise> routineExercises,
   }) = _CreateRoutineRequest;

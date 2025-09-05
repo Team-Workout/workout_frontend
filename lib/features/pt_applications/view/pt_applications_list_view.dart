@@ -4,6 +4,7 @@ import '../model/pt_application_model.dart';
 import '../viewmodel/pt_application_viewmodel.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../features/auth/model/user_model.dart';
+import '../../../core/theme/notion_colors.dart';
 
 class PtApplicationsListView extends ConsumerStatefulWidget {
   final bool? isTrainerView; // null이면 userType으로 자동 판별
@@ -37,10 +38,10 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
       appBar: AppBar(
         title: Text(_isTrainer ? 'PT 신청 관리' : 'PT 신청 내역'),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: NotionColors.white,
+        foregroundColor: NotionColors.black,
       ),
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: NotionColors.gray50,
       body: RefreshIndicator(
         onRefresh: () async {
           ref.read(ptApplicationProvider.notifier).loadPtApplications();
@@ -56,7 +57,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: Colors.red.shade300,
+                  color: NotionColors.error,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -68,7 +69,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 Text(
                   error.toString(),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: NotionColors.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -111,20 +112,20 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: NotionColors.gray100,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.assignment_outlined,
               size: 80,
-              color: Colors.blue.shade300,
+              color: NotionColors.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
           Text(
             _isTrainer ? '대기 중인 PT 신청이 없습니다' : 'PT 신청 내역이 없습니다',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.grey[700],
+              color: NotionColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -134,7 +135,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 ? '회원들의 PT 신청을 기다려주세요!'
                 : '트레이너의 PT 상품을 확인하고\n신청해보세요!',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[500],
+              color: NotionColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -150,20 +151,20 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white,
-            Colors.blue.shade50,
+            NotionColors.white,
+            NotionColors.gray100,
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: NotionColors.black.withOpacity(0.08),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: Colors.blue.shade200,
+          color: NotionColors.border,
           width: 1,
         ),
       ),
@@ -179,8 +180,8 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.orange.shade600,
-                    Colors.orange.shade400,
+                    NotionColors.black,
+                    NotionColors.black,
                   ],
                 ),
               ),
@@ -189,12 +190,12 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: NotionColors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
                       Icons.pending_actions,
-                      color: Colors.white,
+                      color: NotionColors.white,
                       size: 20,
                     ),
                   ),
@@ -206,7 +207,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                         Text(
                           application.offeringTitle ?? 'PT 신청 #${application.applicationId}',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: NotionColors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -215,7 +216,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                         Text(
                           '승인 대기 중',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: NotionColors.white.withOpacity(0.9),
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -226,13 +227,13 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: NotionColors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text(
                       'PENDING',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: NotionColors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -254,12 +255,12 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade100,
+                          color: NotionColors.gray100,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           Icons.person,
-                          color: Colors.blue.shade700,
+                          color: NotionColors.black,
                           size: 16,
                         ),
                       ),
@@ -271,7 +272,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                             Text(
                               _isTrainer ? '신청자' : '트레이너',
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: NotionColors.textSecondary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -303,7 +304,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                           value: application.totalSessions != null 
                               ? '${application.totalSessions}회' 
                               : '미정',
-                          color: Colors.green,
+                          color: NotionColors.black,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -312,7 +313,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                           icon: Icons.calendar_today,
                           label: '신청일',
                           value: _formatDate(application.appliedAt),
-                          color: Colors.purple,
+                          color: NotionColors.black,
                         ),
                       ),
                     ],
@@ -328,7 +329,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                           child: _buildActionButton(
                             label: '승인',
                             icon: Icons.check,
-                            color: Colors.green,
+                            color: NotionColors.black,
                             onPressed: () => _approveApplication(application),
                           ),
                         ),
@@ -337,7 +338,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                           child: _buildActionButton(
                             label: '거절',
                             icon: Icons.close,
-                            color: Colors.red,
+                            color: NotionColors.error,
                             onPressed: () => _rejectApplication(application),
                           ),
                         ),
@@ -349,7 +350,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                       child: _buildActionButton(
                         label: '신청 취소',
                         icon: Icons.cancel_outlined,
-                        color: Colors.orange,
+                        color: NotionColors.error,
                         onPressed: () => _cancelApplication(application),
                       ),
                     ),
@@ -400,7 +401,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
           Text(
             value,
             style: TextStyle(
-              color: Colors.grey[800],
+              color: NotionColors.textSecondary,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -443,12 +444,12 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: Colors.white, size: 16),
+                Icon(icon, color: NotionColors.white, size: 16),
                 const SizedBox(width: 6),
                 Text(
                   label,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: NotionColors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -500,7 +501,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            style: ElevatedButton.styleFrom(backgroundColor: NotionColors.black),
             child: const Text('승인'),
           ),
         ],
@@ -538,7 +539,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: NotionColors.error),
             child: const Text('거절'),
           ),
         ],
@@ -576,7 +577,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            style: ElevatedButton.styleFrom(backgroundColor: NotionColors.error),
             child: const Text('취소하기'),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/workout_record_models.dart';
+import '../../../core/theme/notion_colors.dart';
 import 'exercise_display_card.dart';
 
 class WorkoutDayCard extends StatelessWidget {
@@ -10,21 +11,24 @@ class WorkoutDayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: NotionColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NotionColors.border),
+      ),
       child: ExpansionTile(
         leading: Container(
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFF2C3E50).withAlpha(51),
+            color: NotionColors.gray100,
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
             Icons.fitness_center,
-            color: Color(0xFF2C3E50),
+            color: NotionColors.black,
             size: 24,
           ),
         ),
@@ -32,12 +36,12 @@ class WorkoutDayCard extends StatelessWidget {
           dayRecord.title,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
+            color: NotionColors.black,
           ),
         ),
         subtitle: Text(
           '${dayRecord.exercises.length}개 운동 • ${DateFormat('MM월 dd일').format(dayRecord.date)}',
-          style: TextStyle(color: Colors.grey[600], fontSize: 13),
+          style: TextStyle(color: NotionColors.textSecondary, fontSize: 13),
         ),
         children: [
           Padding(
@@ -50,23 +54,23 @@ class WorkoutDayCard extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue[50],
+                      color: NotionColors.gray100,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue[200]!),
+                      border: Border.all(color: NotionColors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.edit_note, size: 16, color: Colors.blue[700]),
+                            Icon(Icons.edit_note, size: 16, color: NotionColors.black),
                             const SizedBox(width: 4),
                             Text(
                               '오늘의 일지',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.blue[700],
+                                color: NotionColors.black,
                               ),
                             ),
                           ],
@@ -86,7 +90,7 @@ class WorkoutDayCard extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: Color(0xFF2C3E50),
+                    color: NotionColors.black,
                   ),
                 ),
                 const SizedBox(height: 8),

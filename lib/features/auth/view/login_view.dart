@@ -270,16 +270,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           thickness: 1,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          '또는',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
                       Expanded(
                         child: Divider(
                           color: Colors.grey[300],
@@ -287,27 +277,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 24),
-                  _buildSocialLoginButton(
-                    context,
-                    icon: Icons.g_mobiledata,
-                    text: '구글로 계속하기',
-                    onPressed: () {},
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSocialLoginButton(
-                    context,
-                    icon: Icons.apple,
-                    text: '애플로 계속하기',
-                    onPressed: () {},
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSocialLoginButton(
-                    context,
-                    icon: Icons.facebook,
-                    text: '페이스북으로 계속하기',
-                    onPressed: () {},
                   ),
                   const SizedBox(height: 32),
                   Row(

@@ -7,6 +7,8 @@ import '../../body_composition/viewmodel/body_composition_viewmodel.dart';
 import '../../pt_schedule/viewmodel/pt_schedule_viewmodel.dart';
 import '../../pt_contracts/viewmodel/pt_contract_viewmodel.dart';
 import '../../pt_contracts/model/pt_contract_model.dart';
+import '../../../core/theme/notion_colors.dart';
+import '../../../shared/widgets/notion_dashboard_card.dart';
 
 class MemberDashboardView extends ConsumerWidget {
   const MemberDashboardView({super.key});
@@ -14,45 +16,28 @@ class MemberDashboardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: NotionColors.gray50,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NotionColors.white,
         elevation: 0,
         title: const Text(
           '피트프로',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
+            color: NotionColors.black,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
-            color: const Color(0xFF2C3E50),
+            color: NotionColors.black,
           ),
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             onPressed: () {},
-            color: const Color(0xFF2C3E50),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: GestureDetector(
-              onTap: () {
-                context.push('/settings');
-              },
-              child: CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.grey[300],
-                child: const Icon(
-                  Icons.person,
-                  size: 20,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+            color: NotionColors.black,
           ),
         ],
       ),
@@ -71,8 +56,8 @@ class MemberDashboardView extends ConsumerWidget {
           }
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF2C3E50),
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: NotionColors.black,
+        unselectedItemColor: NotionColors.textSecondary,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
           BottomNavigationBarItem(
@@ -131,7 +116,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
+                          color: NotionColors.black,
                         ),
                       ),
                       Row(
@@ -274,11 +259,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: NotionColors.black,
               borderRadius: BorderRadius.circular(12),
             ),
             padding: const EdgeInsets.all(20),
@@ -383,7 +364,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
               Expanded(
                 child: _buildLargeReservationButton(
                   context,
-                  Icons.person_outline,
+                  Icons.settings_outlined,
                   '마이페이지',
                   const Color(0xFF27AE60),
                   () => context.push('/settings'),
@@ -402,11 +383,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2C3E50), Color(0xFF34495E)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: NotionColors.black,
               borderRadius: BorderRadius.circular(12),
             ),
             padding: const EdgeInsets.all(16),
@@ -476,12 +453,6 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 18,
-                              backgroundColor: Colors.white24,
-                              child: Icon(Icons.person,
-                                  color: Colors.white, size: 18),
-                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -508,7 +479,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                                 context.push('/pt-schedule');
                               },
                               style: TextButton.styleFrom(
-                                backgroundColor: Colors.white,
+                                backgroundColor: NotionColors.white,
                                 foregroundColor: const Color(0xFF2C3E50),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16)),
@@ -570,7 +541,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
+            color: NotionColors.black,
           ),
         ),
       ],
@@ -583,22 +554,9 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              color,
-              color.withValues(alpha: 0.8),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: NotionColors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: NotionColors.border),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -606,7 +564,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
             Icon(
               icon,
               size: 32,
-              color: Colors.white,
+              color: NotionColors.textSecondary,
             ),
             const SizedBox(height: 8),
             Text(
@@ -615,7 +573,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: NotionColors.textPrimary,
               ),
             ),
           ],
@@ -675,7 +633,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: (maxWeight - minWeight) / 2,
+          horizontalInterval: (maxWeight - minWeight) <= 0 ? 1.0 : (maxWeight - minWeight) / 2,
           getDrawingHorizontalLine: (value) {
             return const FlLine(
               color: Colors.grey,
@@ -727,7 +685,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: const Color(0xFF6366F1),
+            color: NotionColors.black,
             barWidth: 2,
             isStrokeCapRound: true,
             dotData: FlDotData(
@@ -737,13 +695,13 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                   radius: 2,
                   color: Colors.white,
                   strokeWidth: 1,
-                  strokeColor: const Color(0xFF6366F1),
+                  strokeColor: NotionColors.black,
                 );
               },
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: const Color(0xFF6366F1).withOpacity(0.1),
+              color: NotionColors.black.withOpacity(0.1),
             ),
           ),
         ],
@@ -793,7 +751,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF2C3E50),
+                          color: NotionColors.black,
                         ),
                       ),
                     ],
@@ -934,15 +892,6 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 22, // 약간 더 크게
-                backgroundColor: const Color(0xFF27AE60).withValues(alpha: 0.1),
-                child: const Icon(
-                  Icons.person,
-                  color: Color(0xFF27AE60),
-                  size: 20,
-                ),
-              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -953,7 +902,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                       style: const TextStyle(
                         fontSize: 16, // 폰트 크기 증가
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF2C3E50),
+                        color: NotionColors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1032,7 +981,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF2C3E50),
+            color: NotionColors.black,
           ),
         ),
       ],

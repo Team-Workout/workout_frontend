@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../model/routine_models.dart';
 import '../viewmodel/routine_viewmodel.dart';
+import '../../../core/theme/notion_colors.dart';
 
 class RoutineListView extends ConsumerStatefulWidget {
   const RoutineListView({super.key});
@@ -28,8 +29,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
       appBar: AppBar(
         title: const Text('내 루틴 목록'),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: NotionColors.white,
+        foregroundColor: NotionColors.black,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -39,7 +40,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
           ),
         ],
       ),
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: NotionColors.gray50,
       body: RefreshIndicator(
         onRefresh: () async {
           ref.read(routineProvider.notifier).loadRoutines();
@@ -55,7 +56,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                 Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: Colors.red.shade300,
+                  color: NotionColors.error,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -67,8 +68,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                 Text(
                   error.toString(),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                        color: NotionColors.textSecondary,
+                      ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -103,36 +104,38 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: NotionColors.gray100,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.fitness_center,
               size: 80,
-              color: Colors.blue.shade300,
+              color: NotionColors.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
           Text(
             '저장된 루틴이 없습니다',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w600,
-            ),
+                  color: NotionColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 12),
           Text(
             '첫 번째 운동 루틴을 만들어보세요!',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[500],
-            ),
+                  color: NotionColors.textSecondary,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -143,12 +146,13 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
             icon: const Icon(Icons.add),
             label: const Text('루틴 만들기'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+              backgroundColor: NotionColors.black,
+              foregroundColor: NotionColors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -156,24 +160,10 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
   Widget _buildRoutineCard(RoutineResponse routine) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white,
-            Colors.blue.shade50,
-          ],
-        ),
+        color: NotionColors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
         border: Border.all(
-          color: Colors.blue.shade200,
+          color: NotionColors.border,
           width: 1,
         ),
       ),
@@ -194,12 +184,12 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade100,
+                        color: NotionColors.gray100,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.fitness_center,
-                        color: Colors.blue.shade700,
+                        color: NotionColors.black,
                         size: 20,
                       ),
                     ),
@@ -213,7 +203,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF2C3E50),
+                              color: NotionColors.black,
                             ),
                           ),
                           if (routine.description != null) ...[
@@ -222,7 +212,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                               routine.description!,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: NotionColors.textSecondary,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -242,7 +232,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete, color: Colors.red),
+                              Icon(Icons.delete, color: NotionColors.error),
                               SizedBox(width: 8),
                               Text('삭제'),
                             ],
@@ -259,16 +249,16 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                       icon: Icons.list_alt,
                       label: '운동 수',
                       value: routine.routineExercises?.length.toString() ?? '0',
-                      color: Colors.green,
+                      color: NotionColors.black,
                     ),
                     const SizedBox(width: 12),
                     _buildInfoChip(
                       icon: Icons.calendar_today,
                       label: '생성일',
-                      value: routine.createdAt != null 
-                          ? _formatDate(routine.createdAt!) 
+                      value: routine.createdAt != null
+                          ? _formatDate(routine.createdAt!)
                           : '미정',
-                      color: Colors.purple,
+                      color: NotionColors.black,
                     ),
                   ],
                 ),
@@ -317,7 +307,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                   Text(
                     value,
                     style: TextStyle(
-                      color: Colors.grey[800],
+                      color: NotionColors.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -351,7 +341,9 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await ref.read(routineProvider.notifier).deleteRoutine(routine.id);
+                await ref
+                    .read(routineProvider.notifier)
+                    .deleteRoutine(routine.id);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('루틴이 삭제되었습니다.')),
@@ -365,7 +357,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: NotionColors.error),
             child: const Text('삭제'),
           ),
         ],

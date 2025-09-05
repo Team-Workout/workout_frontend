@@ -20,11 +20,13 @@ PtApplication _$PtApplicationFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$PtApplication {
+  @JsonKey(fromJson: _parseApplicationId)
   int get applicationId => throw _privateConstructorUsedError;
   String get memberName => throw _privateConstructorUsedError;
   String? get trainerName =>
       throw _privateConstructorUsedError; // 트레이너 이름 추가 (회원이 볼 때 필요)
   String get appliedAt => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _parseTotalSessions)
   int? get totalSessions =>
       throw _privateConstructorUsedError; // null 값을 허용하도록 변경
   String? get offeringTitle => throw _privateConstructorUsedError;
@@ -46,11 +48,11 @@ abstract class $PtApplicationCopyWith<$Res> {
       _$PtApplicationCopyWithImpl<$Res, PtApplication>;
   @useResult
   $Res call(
-      {int applicationId,
+      {@JsonKey(fromJson: _parseApplicationId) int applicationId,
       String memberName,
       String? trainerName,
       String appliedAt,
-      int? totalSessions,
+      @JsonKey(fromJson: _parseTotalSessions) int? totalSessions,
       String? offeringTitle});
 }
 
@@ -114,11 +116,11 @@ abstract class _$$PtApplicationImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int applicationId,
+      {@JsonKey(fromJson: _parseApplicationId) int applicationId,
       String memberName,
       String? trainerName,
       String appliedAt,
-      int? totalSessions,
+      @JsonKey(fromJson: _parseTotalSessions) int? totalSessions,
       String? offeringTitle});
 }
 
@@ -175,17 +177,18 @@ class __$$PtApplicationImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PtApplicationImpl implements _PtApplication {
   const _$PtApplicationImpl(
-      {required this.applicationId,
+      {@JsonKey(fromJson: _parseApplicationId) required this.applicationId,
       required this.memberName,
       this.trainerName,
       required this.appliedAt,
-      this.totalSessions,
+      @JsonKey(fromJson: _parseTotalSessions) this.totalSessions,
       this.offeringTitle});
 
   factory _$PtApplicationImpl.fromJson(Map<String, dynamic> json) =>
       _$$PtApplicationImplFromJson(json);
 
   @override
+  @JsonKey(fromJson: _parseApplicationId)
   final int applicationId;
   @override
   final String memberName;
@@ -195,6 +198,7 @@ class _$PtApplicationImpl implements _PtApplication {
   @override
   final String appliedAt;
   @override
+  @JsonKey(fromJson: _parseTotalSessions)
   final int? totalSessions;
 // null 값을 허용하도록 변경
   @override
@@ -247,17 +251,18 @@ class _$PtApplicationImpl implements _PtApplication {
 
 abstract class _PtApplication implements PtApplication {
   const factory _PtApplication(
-      {required final int applicationId,
+      {@JsonKey(fromJson: _parseApplicationId) required final int applicationId,
       required final String memberName,
       final String? trainerName,
       required final String appliedAt,
-      final int? totalSessions,
+      @JsonKey(fromJson: _parseTotalSessions) final int? totalSessions,
       final String? offeringTitle}) = _$PtApplicationImpl;
 
   factory _PtApplication.fromJson(Map<String, dynamic> json) =
       _$PtApplicationImpl.fromJson;
 
   @override
+  @JsonKey(fromJson: _parseApplicationId)
   int get applicationId;
   @override
   String get memberName;
@@ -266,6 +271,7 @@ abstract class _PtApplication implements PtApplication {
   @override
   String get appliedAt;
   @override
+  @JsonKey(fromJson: _parseTotalSessions)
   int? get totalSessions; // null 값을 허용하도록 변경
   @override
   String? get offeringTitle;

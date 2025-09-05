@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../model/workout_record_models.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
+import '../../../core/theme/notion_colors.dart';
 import 'workout_day_card.dart';
 
 class CalendarView extends StatefulWidget {
@@ -71,7 +72,7 @@ class _CalendarViewState extends State<CalendarView> {
     return Column(
       children: [
         Container(
-          color: Colors.white,
+          color: NotionColors.white,
           child: TableCalendar<WorkoutDayRecord>(
               firstDay: DateTime.utc(2020, 1, 1),
               lastDay: DateTime.utc(2030, 12, 31),
@@ -85,25 +86,25 @@ class _CalendarViewState extends State<CalendarView> {
                 titleTextStyle: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2C3E50),
+                  color: NotionColors.black,
                 ),
-                leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF2C3E50)),
-                rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF2C3E50)),
+                leftChevronIcon: Icon(Icons.chevron_left, color: NotionColors.black),
+                rightChevronIcon: Icon(Icons.chevron_right, color: NotionColors.black),
               ),
               calendarStyle: const CalendarStyle(
                 todayDecoration: BoxDecoration(
-                  color: Colors.orange,
+                  color: NotionColors.textSecondary,
                   shape: BoxShape.circle,
                 ),
                 selectedDecoration: BoxDecoration(
-                  color: Color(0xFF2C3E50),
+                  color: NotionColors.black,
                   shape: BoxShape.circle,
                 ),
                 markerDecoration: BoxDecoration(
-                  color: Colors.red,
+                  color: NotionColors.black,
                   shape: BoxShape.circle,
                 ),
-                weekendTextStyle: TextStyle(color: Colors.red),
+                weekendTextStyle: TextStyle(color: NotionColors.black),
               ),
               onDaySelected: (selectedDay, focusedDay) {
                 widget.viewModel.updateSelectedDate(selectedDay);
@@ -214,7 +215,7 @@ class _CalendarViewState extends State<CalendarView> {
     final events = _getEventsForDay(widget.viewModel.selectedDate);
     
     return Container(
-      color: Colors.white,
+      color: NotionColors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -226,7 +227,7 @@ class _CalendarViewState extends State<CalendarView> {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: NotionColors.black,
               ),
             ),
           ),
@@ -240,17 +241,17 @@ class _CalendarViewState extends State<CalendarView> {
                     Icon(
                       Icons.fitness_center_outlined,
                       size: 64,
-                      color: Colors.grey,
+                      color: NotionColors.textSecondary,
                     ),
                     SizedBox(height: 16),
                     Text(
                       '이 날에는 운동 기록이 없습니다',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                      style: TextStyle(color: NotionColors.textSecondary, fontSize: 16),
                     ),
                     SizedBox(height: 8),
                     Text(
                       '운동 기록 탭에서 새로운 기록을 작성해보세요!',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                      style: TextStyle(color: NotionColors.textSecondary, fontSize: 14),
                     ),
                   ],
                 ),

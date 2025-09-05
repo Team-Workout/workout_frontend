@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
-import 'package:pt_service/shared/widgets/dashboard_card.dart';
+import 'package:pt_service/shared/widgets/notion_dashboard_card.dart';
+import '../../../shared/widgets/dashboard_card.dart';
 import 'package:pt_service/features/trainer_profile/view/trainer_profile_edit_view.dart';
 import 'package:pt_service/features/pt_offerings/viewmodel/pt_offering_viewmodel.dart';
 import 'package:pt_service/features/pt_applications/viewmodel/pt_application_viewmodel.dart';
 import 'package:pt_service/features/pt_schedule/viewmodel/pt_schedule_viewmodel.dart';
 import 'package:pt_service/features/pt_schedule/repository/pt_schedule_repository.dart';
 import '../../../features/trainer_clients/view/trainer_clients_list_view.dart';
-import '../../../core/theme/brand_colors.dart';
+import '../../../core/theme/notion_colors.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'trainer_dashboard_view.g.dart';
@@ -143,21 +144,11 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
     ) ?? 0;
     
     return Scaffold(
+      backgroundColor: NotionColors.gray50,
       appBar: AppBar(
+        backgroundColor: NotionColors.white,
         title: const Text('트레이너 대시보드'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TrainerProfileEditView(),
-                ),
-              );
-            },
-            tooltip: '프로필 수정',
-          ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
@@ -184,17 +175,20 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
             Text(
               '이번 주 PT 일정을 한눈에 확인해보세요',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey[600],
+                color: NotionColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
             
             // 📊 이번 주 PT 현황 차트 (맨 위로 이동)
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            Container(
+              decoration: BoxDecoration(
+                color: NotionColors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: NotionColors.border),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -214,7 +208,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             Text(
                               '일별 수업 스케줄',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[600],
+                                color: NotionColors.textSecondary,
                               ),
                             ),
                           ],
@@ -222,14 +216,14 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
+                            color: NotionColors.gray100,
+                            borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '이번 달: ${monthlyPtCount}건',
-                            style: TextStyle(
-                              color: Colors.blue[700],
-                              fontWeight: FontWeight.w600,
+                            style: const TextStyle(
+                              color: NotionColors.textSecondary,
+                              fontWeight: FontWeight.w500,
                               fontSize: 12,
                             ),
                           ),
@@ -250,39 +244,20 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                               barTouchData: BarTouchData(
                                 enabled: true,
                                 touchTooltipData: BarTouchTooltipData(
-                                  getTooltipColor: (group) => Colors.blueGrey,
+                                  getTooltipColor: (group) => NotionColors.black,
                                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                                     const days = ['월', '화', '수', '목', '금', '토', '일'];
                                     return BarTooltipItem(
                                       '${days[groupIndex]}\n${rod.toY.toInt()}건',
-                                      const TextStyle(color: Colors.white),
+                                      const TextStyle(color: NotionColors.white),
                                     );
                                   },
                                 ),
                               ),
                               titlesData: FlTitlesData(
                                 show: true,
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 32,
-                                    getTitlesWidget: (value, meta) {
-                                      const days = ['월', '화', '수', '목', '금', '토', '일'];
-                                      if (value.toInt() >= 0 && value.toInt() < days.length) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(top: 12),
-                                          child: Text(
-                                            days[value.toInt()],
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      return const Text('');
-                                    },
-                                  ),
+                                bottomTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
                                 ),
                                 leftTitles: AxisTitles(
                                   sideTitles: SideTitles(
@@ -298,9 +273,9 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                           padding: const EdgeInsets.only(right: 8),
                                           child: Text(
                                             intValue.toString(),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12,
-                                              color: Colors.grey[600],
+                                              color: NotionColors.textSecondary,
                                             ),
                                           ),
                                         );
@@ -309,8 +284,27 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                     },
                                   ),
                                 ),
-                                topTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
+                                topTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 32,
+                                    getTitlesWidget: (value, meta) {
+                                      const days = ['월', '화', '수', '목', '금', '토', '일'];
+                                      if (value.toInt() >= 0 && value.toInt() < days.length) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(bottom: 12),
+                                          child: Text(
+                                            days[value.toInt()],
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const Text('');
+                                    },
+                                  ),
                                 ),
                                 rightTitles: const AxisTitles(
                                   sideTitles: SideTitles(showTitles: false),
@@ -321,8 +315,8 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                 drawVerticalLine: false,
                                 horizontalInterval: maxY > 10 ? (maxY / 3).ceilToDouble() : (maxY > 5 ? 2 : 1),
                                 getDrawingHorizontalLine: (value) {
-                                  return FlLine(
-                                    color: Colors.grey[200]!,
+                                  return const FlLine(
+                                    color: NotionColors.border,
                                     strokeWidth: 1,
                                   );
                                 },
@@ -334,14 +328,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                   barRods: [
                                     BarChartRodData(
                                       toY: entry.value.toDouble(),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.blue[300]!,
-                                          Colors.blue[600]!,
-                                        ],
-                                        begin: Alignment.bottomCenter,
-                                        end: Alignment.topCenter,
-                                      ),
+                                      color: NotionColors.black,
                                       width: 24,
                                       borderRadius: const BorderRadius.only(
                                         topLeft: Radius.circular(6),
@@ -359,11 +346,11 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.error_outline, color: Colors.red[300], size: 32),
+                              Icon(Icons.error_outline, color: NotionColors.error, size: 32),
                               const SizedBox(height: 8),
                               Text(
                                 '차트를 불러올 수 없습니다',
-                                style: TextStyle(color: Colors.grey[600]),
+                                style: TextStyle(color: NotionColors.textSecondary),
                               ),
                             ],
                           ),
@@ -377,7 +364,12 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
             
             // 📅 오늘의 PT 일정
             const SizedBox(height: 24),
-            Card(
+            Container(
+              decoration: BoxDecoration(
+                color: NotionColors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: NotionColors.border),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -394,6 +386,9 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                           onPressed: () {
                             context.push('/pt-schedule');
                           },
+                          style: TextButton.styleFrom(
+                            foregroundColor: NotionColors.textSecondary,
+                          ),
                           child: const Text('전체보기'),
                         ),
                       ],
@@ -409,7 +404,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             child: Text(
                               '오늘 예정된 PT가 없습니다',
                               style: TextStyle(
-                                color: Colors.grey,
+                                color: NotionColors.textTertiary,
                                 fontSize: 14,
                               ),
                             ),
@@ -430,20 +425,31 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                           final durationText = '${endTime.difference(startTime).inMinutes}분';
                           
                           return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.blue.shade100,
-                              child: Text(
-                                timeText.substring(0, 2),
-                                style: TextStyle(
-                                  color: Colors.blue.shade700,
-                                  fontWeight: FontWeight.bold,
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: NotionColors.gray100,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  timeText.substring(0, 2),
+                                  style: const TextStyle(
+                                    color: NotionColors.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ),
                             title: Text(schedule.memberName),
                             subtitle: Text('$timeText - $durationText'),
                             trailing: IconButton(
-                              icon: const Icon(Icons.message_outlined),
+                              icon: const Icon(
+                                Icons.message_outlined,
+                                color: NotionColors.textSecondary,
+                              ),
                               onPressed: () {},
                             ),
                             onTap: () {
@@ -465,7 +471,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                         child: Text(
                           '일정을 불러올 수 없습니다',
                           style: TextStyle(
-                            color: Colors.red,
+                            color: NotionColors.error,
                             fontSize: 14,
                           ),
                         ),
@@ -489,24 +495,18 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
             // 탭 바
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                color: NotionColors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: NotionColors.border),
               ),
               child: Column(
                 children: [
                   TabBar(
                     controller: _tabController,
-                    labelColor: Colors.black,
-                    unselectedLabelColor: Colors.grey[600],
-                    indicatorColor: Colors.black,
-                    indicatorWeight: 3,
+                    labelColor: NotionColors.black,
+                    unselectedLabelColor: NotionColors.textSecondary,
+                    indicatorColor: NotionColors.black,
+                    indicatorWeight: 2,
                     labelStyle: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -564,38 +564,35 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
         crossAxisSpacing: 12,
         childAspectRatio: 1.0,
         children: [
-          DashboardCard(
+          NotionDashboardCard(
             title: '오늘의 PT',
             value: todayPtCount > 0 ? '$todayPtCount건' : '일정 없음',
             icon: Icons.calendar_today,
-            color: Colors.blue,
+            isHighlighted: todayPtCount > 0,
             onTap: () {
               context.push('/pt-schedule');
             },
           ),
-          DashboardCard(
+          NotionDashboardCard(
             title: 'PT 약속 생성',
             value: '새 약속 생성',
             icon: Icons.add_circle,
-            color: BrandColors.primaryGreen,
             onTap: () {
               context.push('/reservation-recommendations');
             },
           ),
-          DashboardCard(
+          NotionDashboardCard(
             title: 'PT 약속 관리',
             value: '예약된 일정',
             icon: Icons.schedule,
-            color: Colors.orange,
             onTap: () {
               context.push('/pt-schedule');
             },
           ),
-          DashboardCard(
+          NotionDashboardCard(
             title: '약속 승인',
             value: '회원 요청 승인',
             icon: Icons.check_circle,
-            color: Colors.teal,
             onTap: () {
               context.push('/appointment-confirmation');
             },
@@ -619,11 +616,10 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
         crossAxisSpacing: 12,
         childAspectRatio: 1.0,
         children: [
-          DashboardCard(
+          NotionDashboardCard(
             title: '내 회원 관리',
             value: '회원 현황 확인',
             icon: Icons.people,
-            color: BrandColors.primaryBlue, // 브랜드 컬러 적용
             onTap: () {
               Navigator.push(
                 context,
@@ -633,13 +629,13 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
               );
             },
           ),
-          DashboardCard(
+          NotionDashboardCard(
             title: 'PT 신청',
             value: pendingApplicationsCount > 0 
                 ? '$pendingApplicationsCount건 대기' 
                 : '대기 없음',
             icon: Icons.assignment,
-            color: pendingApplicationsCount > 0 ? BrandColors.error : BrandColors.primaryGreen,
+            isHighlighted: pendingApplicationsCount > 0,
             onTap: () {
               context.push('/pt-applications');
             },
@@ -667,40 +663,38 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
         crossAxisSpacing: 12,
         childAspectRatio: 1.0,
         children: [
-          DashboardCard(
+          NotionDashboardCard(
             title: 'PT 상품 관리',
             value: ptOfferingsCount > 0 
                 ? '$ptOfferingsCount개 상품' 
                 : '상품 없음',
             icon: Icons.shopping_bag,
-            color: Colors.purple,
+            isHighlighted: ptOfferingsCount > 0,
             onTap: () {
               context.push('/pt-offerings');
             },
           ),
-          DashboardCard(
+          NotionDashboardCard(
             title: 'PT 계약',
             value: '계약 관리',
             icon: Icons.assignment_turned_in,
-            color: Colors.teal,
             onTap: () {
               context.push('/pt-contracts');
             },
           ),
-          DashboardCard(
+          NotionDashboardCard(
             title: '이번 달 수업',
             value: monthlyPtCount > 0 ? '${monthlyPtCount}건' : '수업 없음',
             icon: Icons.fitness_center,
-            color: Colors.orange,
+            isHighlighted: monthlyPtCount > 0,
             onTap: () {
               context.push('/my-appointment-requests');
             },
           ),
-          DashboardCard(
+          NotionDashboardCard(
             title: 'PT 신청 내역',
             value: '전체 신청 관리',
             icon: Icons.history,
-            color: Colors.deepPurple,
             onTap: () {
               context.push('/my-appointment-requests');
             },
@@ -723,10 +717,6 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const CircleAvatar(
-                  radius: 30,
-                  child: Icon(Icons.person, size: 30),
-                ),
                 const SizedBox(height: 12),
                 Text(
                   ref.watch(currentUserProvider)?.name ?? '트레이너',

@@ -5,6 +5,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../model/pt_offering_model.dart';
 import '../viewmodel/pt_offering_viewmodel.dart';
 import '../../pt_applications/viewmodel/pt_application_viewmodel.dart';
+import '../../../core/theme/notion_colors.dart';
 
 class PtOfferingsListView extends ConsumerStatefulWidget {
   final int? trainerId; // null이면 현재 로그인한 트레이너의 상품, 값이 있으면 해당 트레이너의 상품
@@ -80,7 +81,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: Colors.red.shade300,
+                  color: NotionColors.error,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -92,7 +93,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 Text(
                   error.toString(),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: NotionColors.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -133,13 +134,13 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
           Icon(
             Icons.fitness_center_outlined,
             size: 80,
-            color: Colors.grey.shade300,
+            color: NotionColors.textSecondary,
           ),
           const SizedBox(height: 24),
           Text(
             widget.isTrainerView ? '등록된 PT 상품이 없습니다' : '해당 트레이너의 PT 상품이 없습니다',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.grey[600],
+              color: NotionColors.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -148,7 +149,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 ? '새로운 PT 상품을 추가해보세요'
                 : '다른 트레이너의 상품을 확인해보세요',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[500],
+              color: NotionColors.textSecondary,
             ),
           ),
           if (widget.isTrainerView) ...[
@@ -176,17 +177,10 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NotionColors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
         border: Border.all(
-          color: Colors.grey.shade200,
+          color: NotionColors.border,
           width: 1,
         ),
       ),
@@ -201,12 +195,12 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: NotionColors.gray100,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.fitness_center_outlined,
-                    color: Colors.grey[700],
+                    color: NotionColors.textSecondary,
                     size: 18,
                   ),
                 ),
@@ -218,7 +212,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                       Text(
                         offering.title,
                         style: const TextStyle(
-                          color: Colors.black87,
+                          color: NotionColors.black,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -230,7 +224,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                         Text(
                           '${offering.trainerName} 트레이너',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: NotionColors.textSecondary,
                             fontSize: 13,
                           ),
                         ),
@@ -241,13 +235,13 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 if (widget.isTrainerView)
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.red[50],
+                      color: NotionColors.gray100,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: IconButton(
                       icon: Icon(
                         Icons.delete_outline,
-                        color: Colors.red[400],
+                        color: NotionColors.error,
                         size: 18,
                       ),
                       onPressed: () => _deleteOffering(offering),
@@ -270,7 +264,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                   Text(
                     offering.description,
                     style: TextStyle(
-                      color: Colors.grey[700],
+                      color: NotionColors.textSecondary,
                       fontSize: 14,
                       height: 1.4,
                     ),
@@ -324,10 +318,10 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: NotionColors.gray100,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.grey[200]!,
+          color: NotionColors.border,
           width: 1,
         ),
       ),
@@ -336,12 +330,12 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: Colors.grey[600]),
+              Icon(icon, size: 14, color: NotionColors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.grey[600],
+                  color: NotionColors.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -352,7 +346,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
           Text(
             value,
             style: const TextStyle(
-              color: Colors.black87,
+              color: NotionColors.black,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -365,15 +359,8 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
   Widget _buildCleanBookingButton(PtOffering offering) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black87,
+        color: NotionColors.black,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -387,14 +374,14 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
               children: [
                 const Icon(
                   Icons.calendar_today_outlined,
-                  color: Colors.white,
+                  color: NotionColors.white,
                   size: 16,
                 ),
                 const SizedBox(width: 8),
                 const Text(
                   '예약하기',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: NotionColors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -460,7 +447,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
               Navigator.pop(context);
               await _performDelete(offering);
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: NotionColors.error),
             child: const Text('삭제'),
           ),
         ],
@@ -526,14 +513,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
           constraints: const BoxConstraints(maxWidth: 400),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white,
-                Colors.blue.shade50,
-              ],
-            ),
+            color: NotionColors.white,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -543,12 +523,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.blue.shade600,
-                      Colors.blue.shade400,
-                    ],
-                  ),
+                  color: NotionColors.black,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
@@ -559,12 +534,12 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: NotionColors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.fitness_center,
-                        color: Colors.white,
+                        color: NotionColors.white,
                         size: 32,
                       ),
                     ),
@@ -572,7 +547,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                     const Text(
                       'PT 신청하기',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: NotionColors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -591,17 +566,10 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: NotionColors.white,
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                         border: Border.all(
-                          color: Colors.blue.shade100,
+                          color: NotionColors.border,
                           width: 1,
                         ),
                       ),
@@ -612,7 +580,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                             children: [
                               Icon(
                                 Icons.local_offer,
-                                color: Colors.blue.shade600,
+                                color: NotionColors.black,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -632,14 +600,14 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                             Icons.payments,
                             '가격',
                             '₩${_formatPrice(offering.price)}',
-                            Colors.green,
+                            NotionColors.black,
                           ),
                           const SizedBox(height: 8),
                           _buildDialogInfoRow(
                             Icons.event_repeat,
                             '세션',
                             '${offering.totalSessions}회',
-                            Colors.orange,
+                            NotionColors.black,
                           ),
                           if (offering.trainerName != null) ...[
                             const SizedBox(height: 8),
@@ -647,7 +615,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                               Icons.person,
                               '트레이너',
                               offering.trainerName!,
-                              Colors.purple,
+                              NotionColors.black,
                             ),
                           ],
                         ],
@@ -660,17 +628,17 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
+                        color: NotionColors.gray100,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.amber.shade200,
+                          color: NotionColors.border,
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: Colors.amber.shade700,
+                            color: NotionColors.black,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
@@ -678,7 +646,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                             child: Text(
                               'PT 신청 후 트레이너의 승인을 기다려주세요.',
                               style: TextStyle(
-                                color: Colors.amber.shade800,
+                                color: NotionColors.black,
                                 fontSize: 13,
                               ),
                             ),
@@ -694,7 +662,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: NotionColors.gray100,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
@@ -709,13 +677,13 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
-                            side: BorderSide(color: Colors.grey.shade300),
+                            side: BorderSide(color: NotionColors.textSecondary),
                           ),
                         ),
                         child: Text(
                           '취소',
                           style: TextStyle(
-                            color: Colors.grey.shade700,
+                            color: NotionColors.textSecondary,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -726,20 +694,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.blue.shade600,
-                              Colors.blue.shade400,
-                            ],
-                          ),
+                          color: NotionColors.black,
                           borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          border: Border.all(color: NotionColors.border),
                         ),
                         child: Material(
                           color: Colors.transparent,
@@ -755,7 +712,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                                 child: Text(
                                   '신청하기',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: NotionColors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -791,7 +748,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
         Text(
           '$label:',
           style: TextStyle(
-            color: Colors.grey.shade600,
+            color: NotionColors.textSecondary,
             fontSize: 14,
           ),
         ),
@@ -836,7 +793,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${offering.title} PT 신청이 완료되었습니다!'),
-              backgroundColor: Colors.green,
+              backgroundColor: NotionColors.black,
             ),
           );
         }
@@ -847,7 +804,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: Colors.red,
+            backgroundColor: NotionColors.error,
           ),
         );
       }

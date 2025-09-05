@@ -9,7 +9,7 @@ part of 'routine_models.dart';
 _$CreateRoutineRequestImpl _$$CreateRoutineRequestImplFromJson(
         Map<String, dynamic> json) =>
     _$CreateRoutineRequestImpl(
-      name: json['name'] as String,
+      name: json['name'] as String?,
       description: json['description'] as String?,
       routineExercises: (json['routineExercises'] as List<dynamic>)
           .map((e) => RoutineExercise.fromJson(e as Map<String, dynamic>))
