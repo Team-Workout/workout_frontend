@@ -75,7 +75,7 @@ class BrandTheme {
         surface: BrandColors.surface,
         background: BrandColors.background,
       ),
-      
+
       // AppBar 테마
       appBarTheme: const AppBarTheme(
         backgroundColor: BrandColors.surface,
@@ -98,19 +98,6 @@ class BrandTheme {
         shadowColor: BrandColors.primaryBlue.withOpacity(0.1),
       ),
 
-      // 버튼 테마
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: BrandColors.primaryBlue,
-          foregroundColor: BrandColors.textOnPrimary,
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        ),
-      ),
-
       // FAB 테마
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: BrandColors.primaryGreen,
@@ -131,9 +118,11 @@ class BrandTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: BrandColors.primaryBlue, width: 2),
+          borderSide:
+              const BorderSide(color: BrandColors.primaryBlue, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
 
       // 탭 테마
@@ -210,7 +199,8 @@ class BrandGradientButton extends StatelessWidget {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: padding ?? const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            padding: padding ??
+                const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,

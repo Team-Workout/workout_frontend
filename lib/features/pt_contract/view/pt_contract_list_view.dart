@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../model/pt_contract_models.dart';
 import '../viewmodel/pt_contract_viewmodel.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class PtContractListView extends ConsumerStatefulWidget {
   const PtContractListView({super.key});
@@ -94,11 +95,11 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
+              NotionButton(
                 onPressed: () {
                   ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
                 },
-                child: const Text('다시 시도'),
+                text: '다시 시도',
               ),
             ],
           ),

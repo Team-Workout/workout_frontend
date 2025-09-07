@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../model/routine_models.dart';
 import '../viewmodel/routine_viewmodel.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class RoutineDetailView extends ConsumerStatefulWidget {
   final int routineId;
@@ -46,12 +47,24 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_routine?.name ?? '루틴 상세'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: Theme.of(context).textTheme.apply(
+          fontFamily: 'IBMPlexSansKR',
+        ),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _routine?.name ?? '루틴 상세',
+            style: const TextStyle(
+              fontFamily: 'IBMPlexSansKR',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
         actions: [
           if (_routine != null)
             PopupMenuButton<String>(
@@ -83,6 +96,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
               : _routine != null
                   ? _buildContent()
                   : const Center(child: Text('루틴을 찾을 수 없습니다')),
+      ),
     );
   }
 
@@ -111,10 +125,10 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          ElevatedButton.icon(
+          NotionButton(
             onPressed: _loadRoutineDetail,
-            icon: const Icon(Icons.refresh),
-            label: const Text('다시 시도'),
+            text: '다시 시도',
+            icon: Icons.refresh,
           ),
         ],
       ),
@@ -139,20 +153,13 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.blue.shade600,
-            Colors.blue.shade400,
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -166,12 +173,12 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.fitness_center,
-                    color: Colors.white,
+                    color: Color(0xFF4CAF50),
                     size: 20,
                   ),
                 ),
@@ -180,9 +187,10 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                   child: Text(
                     _routine!.name,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Colors.black,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                   ),
                 ),
@@ -192,9 +200,10 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
               const SizedBox(height: 12),
               Text(
                 _routine!.description!,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                style: const TextStyle(
+                  color: Colors.grey,
                   fontSize: 16,
+                  fontFamily: 'IBMPlexSansKR',
                 ),
               ),
             ],
@@ -231,27 +240,30 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.grey[100],
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.white, size: 18),
+            Icon(icon, color: Colors.grey[600], size: 18),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.grey[600],
                 fontSize: 12,
+                fontFamily: 'IBMPlexSansKR',
               ),
             ),
             const SizedBox(height: 2),
             Text(
               value,
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                fontFamily: 'IBMPlexSansKR',
               ),
             ),
           ],
@@ -263,8 +275,18 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
   Widget _buildExerciseListCard() {
     final exercises = _routine!.routineExercises ?? [];
     
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -272,14 +294,15 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
           children: [
             Row(
               children: [
-                Icon(Icons.list_alt, color: Colors.grey[700]),
+                Icon(Icons.list_alt, color: const Color(0xFF4CAF50)),
                 const SizedBox(width: 8),
                 Text(
                   '운동 목록',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: Colors.black,
+                    fontFamily: 'IBMPlexSansKR',
                   ),
                 ),
               ],
@@ -294,6 +317,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: 16,
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                   ),
                 ),
@@ -313,9 +337,9 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: const Color(0xFF4CAF50).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -325,30 +349,33 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
             Row(
               children: [
                 Container(
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade100,
-                    borderRadius: BorderRadius.circular(6),
+                    color: const Color(0xFF4CAF50),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
                       exerciseNumber.toString(),
-                      style: TextStyle(
-                        color: Colors.blue.shade700,
-                        fontSize: 12,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     exercise.exerciseName ?? 'Exercise ID: ${exercise.exerciseId}',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                   ),
                 ),
@@ -357,10 +384,11 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
             const SizedBox(height: 12),
             Text(
               '세트 정보',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+                fontFamily: 'IBMPlexSansKR',
               ),
             ),
             const SizedBox(height: 8),
@@ -376,32 +404,40 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
 
   Widget _buildSetInfo(RoutineSet set, int setNumber) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 40,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFF4CAF50),
+              borderRadius: BorderRadius.circular(4),
+            ),
             child: Text(
               '${setNumber}세트',
               style: const TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'IBMPlexSansKR',
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               '${set.weight}kg × ${set.reps}회',
               style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontFamily: 'IBMPlexSansKR',
               ),
             ),
           ),
@@ -425,7 +461,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
             onPressed: () => Navigator.pop(context),
             child: const Text('취소'),
           ),
-          ElevatedButton(
+          NotionButton(
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -444,8 +480,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('삭제'),
+            text: '삭제',
           ),
         ],
       ),

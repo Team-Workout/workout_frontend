@@ -50,10 +50,22 @@ class PtOfferingApiService {
             .map((data) => PtOffering.fromJson(data as Map<String, dynamic>))
             .toList();
       } 
-      // 응답이 래핑된 객체로 오는 경우
+      // 응답이 래핑된 객체로 오는 경우 ({"data": [...]} 형태)
       else if (response.data is Map<String, dynamic>) {
-        final ptOfferingsResponse = PtOfferingsResponse.fromJson(response.data);
-        return ptOfferingsResponse.ptOfferings;
+        final responseMap = response.data as Map<String, dynamic>;
+        if (responseMap.containsKey('data')) {
+          final List<dynamic>? dataList = responseMap['data'] as List<dynamic>?;
+          if (dataList == null || dataList.isEmpty) {
+            return []; // 빈 배열이거나 null인 경우 빈 리스트 반환
+          }
+          return dataList
+              .map((data) => PtOffering.fromJson(data as Map<String, dynamic>))
+              .toList();
+        } else {
+          // 기존 PtOfferingsResponse 형태
+          final ptOfferingsResponse = PtOfferingsResponse.fromJson(responseMap);
+          return ptOfferingsResponse.ptOfferings;
+        }
       } 
       else {
         return [];
@@ -65,8 +77,8 @@ class PtOfferingApiService {
       } else if (errorMessage.contains('404')) {
         return []; // 상품이 없는 경우 빈 리스트 반환
       } else {
-        print('PT 상품 조회 오류: $errorMessage');
-        throw Exception('PT 상품 조회 실패: 서버 오류가 발생했습니다.');
+        print('PT 상품 조회 정보: $errorMessage');
+        return []; // 에러 대신 빈 리스트 반환
       }
     }
   }

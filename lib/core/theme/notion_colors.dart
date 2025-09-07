@@ -8,18 +8,18 @@ class NotionColors {
   // 🔲 기본 모노톤
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF191919);
-  
+
   // 🌫️ 회색 스케일 (Notion 기반)
-  static const Color gray50 = Color(0xFFF9FAFB);   // 거의 흰색 (배경)
-  static const Color gray100 = Color(0xFFF3F4F6);  // 매우 연한 회색 (카드 배경)
-  static const Color gray200 = Color(0xFFE5E7EB);  // 연한 회색 (border)
-  static const Color gray300 = Color(0xFFD1D5DB);  // 중간 연한 회색
-  static const Color gray400 = Color(0xFF9CA3AF);  // 중간 회색 (placeholder)
-  static const Color gray500 = Color(0xFF6B7280);  // 중간 진한 회색 (보조 텍스트)
-  static const Color gray600 = Color(0xFF4B5563);  // 진한 회색
-  static const Color gray700 = Color(0xFF374151);  // 매우 진한 회색
-  static const Color gray800 = Color(0xFF1F2937);  // 거의 검은색
-  static const Color gray900 = Color(0xFF111827);  // 검은색에 가까운
+  static const Color gray50 = Color(0xFFF9FAFB); // 거의 흰색 (배경)
+  static const Color gray100 = Color(0xFFF3F4F6); // 매우 연한 회색 (카드 배경)
+  static const Color gray200 = Color(0xFFE5E7EB); // 연한 회색 (border)
+  static const Color gray300 = Color(0xFFD1D5DB); // 중간 연한 회색
+  static const Color gray400 = Color(0xFF9CA3AF); // 중간 회색 (placeholder)
+  static const Color gray500 = Color(0xFF6B7280); // 중간 진한 회색 (보조 텍스트)
+  static const Color gray600 = Color(0xFF4B5563); // 진한 회색
+  static const Color gray700 = Color(0xFF374151); // 매우 진한 회색
+  static const Color gray800 = Color(0xFF1F2937); // 거의 검은색
+  static const Color gray900 = Color(0xFF111827); // 검은색에 가까운
 
   // 📝 텍스트 컬러
   static const Color textPrimary = black;
@@ -36,11 +36,11 @@ class NotionColors {
   static const Color divider = gray200;
   static const Color hover = gray50;
   static const Color selected = gray100;
-  
+
   // 🔵 최소한의 액센트 (노션의 파란색)
   static const Color accent = Color(0xFF0070F3); // 노션 블루
   static const Color accentLight = Color(0xFFE8F4FD);
-  
+
   // ⚠️ 상태 컬러 (모노톤으로 변환)
   static const Color success = gray800;
   static const Color warning = gray700;
@@ -54,7 +54,7 @@ class NotionTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      
+
       // 컬러 스킴
       colorScheme: const ColorScheme.light(
         primary: NotionColors.black,
@@ -68,10 +68,10 @@ class NotionTheme {
         onBackground: NotionColors.black,
         onError: NotionColors.white,
       ),
-      
+
       // 스캐폴드 배경
       scaffoldBackgroundColor: NotionColors.gray50,
-      
+
       // AppBar 테마
       appBarTheme: const AppBarTheme(
         backgroundColor: NotionColors.white,
@@ -95,19 +95,6 @@ class NotionTheme {
         ),
       ),
 
-      // 버튼 테마
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: NotionColors.black,
-          foregroundColor: NotionColors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        ),
-      ),
-      
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: NotionColors.black,
@@ -118,7 +105,7 @@ class NotionTheme {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         ),
       ),
-      
+
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: NotionColors.gray600,
@@ -142,7 +129,8 @@ class NotionTheme {
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: NotionColors.black, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         hintStyle: const TextStyle(color: NotionColors.textPlaceholder),
       ),
 
@@ -152,15 +140,16 @@ class NotionTheme {
         unselectedLabelColor: NotionColors.gray500,
         indicatorColor: NotionColors.black,
         labelStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-        unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+        unselectedLabelStyle:
+            TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
       ),
-      
+
       // Divider 테마
       dividerTheme: const DividerThemeData(
         color: NotionColors.divider,
         thickness: 1,
       ),
-      
+
       // Icon 테마
       iconTheme: const IconThemeData(
         color: NotionColors.gray600,

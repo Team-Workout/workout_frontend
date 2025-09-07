@@ -5,6 +5,8 @@ import '../viewmodel/pt_application_viewmodel.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../features/auth/model/user_model.dart';
 import '../../../core/theme/notion_colors.dart';
+import '../../dashboard/widgets/notion_button.dart';
+import '../../dashboard/widgets/dashboard_pt_contract_card.dart';
 
 class PtApplicationsListView extends ConsumerStatefulWidget {
   final bool? isTrainerView; // null이면 userType으로 자동 판별
@@ -46,59 +48,73 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
         onRefresh: () async {
           ref.read(ptApplicationProvider.notifier).loadPtApplications();
         },
-        child: applicationsAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          error: (error, stackTrace) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: NotionColors.error,
+        child: Column(
+          children: [
+            // PT 계약 정보 (멤버일 때만 표시)
+            if (!_isTrainer) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: const DashboardPtContractCard(),
+              ),
+            ],
+            // PT 신청 내역 영역
+            Expanded(
+              child: applicationsAsync.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'PT 신청 내역을 불러오는 중 오류가 발생했습니다',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: NotionColors.textSecondary,
+                error: (error, stackTrace) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: NotionColors.error,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'PT 신청 내역을 불러오는 중 오류가 발생했습니다',
+                        style: Theme.of(context).textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        error.toString(),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: NotionColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      NotionButton(
+                        onPressed: () {
+                          ref.read(ptApplicationProvider.notifier).loadPtApplications();
+                        },
+                        text: '다시 시도',
+                        icon: Icons.refresh,
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    ref.read(ptApplicationProvider.notifier).loadPtApplications();
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('다시 시도'),
-                ),
-              ],
-            ),
-          ),
-          data: (applications) {
-            if (applications.isEmpty) {
-              return _buildEmptyState();
-            }
+                data: (applications) {
+                  if (applications.isEmpty) {
+                    return _buildEmptyState();
+                  }
 
-            return ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: applications.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final application = applications[index];
-                return _buildApplicationCard(application);
-              },
-            );
-          },
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: applications.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final application = applications[index];
+                      return _buildApplicationCard(application);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -482,7 +498,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
             onPressed: () => Navigator.pop(context),
             child: const Text('취소'),
           ),
-          ElevatedButton(
+          NotionButton(
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -501,8 +517,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: NotionColors.black),
-            child: const Text('승인'),
+            text: '승인',
           ),
         ],
       ),
@@ -520,7 +535,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
             onPressed: () => Navigator.pop(context),
             child: const Text('취소'),
           ),
-          ElevatedButton(
+          NotionButton(
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -539,8 +554,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: NotionColors.error),
-            child: const Text('거절'),
+            text: '거절',
           ),
         ],
       ),
@@ -558,7 +572,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
             onPressed: () => Navigator.pop(context),
             child: const Text('돌아가기'),
           ),
-          ElevatedButton(
+          NotionButton(
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -577,8 +591,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: NotionColors.error),
-            child: const Text('취소하기'),
+            text: '취소하기',
           ),
         ],
       ),

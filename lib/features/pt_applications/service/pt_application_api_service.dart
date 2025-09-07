@@ -39,11 +39,25 @@ class PtApplicationApiService {
     try {
       final response = await _apiService.get('/pt-applications');
 
-      // 응답이 래핑된 객체로 오는 경우
+      // 응답이 래핑된 객체로 오는 경우: {"data": {"applications": []}}
       if (response.data is Map<String, dynamic>) {
-        final ptApplicationsResponse =
-            PtApplicationsResponse.fromJson(response.data);
-        return ptApplicationsResponse.applications;
+        final responseMap = response.data as Map<String, dynamic>;
+        
+        // Check if data key exists and contains applications
+        if (responseMap['data'] != null && responseMap['data'] is Map<String, dynamic>) {
+          final dataMap = responseMap['data'] as Map<String, dynamic>;
+          final ptApplicationsResponse = PtApplicationsResponse.fromJson(dataMap);
+          return ptApplicationsResponse.applications;
+        }
+        // Handle direct applications in response.data
+        else if (responseMap['applications'] != null) {
+          final ptApplicationsResponse = PtApplicationsResponse.fromJson(responseMap);
+          return ptApplicationsResponse.applications;
+        }
+        // Handle empty data
+        else {
+          return [];
+        }
       }
       // 응답이 직접 배열로 오는 경우
       else if (response.data is List) {

@@ -5,6 +5,7 @@ import '../viewmodel/trainer_viewmodel.dart';
 import '../model/trainer_model.dart';
 import '../../../services/image_cache_manager.dart';
 import 'trainer_detail_view.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class TrainersView extends ConsumerStatefulWidget {
   const TrainersView({super.key});
@@ -15,13 +16,21 @@ class TrainersView extends ConsumerStatefulWidget {
 
 class _TrainersViewState extends ConsumerState<TrainersView> {
   final TextEditingController _searchController = TextEditingController();
-  String selectedCategory = 'All Trainers';
+  String selectedCategory = '전체 트레이너';
+  List<TrainerProfile> filteredTrainers = [];
+
+  final Map<String, List<String>> categorySpecialties = {
+    '전체 트레이너': [],
+    '다이어트': ['Weight Loss', '체중감량', '다이어트'],
+    '근력강화': ['Muscle Gain', '근력강화', '웨이트트레이닝'],
+    '재활운동': ['Rehabilitation', '재활', '물리치료'],
+  };
 
   final List<String> categories = [
-    'All Trainers',
-    'Weight Loss',
-    'Muscle Gain',
-    'Rehabilitation',
+    '전체 트레이너',
+    '다이어트',
+    '근력강화',
+    '재활운동',
   ];
 
   @override
@@ -39,6 +48,23 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
     super.dispose();
   }
 
+  List<TrainerProfile> _filterTrainersByCategory(List<TrainerProfile> trainers, String category) {
+    if (category == '전체 트레이너') {
+      return trainers;
+    }
+
+    final specialtiesToMatch = categorySpecialties[category] ?? [];
+    if (specialtiesToMatch.isEmpty) {
+      return trainers;
+    }
+
+    return trainers.where((trainer) {
+      return trainer.specialties.any((specialty) =>
+          specialtiesToMatch.any((match) =>
+              specialty.toLowerCase().contains(match.toLowerCase())));
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final trainersState = ref.watch(trainerProfileViewModelProvider);
@@ -46,23 +72,31 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Choose Your Trainer',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+            ),
           ),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false, // 뒤로가기 버튼 제거 (네비게이션 바 사용)
+        title: const Text(
+          'PT 트레이너 선택',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.black),
+            icon: const Icon(Icons.filter_list, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -74,30 +108,40 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search trainers...',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                      width: 1.5,
                     ),
                   ),
-                  onChanged: (value) {
-                    ref.read(trainerProfileViewModelProvider.notifier).searchTrainers(value);
-                  },
+                  child: TextField(
+                    controller: _searchController,
+                    style: const TextStyle(
+                      fontFamily: 'IBMPlexSansKR',
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '트레이너를 검색하세요...',
+                      hintStyle: const TextStyle(
+                        color: Colors.grey,
+                        fontFamily: 'IBMPlexSansKR',
+                        fontWeight: FontWeight.w500,
+                      ),
+                      prefixIcon: const Icon(Icons.search, color: Color(0xFF10B981)),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(20),
+                    ),
+                    onChanged: (value) {
+                      ref.read(trainerProfileViewModelProvider.notifier).searchTrainers(value);
+                    },
+                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
-                  height: 36,
+                  height: 44, // 높이를 36에서 44로 증가
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: categories.length,
@@ -106,29 +150,39 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                       final isSelected = selectedCategory == category;
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(
-                            category,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black87,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                            ),
-                          ),
-                          selected: isSelected,
-                          onSelected: (selected) {
+                        child: GestureDetector(
+                          onTap: () {
                             setState(() {
                               selectedCategory = category;
                             });
-                            // TODO: 카테고리 필터링 구현 필요
-                            // ref.read(trainerProfileViewModelProvider.notifier).filterByCategory(category);
                           },
-                          backgroundColor: Colors.grey[200],
-                          selectedColor: Colors.black87,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              gradient: isSelected 
+                                  ? const LinearGradient(
+                                      colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : null,
+                              color: isSelected ? null : const Color(0xFF10B981).withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFF10B981).withValues(alpha: isSelected ? 0.8 : 0.2),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              category,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : const Color(0xFF10B981),
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'IBMPlexSansKR',
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
-                          showCheckmark: false,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
                         ),
                       );
                     },
@@ -140,11 +194,31 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
           Expanded(
             child: trainersState.when(
               data: (trainers) {
-                if (trainers.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No trainers found',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                // 카테고리 필터링 적용
+                final displayTrainers = _filterTrainersByCategory(trainers, selectedCategory);
+                
+                if (displayTrainers.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          selectedCategory == '전체 트레이너' 
+                              ? '트레이너를 찾을 수 없습니다'
+                              : '$selectedCategory 전문 트레이너를 찾을 수 없습니다',
+                          style: const TextStyle(
+                            fontSize: 16, 
+                            color: Colors.grey,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }
@@ -152,17 +226,21 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                 return ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 12),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
-                        'Available Trainers',
-                        style: TextStyle(
+                        selectedCategory == '전체 트레이너' 
+                            ? '이용 가능한 트레이너 (${displayTrainers.length}명)'
+                            : '$selectedCategory 전문 트레이너 (${displayTrainers.length}명)',
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF10B981),
+                          fontFamily: 'IBMPlexSansKR',
                         ),
                       ),
                     ),
-                    ...trainers.map((trainer) => _buildTrainerCard(trainer)),
+                    ...displayTrainers.map((trainer) => _buildTrainerCard(trainer)),
                   ],
                 );
               },
@@ -171,34 +249,6 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                 child: Text('Error: $error'),
               ),
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.black87,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 2,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: 'Workouts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Trainers',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up),
-            label: 'Progress',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
           ),
         ],
       ),
@@ -248,35 +298,103 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
             height: 200,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.grey[300]!,
-                  Colors.grey[400]!,
-                ],
-              ),
             ),
             child: Stack(
               children: [
+                // 배경 이미지 또는 그라디언트
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: snapshot.hasData && snapshot.data != null
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.file(
+                              File(snapshot.data!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        const Color(0xFF10B981).withOpacity(0.8),
+                                        const Color(0xFF34D399).withOpacity(0.9),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            // 어두운 그라디언트 오버레이
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.7),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                const Color(0xFF10B981).withOpacity(0.8),
+                                const Color(0xFF34D399).withOpacity(0.9),
+                              ],
+                            ),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.white.withOpacity(0.5),
+                            ),
+                          ),
+                        ),
+                ),
                 Positioned(
                   bottom: 16,
                   left: 16,
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.white,
-                        backgroundImage: snapshot.hasData && snapshot.data != null
-                            ? FileImage(File(snapshot.data!))
-                            : null,
-                        child: snapshot.hasData && snapshot.data != null
-                            ? null
-                            : Icon(
-                                Icons.person,
-                                size: 30,
-                                color: Colors.grey[600],
-                              ),
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 30,
+                          backgroundColor: const Color(0xFF10B981),
+                          backgroundImage: snapshot.hasData && snapshot.data != null
+                              ? FileImage(File(snapshot.data!))
+                              : null,
+                          child: snapshot.hasData && snapshot.data != null
+                              ? null
+                              : const Icon(
+                                  Icons.person,
+                                  size: 30,
+                                  color: Colors.white,
+                                ),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -392,7 +510,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                         ],
                       ),
                     ),
-                    ElevatedButton(
+                    NotionButton(
                       onPressed: () {
                         // 트레이너 상세 페이지로 이동
                         Navigator.push(
@@ -405,23 +523,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                           ),
                         );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black87,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        '프로필 보기',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
+                      text: '프로필 보기',
                     ),
                   ],
                 ),

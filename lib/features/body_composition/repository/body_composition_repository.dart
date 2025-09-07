@@ -146,8 +146,23 @@ class BodyCompositionRepository {
         // Check if response is a Map
         else if (response.data is Map<String, dynamic>) {
           final responseData = response.data as Map<String, dynamic>;
+          
+          // Handle response format like {"data": 7}
+          if (responseData.containsKey('data') && responseData['data'] is int) {
+            final Map<String, dynamic> transformedData = {
+              'id': responseData['data'],
+              'member': {'id': 0}, // Default member ID
+              'measurementDate': measurementDate,
+              'weightKg': weightKg,
+              'fatKg': fatKg,
+              'muscleMassKg': muscleMassKg,
+            };
+            return BodyComposition.fromJson(transformedData);
+          }
+          
+          // Handle other Map formats
           final Map<String, dynamic> transformedData = {
-            'id': responseData['id'] ?? response.data,
+            'id': responseData['id'] ?? responseData['data'] ?? 0,
             'member': {'id': responseData['memberId'] ?? 0},
             'measurementDate':
                 responseData['measurementDate'] ?? measurementDate,
@@ -284,6 +299,18 @@ class BodyCompositionRepository {
 
       print('Body images get success: ${response.statusCode} - ${response.data}');
 
+      // API 응답이 {"data": [...]} 형태로 온다
+      if (response.data is Map<String, dynamic>) {
+        final responseMap = response.data as Map<String, dynamic>;
+        if (responseMap['data'] is List) {
+          final imageList = responseMap['data'] as List;
+          return imageList
+              .map((item) => BodyImageResponse.fromJson(item as Map<String, dynamic>))
+              .toList();
+        }
+      }
+      
+      // 직접 List로 오는 경우 (fallback)
       if (response.data is List) {
         return (response.data as List)
             .map((item) => BodyImageResponse.fromJson(item as Map<String, dynamic>))

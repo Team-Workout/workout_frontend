@@ -80,7 +80,13 @@ class SettingsRepository {
       );
 
       print('Upload success: ${response.statusCode} - ${response.data}');
-      return ProfileImageResponse.fromJson(response.data);
+      
+      // Handle response format like {"data": {fileId: 2, fileUrl: "...", ...}}
+      if (response.data is Map<String, dynamic> && response.data['data'] != null) {
+        return ProfileImageResponse.fromJson(response.data['data']);
+      } else {
+        return ProfileImageResponse.fromJson(response.data);
+      }
     } catch (e) {
       print('=== Upload Error Details ===');
       if (e is DioException) {
@@ -108,7 +114,7 @@ class SettingsRepository {
   }
 
   /// 현재 프로필 이미지 조회
-  Future<ProfileImageInfo> getProfileImage() async {
+  Future<ProfileImageInfo?> getProfileImage() async {
     try {
       print('=== Profile Image Get Debug ===');
       print('Request URL: ${_dio.options.baseUrl}/common/members/me/profile-image');
@@ -117,7 +123,7 @@ class SettingsRepository {
       print('Session ID: ${_sessionService.sessionId}');
       print('Session Token: ${_sessionService.sessionToken}');
       
-      final response = await _dio.get('/common/members/me/profile-image');
+      final response = await _dio.post('/common/members/me/profile-image');
       print('Get profile image success: ${response.statusCode} - ${response.data}');
       return ProfileImageInfo.fromJson(response.data);
     } catch (e) {
@@ -135,6 +141,11 @@ class SettingsRepository {
         } else if (e.response?.statusCode == 404) {
           print('=== 404 Not Found ===');
           print('User might not have a profile image set');
+        } else if (e.response?.statusCode == 500) {
+          print('=== 500 Server Error ===');
+          print('Server internal error - profile image feature might not be fully implemented');
+          // Return null or default instead of throwing exception
+          return null;
         }
       }
       print('Get profile image error: $e');

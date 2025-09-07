@@ -24,7 +24,9 @@ dependencies:
   # UI
   cupertino_icons: ^1.0.8
   fl_chart: ^0.68.0
-  intl: ^0.19.0
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
   
   # Storage
   shared_preferences: ^2.2.3
@@ -44,6 +46,7 @@ dependencies:
   
   # Image Picker
   image_picker: ^1.1.2
+  firebase_core: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -95,3 +98,21 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  
+  fonts:
+    - family: IBMPlexSansKR
+      fonts:
+        - asset: lib/assets/fonts/IBMPlexSansKR-Thin.ttf
+          weight: 100
+        - asset: lib/assets/fonts/IBMPlexSansKR-ExtraLight.ttf
+          weight: 200
+        - asset: lib/assets/fonts/IBMPlexSansKR-Light.ttf
+          weight: 300
+        - asset: lib/assets/fonts/IBMPlexSansKR-Regular.ttf
+          weight: 400
+        - asset: lib/assets/fonts/IBMPlexSansKR-Medium.ttf
+          weight: 500
+        - asset: lib/assets/fonts/IBMPlexSansKR-SemiBold.ttf
+          weight: 600
+        - asset: lib/assets/fonts/IBMPlexSansKR-Bold.ttf
+          weight: 700

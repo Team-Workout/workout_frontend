@@ -136,14 +136,22 @@ class WorkoutApiService {
     try {
       final response = await _apiService.get('/workout/me/routines');
 
-      if (response.data is List) {
+      // 응답 구조: {"data": [...]}
+      if (response.data is Map<String, dynamic> && response.data['data'] is List) {
+        return (response.data['data'] as List)
+            .map((json) => RoutineResponse.fromJson(json))
+            .toList();
+      } else if (response.data is List) {
+        // 기존 방식도 호환 유지
         return (response.data as List)
             .map((json) => RoutineResponse.fromJson(json))
             .toList();
       } else {
+        print('🚨 예상치 못한 응답 형식: ${response.data}');
         throw Exception('잘못된 응답 형식입니다.');
       }
     } catch (e) {
+      print('🚨 getMyRoutines 에러: $e');
       final errorMessage = e.toString();
       if (errorMessage.contains('401')) {
         throw Exception('인증이 필요합니다. 다시 로그인해주세요.');
@@ -159,8 +167,19 @@ class WorkoutApiService {
   Future<RoutineResponse> getRoutineDetail(int routineId) async {
     try {
       final response = await _apiService.get('/workout/routine/$routineId');
-      return RoutineResponse.fromJson(response.data);
+      
+      // 응답 구조: {"data": {...}}
+      if (response.data is Map<String, dynamic> && response.data['data'] is Map<String, dynamic>) {
+        return RoutineResponse.fromJson(response.data['data']);
+      } else if (response.data is Map<String, dynamic>) {
+        // 기존 방식도 호환 유지
+        return RoutineResponse.fromJson(response.data);
+      } else {
+        print('🚨 예상치 못한 루틴 디테일 응답 형식: ${response.data}');
+        throw Exception('잘못된 응답 형식입니다.');
+      }
     } catch (e) {
+      print('🚨 getRoutineDetail 에러: $e');
       final errorMessage = e.toString();
       if (errorMessage.contains('401')) {
         throw Exception('인증이 필요합니다. 다시 로그인해주세요.');

@@ -13,6 +13,7 @@ import 'package:pt_service/features/sync/viewmodel/sync_viewmodel.dart';
 import 'package:pt_service/core/config/api_config.dart';
 import 'package:pt_service/core/services/api_service.dart';
 import '../../../core/theme/notion_colors.dart';
+import '../../dashboard/widgets/notion_button.dart';
 import '../../../services/image_cache_manager.dart';
 import '../viewmodel/settings_viewmodel.dart';
 
@@ -40,17 +41,44 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final profileImageAsync = ref.watch(profileImageProvider);
 
     return Scaffold(
-      backgroundColor: NotionColors.gray50,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: NotionColors.white,
-        title: const Text('설정', style: TextStyle(color: NotionColors.black)),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          '설정',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        centerTitle: true,
       ),
       body: ListView(
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: NotionColors.white,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -65,13 +93,16 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                             } else {
                               return CircleAvatar(
                                 radius: 40,
-                                backgroundColor: NotionColors.black,
+                                backgroundColor: const Color(0xFF10B981),
                                 child: Text(
-                                  user?.name.substring(0, 1) ?? 'U',
+                                  (user?.name != null && user!.name.isNotEmpty) 
+                                      ? user.name.substring(0, 1).toUpperCase() 
+                                      : 'U',
                                   style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: NotionColors.white,
+                                    color: Colors.white,
+                                    fontFamily: 'IBMPlexSansKR',
                                   ),
                                 ),
                               );
@@ -79,18 +110,21 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           },
                           loading: () => CircleAvatar(
                             radius: 40,
-                            backgroundColor: NotionColors.black,
+                            backgroundColor: const Color(0xFF10B981),
                             child: const CircularProgressIndicator(color: Colors.white),
                           ),
                           error: (_, __) => CircleAvatar(
                             radius: 40,
-                            backgroundColor: NotionColors.black,
+                            backgroundColor: const Color(0xFF10B981),
                             child: Text(
-                              user?.name.substring(0, 1) ?? 'U',
+                              (user?.name != null && user!.name.isNotEmpty) 
+                                  ? user.name.substring(0, 1).toUpperCase() 
+                                  : 'U',
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: NotionColors.white,
+                                color: Colors.white,
+                                fontFamily: 'IBMPlexSansKR',
                               ),
                             ),
                           ),
@@ -104,15 +138,15 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: NotionColors.black,
+                          color: const Color(0xFF10B981),
                           shape: BoxShape.circle,
-                          border: Border.all(color: NotionColors.white, width: 1.5),
+                          border: Border.all(color: Colors.white, width: 1.5),
                         ),
                         child: IconButton(
                           iconSize: 14,
                           padding: EdgeInsets.zero,
                           onPressed: () => _showImagePickerOptions(context, ref),
-                          icon: const Icon(Icons.camera_alt, color: NotionColors.white),
+                          icon: const Icon(Icons.camera_alt, color: Colors.white),
                         ),
                       ),
                     ),
@@ -121,31 +155,40 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 const SizedBox(height: 16),
                 Text(
                   user?.name ?? '사용자',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: NotionColors.black,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF10B981),
+                    fontFamily: 'IBMPlexSansKR',
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   user?.email ?? '',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: NotionColors.textSecondary,
-                      ),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: NotionColors.black,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     _getUserTypeLabel(user?.userType.name),
                     style: const TextStyle(
-                      color: NotionColors.white,
+                      color: Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                   ),
                 ),
@@ -357,10 +400,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                               ? Icons.error 
                               : Icons.help_outline,
                           color: syncState.isCompleted 
-                            ? NotionColors.black 
+                            ? const Color(0xFF10B981)
                             : syncState.error != null 
-                              ? NotionColors.error 
-                              : NotionColors.textSecondary,
+                              ? Colors.red
+                              : Colors.grey[600],
                         ),
                   );
                 },
@@ -369,17 +412,29 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: OutlinedButton.icon(
-              onPressed: () {
-                _showLogoutDialog(context, ref);
-              },
-              icon: const Icon(Icons.logout, color: NotionColors.error),
-              label: const Text(
-                '로그아웃',
-                style: TextStyle(color: NotionColors.error),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: NotionColors.error),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  _showLogoutDialog(context, ref);
+                },
+                icon: const Icon(Icons.logout, color: Colors.red),
+                label: const Text(
+                  '로그아웃',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.red, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
             ),
           ),
@@ -410,18 +465,30 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: NotionColors.black,
-                  fontWeight: FontWeight.bold,
-                ),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF10B981),
+              fontFamily: 'IBMPlexSansKR',
+            ),
           ),
         ),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: NotionColors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: NotionColors.border),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF10B981).withValues(alpha: 0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             children: items,
@@ -439,9 +506,33 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     VoidCallback onTap,
   ) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF10B981), Color(0xFF34D399)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 18,
+        ),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontFamily: 'IBMPlexSansKR',
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: Color(0xFF10B981),
+      ),
       onTap: onTap,
     );
   }
@@ -454,10 +545,32 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     ValueChanged<bool> onChanged,
   ) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF10B981), Color(0xFF34D399)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 18,
+        ),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontFamily: 'IBMPlexSansKR',
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       trailing: Switch(
         value: value,
+        activeColor: const Color(0xFF10B981),
         onChanged: onChanged,
       ),
     );
@@ -468,30 +581,66 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('비밀번호 변경'),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               obscureText: true,
               decoration: InputDecoration(
                 labelText: '현재 비밀번호',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF34D399),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF10B981),
+                    width: 2,
+                  ),
+                ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               obscureText: true,
               decoration: InputDecoration(
                 labelText: '새 비밀번호',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF34D399),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF10B981),
+                    width: 2,
+                  ),
+                ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               obscureText: true,
               decoration: InputDecoration(
                 labelText: '새 비밀번호 확인',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF34D399),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF10B981),
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ],
@@ -519,28 +668,72 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('연락처 수정'),
-        content: const TextField(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '연락처 수정',
+          style: TextStyle(
+            fontFamily: 'IBMPlexSansKR',
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF10B981),
+          ),
+        ),
+        content: TextField(
           decoration: InputDecoration(
             labelText: '새 연락처',
             hintText: '010-1234-5678',
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF34D399),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF10B981),
+                width: 2,
+              ),
+            ),
           ),
           keyboardType: TextInputType.phone,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소'),
+            child: const Text(
+              '취소',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                color: Colors.grey,
+              ),
+            ),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('연락처가 수정되었습니다')),
+                const SnackBar(
+                  content: Text('연락처가 수정되었습니다'),
+                  backgroundColor: Color(0xFF10B981),
+                ),
               );
             },
-            child: const Text('수정'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '수숡',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -580,11 +773,24 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('취소'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('적용'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '적용',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -618,11 +824,24 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('취소'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('적용'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '적용',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -643,14 +862,30 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('취소'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('백업이 완료되었습니다')),
+                const SnackBar(
+                  content: Text('백업이 완료되었습니다'),
+                  backgroundColor: Color(0xFF10B981),
+                ),
               );
             },
-            child: const Text('백업'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '백업',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -691,9 +926,22 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
         ),
         actions: [
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '닫기',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -721,9 +969,22 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ],
         ),
         actions: [
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '닫기',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -751,9 +1012,22 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
         ),
         actions: [
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '닫기',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -780,9 +1054,22 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
         ),
         actions: [
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '닫기',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -800,13 +1087,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('취소'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () {
               ref.read(authStateProvider).logout();
               context.go('/login');
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: NotionColors.error,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('로그아웃'),
           ),
@@ -850,10 +1141,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.cancel, color: NotionColors.error),
+                leading: const Icon(Icons.cancel, color: Colors.red),
                 title: const Text(
                   '취소',
-                  style: TextStyle(color: NotionColors.error),
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -947,11 +1241,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           radius: 40,
           backgroundColor: NotionColors.black,
           child: Text(
-            userName?.substring(0, 1) ?? 'U',
+            (userName != null && userName.isNotEmpty) 
+                ? userName.substring(0, 1).toUpperCase() 
+                : 'U',
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white,
+              fontFamily: 'IBMPlexSansKR',
             ),
           ),
         );
@@ -999,7 +1296,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('마스터 데이터 동기화를 시작합니다...'),
-          backgroundColor: NotionColors.black,
+          backgroundColor: Color(0xFF10B981),
         ),
       );
 
@@ -1012,14 +1309,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('동기화 실패: ${syncState.error}'),
-              backgroundColor: NotionColors.error,
+              backgroundColor: Colors.red,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(syncState.message ?? '동기화가 완료되었습니다.'),
-              backgroundColor: NotionColors.black,
+              backgroundColor: Color(0xFF10B981),
             ),
           );
         }
@@ -1051,9 +1348,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 onPressed: () => Navigator.of(context).pop(false),
                 child: const Text('취소'),
               ),
-              ElevatedButton(
+              NotionButton(
+                text: '초기화',
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('초기화'),
               ),
             ],
           );
@@ -1067,7 +1364,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('마스터 데이터 캐시가 초기화되었습니다.'),
-              backgroundColor: NotionColors.black,
+              backgroundColor: Color(0xFF10B981),
             ),
           );
         }

@@ -230,6 +230,24 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "firebase_core",
+      "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/firebase_core-4.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_core_platform_interface",
+      "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/firebase_core_platform_interface-6.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_core_web",
+      "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/firebase_core_web-3.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "fixnum",
       "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/fixnum-1.1.1",
       "packageUri": "lib/",
@@ -258,6 +276,12 @@
       "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/flutter_lints-5.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "flutter_localizations",
+      "rootUri": "file:///Users/iyonghyeog/Desktop/development/flutter/packages/flutter_localizations",
+      "packageUri": "lib/",
+      "languageVersion": "3.8"
     },
     {
       "name": "flutter_plugin_android_lifecycle",
@@ -387,9 +411,9 @@
     },
     {
       "name": "intl",
-      "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/intl-0.19.0",
+      "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/intl-0.20.2",
       "packageUri": "lib/",
-      "languageVersion": "3.0"
+      "languageVersion": "3.3"
     },
     {
       "name": "io",
@@ -729,7 +753,7 @@
     },
     {
       "name": "table_calendar",
-      "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/table_calendar-3.1.3",
+      "rootUri": "file:///Users/iyonghyeog/.pub-cache/hosted/pub.dev/table_calendar-3.2.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },

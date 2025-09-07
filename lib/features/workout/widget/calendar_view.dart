@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../model/workout_record_models.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
 import '../../../core/theme/notion_colors.dart';
@@ -22,6 +23,7 @@ class _CalendarViewState extends State<CalendarView> {
   @override
   void initState() {
     super.initState();
+    initializeDateFormatting('ko_KR', null); // 한국어 초기화
     _loadWorkoutDates();
     // ViewModel의 변경사항을 감지하여 달력 데이터 새로고침
     widget.viewModel.addListener(_onViewModelChanged);
@@ -69,67 +71,110 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          color: NotionColors.white,
-          child: TableCalendar<WorkoutDayRecord>(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: widget.viewModel.focusedDate,
-              selectedDayPredicate: (day) => isSameDay(widget.viewModel.selectedDate, day),
-              eventLoader: (day) => _getEventsForDay(day),
-              calendarFormat: CalendarFormat.month,
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-                titleTextStyle: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: NotionColors.black,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: Theme.of(context).textTheme.apply(
+          fontFamily: 'IBMPlexSansKR',
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: TableCalendar<WorkoutDayRecord>(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: widget.viewModel.focusedDate,
+                selectedDayPredicate: (day) => isSameDay(widget.viewModel.selectedDate, day),
+                eventLoader: (day) => _getEventsForDay(day),
+                calendarFormat: CalendarFormat.month,
+                locale: 'ko_KR', // 한국어 설정
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  titleTextStyle: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF4CAF50)),
+                  rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF4CAF50)),
                 ),
-                leftChevronIcon: Icon(Icons.chevron_left, color: NotionColors.black),
-                rightChevronIcon: Icon(Icons.chevron_right, color: NotionColors.black),
+                daysOfWeekStyle: const DaysOfWeekStyle(
+                  weekendStyle: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  weekdayStyle: TextStyle(
+                    color: Colors.black54,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+                calendarStyle: const CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: BoxDecoration(
+                    color: Color(0xFF4CAF50),
+                    shape: BoxShape.circle,
+                  ),
+                  markerDecoration: BoxDecoration(
+                    color: Color(0xFF4CAF50),
+                    shape: BoxShape.circle,
+                  ),
+                  weekendTextStyle: TextStyle(
+                    color: Colors.red,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  defaultTextStyle: TextStyle(
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  selectedTextStyle: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  todayTextStyle: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  markerSize: 6,
+                  markersMaxCount: 3,
+                ),
+                onDaySelected: (selectedDay, focusedDay) {
+                  widget.viewModel.updateSelectedDate(selectedDay);
+                  widget.viewModel.updateFocusedDate(focusedDay);
+                  // 선택된 날짜의 운동 기록이 캐시에 없다면 로드
+                  final dateString = DateFormat('yyyy-MM-dd').format(selectedDay);
+                  if (!_workoutDataCache.containsKey(dateString)) {
+                    _loadWorkoutDataForDate(dateString);
+                  }
+                },
+                onPageChanged: (focusedDay) {
+                  widget.viewModel.updateFocusedDate(focusedDay);
+                  // 달 변경 시 운동 날짜 새로고침
+                  _workoutDataCache.clear(); // 캐시 클리어
+                  _loadWorkoutDates();
+                },
               ),
-              calendarStyle: const CalendarStyle(
-                todayDecoration: BoxDecoration(
-                  color: NotionColors.textSecondary,
-                  shape: BoxShape.circle,
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SingleChildScrollView(
+                  child: _buildSelectedDayWorkouts(),
                 ),
-                selectedDecoration: BoxDecoration(
-                  color: NotionColors.black,
-                  shape: BoxShape.circle,
-                ),
-                markerDecoration: BoxDecoration(
-                  color: NotionColors.black,
-                  shape: BoxShape.circle,
-                ),
-                weekendTextStyle: TextStyle(color: NotionColors.black),
               ),
-              onDaySelected: (selectedDay, focusedDay) {
-                widget.viewModel.updateSelectedDate(selectedDay);
-                widget.viewModel.updateFocusedDate(focusedDay);
-                // 선택된 날짜의 운동 기록이 캐시에 없다면 로드
-                final dateString = DateFormat('yyyy-MM-dd').format(selectedDay);
-                if (!_workoutDataCache.containsKey(dateString)) {
-                  _loadWorkoutDataForDate(dateString);
-                }
-              },
-              onPageChanged: (focusedDay) {
-                widget.viewModel.updateFocusedDate(focusedDay);
-                // 달 변경 시 운동 날짜 새로고침
-                _workoutDataCache.clear(); // 캐시 클리어
-                _loadWorkoutDates();
-              },
             ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              child: _buildSelectedDayWorkouts(),
-            ),
-          ),
-        ],
+          ],
+        ),
     );
   }
 

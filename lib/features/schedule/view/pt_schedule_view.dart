@@ -8,6 +8,7 @@ import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/auth/model/user_model.dart';
 import 'package:intl/intl.dart';
 import '../widget/weekly_timetable_widget.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class PTScheduleView extends ConsumerStatefulWidget {
   const PTScheduleView({super.key});
@@ -117,18 +118,15 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
           if (_selectedWeek.difference(DateTime.now()).inDays.abs() > 7)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ElevatedButton.icon(
+              child: NotionButton(
                 onPressed: () {
                   setState(() {
                     _selectedWeek = DateTime.now();
                   });
                   _loadWeeklySchedule();
                 },
-                icon: const Icon(Icons.today),
-                label: const Text('오늘로 돌아가기'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 40),
-                ),
+                text: '오늘로 돌아가기',
+                icon: Icons.today,
               ),
             ),
           const SizedBox(height: 8),
@@ -150,9 +148,9 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                     const SizedBox(height: 16),
                     Text('오류가 발생했습니다: $error'),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    NotionButton(
                       onPressed: _loadWeeklySchedule,
-                      child: const Text('다시 시도'),
+                      text: '다시 시도',
                     ),
                   ],
                 ),

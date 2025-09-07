@@ -219,14 +219,20 @@ class ExerciseInputCard extends StatelessWidget {
               // setState를 호출하여 UI 업데이트 (부모에서 관리)
             },
             style: TextButton.styleFrom(
-              backgroundColor: const Color(0xFF3B82F6),
+              backgroundColor: const Color(0xFF4CAF50),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
-            child: const Text('저장'),
+            child: const Text(
+              '저장',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),

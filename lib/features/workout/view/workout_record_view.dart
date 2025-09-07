@@ -29,7 +29,8 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
       final workoutApiService = ref.read(workoutApiServiceProvider);
       final localStorageService = ref.read(localStorageServiceProvider);
       final authState = ref.read(authStateProvider);
-      _viewModel = WorkoutRecordViewmodel(workoutApiService, localStorageService, authState);
+      _viewModel = WorkoutRecordViewmodel(
+          workoutApiService, localStorageService, authState);
       _initializeViewModel();
     });
   }
@@ -53,49 +54,80 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        backgroundColor: NotionColors.gray50,
-        appBar: AppBar(
-          backgroundColor: NotionColors.white,
-          elevation: 0,
-          title: const Text(
-            '운동 관리',
-            style: TextStyle(
-              color: NotionColors.black,
-              fontWeight: FontWeight.bold,
+      length: 3,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          textTheme: Theme.of(context).textTheme.apply(
+                fontFamily: 'IBMPlexSansKR',
+              ),
+        ),
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF8F9FA),
+          appBar: AppBar(
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+                ),
+              ),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            title: const Text(
+              '운동',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+            centerTitle: true,
+            iconTheme: const IconThemeData(color: Colors.white),
+            bottom: const TabBar(
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: Colors.white,
+              indicatorWeight: 3,
+              labelStyle: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+              unselectedLabelStyle: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+              tabs: [
+                Tab(text: '운동 기록'),
+                Tab(text: '기록 이력'),
+                Tab(text: '내 루틴'),
+              ],
             ),
           ),
-          iconTheme: const IconThemeData(color: NotionColors.black),
-          bottom: const TabBar(
-            labelColor: NotionColors.black,
-            unselectedLabelColor: NotionColors.textSecondary,
-            indicatorColor: NotionColors.black,
-            tabs: [
-              Tab(text: '운동 기록'),
-              Tab(text: '달력 보기'),
-              Tab(text: '루틴 만들기'),
-              Tab(text: '내 루틴'),
-            ],
-          ),
+          body: _isInitialized
+              ? ListenableBuilder(
+                  listenable: _viewModel,
+                  builder: (context, child) {
+                    return TabBarView(
+                      children: [
+                        WorkoutRecordTab(viewModel: _viewModel),
+                        CalendarView(viewModel: _viewModel),
+                        const RoutineListView(),
+                      ],
+                    );
+                  },
+                )
+              : const Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF4CAF50),
+                  ),
+                ),
         ),
-        body: _isInitialized
-            ? ListenableBuilder(
-                listenable: _viewModel,
-                builder: (context, child) {
-                  return TabBarView(
-                    children: [
-                      WorkoutRecordTab(viewModel: _viewModel),
-                      CalendarView(viewModel: _viewModel),
-                      WorkoutRoutineTab(viewModel: _viewModel),
-                      const RoutineListView(),
-                    ],
-                  );
-                },
-              )
-            : const Center(
-                child: CircularProgressIndicator(),
-              ),
       ),
     );
   }

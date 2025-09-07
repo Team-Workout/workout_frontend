@@ -7,6 +7,7 @@ import 'package:pt_service/features/auth/view/signup_view.dart';
 import 'package:pt_service/features/dashboard/view/trainer_dashboard_view.dart';
 import 'package:pt_service/features/dashboard/view/member_dashboard_view.dart';
 import 'package:pt_service/features/dashboard/view/manager_dashboard_view.dart';
+import '../../shared/widgets/app_scaffold_with_nav.dart';
 import 'package:pt_service/features/workout/view/workout_record_view.dart';
 import 'package:pt_service/features/report/view/analysis_report_view.dart';
 import 'package:pt_service/features/schedule/view/pt_schedule_view.dart';
@@ -14,6 +15,7 @@ import 'package:pt_service/features/settings/view/settings_view.dart';
 import 'package:pt_service/features/trainer_profile/view/trainer_profile_edit_view.dart';
 import 'package:pt_service/features/trainer/view/gym_trainers_view.dart';
 import 'package:pt_service/features/trainer/view/trainer_detail_view.dart';
+import 'package:pt_service/features/trainer/view/trainers_view.dart';
 import 'package:pt_service/features/trainer/model/trainer_model.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/body_composition/view/body_composition_view.dart';
@@ -62,7 +64,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           case UserType.trainer:
             return '/trainer-dashboard';
           case UserType.member:
-            return '/member-dashboard';
+            return '/dashboard';
           case UserType.manager:
             return '/manager-dashboard';
         }
@@ -87,17 +89,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/trainer-dashboard',
         builder: (context, state) => const TrainerDashboardView(),
       ),
-      GoRoute(
-        path: '/member-dashboard',
-        builder: (context, state) => const MemberDashboardView(),
+      // Member Shell Route with Bottom Navigation
+      ShellRoute(
+        builder: (context, state, child) {
+          final currentPath = state.matchedLocation;
+          int currentIndex = 0;
+          
+          if (currentPath == '/dashboard') currentIndex = 0;
+          else if (currentPath == '/workout-record') currentIndex = 1;
+          else if (currentPath == '/body-composition') currentIndex = 2;
+          else if (currentPath == '/trainers' || currentPath == '/pt-applications') currentIndex = 3;
+          else if (currentPath == '/settings') currentIndex = 4;
+          
+          return AppScaffoldWithNav(
+            currentIndex: currentIndex,
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/dashboard',
+            builder: (context, state) => const MemberDashboardView(),
+          ),
+          GoRoute(
+            path: '/workout-record',
+            builder: (context, state) => const WorkoutRecordView(),
+          ),
+          GoRoute(
+            path: '/body-composition',
+            builder: (context, state) => const BodyCompositionView(),
+          ),
+          GoRoute(
+            path: '/trainers',
+            builder: (context, state) => const TrainersView(),
+          ),
+          GoRoute(
+            path: '/pt-applications',
+            builder: (context, state) => const PtApplicationsListView(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsView(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/manager-dashboard',
         builder: (context, state) => const ManagerDashboardView(),
-      ),
-      GoRoute(
-        path: '/workout-record',
-        builder: (context, state) => const WorkoutRecordView(),
       ),
       GoRoute(
         path: '/analysis-report',
@@ -106,14 +144,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/pt-schedule',
         builder: (context, state) => const PTScheduleView(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsView(),
-      ),
-      GoRoute(
-        path: '/body-composition',
-        builder: (context, state) => const BodyCompositionView(),
       ),
       GoRoute(
         path: '/trainer-profile-edit',
@@ -189,10 +219,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           
           return TrainerPtOfferingsView(trainer: trainer);
         },
-      ),
-      GoRoute(
-        path: '/pt-applications',
-        builder: (context, state) => const PtApplicationsListView(),
       ),
       GoRoute(
         path: '/workout-routines',

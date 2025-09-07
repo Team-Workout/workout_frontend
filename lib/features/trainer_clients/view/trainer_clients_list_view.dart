@@ -5,6 +5,7 @@ import '../viewmodel/trainer_client_viewmodel.dart';
 import '../model/trainer_client_model.dart';
 import '../../../services/image_cache_manager.dart';
 import 'trainer_client_detail_view.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class TrainerClientsListView extends ConsumerStatefulWidget {
   const TrainerClientsListView({super.key});
@@ -202,11 +203,11 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    NotionButton(
                       onPressed: () {
                         ref.read(trainerClientListProvider.notifier).refresh();
                       },
-                      child: const Text('다시 시도'),
+                      text: '다시 시도',
                     ),
                   ],
                 ),

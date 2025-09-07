@@ -94,6 +94,8 @@ final bodyStatsProvider = Provider<BodyStats?>((ref) {
 
 class BodyCompositionNotifier extends StateNotifier<AsyncValue<List<BodyComposition>>> {
   final BodyCompositionRepository repository;
+  String? _lastStartDate;
+  String? _lastEndDate;
 
   BodyCompositionNotifier(this.repository) : super(const AsyncValue.loading());
 
@@ -103,9 +105,16 @@ class BodyCompositionNotifier extends StateNotifier<AsyncValue<List<BodyComposit
       final defaultEndDate = DateTime.now();
       final defaultStartDate = defaultEndDate.subtract(const Duration(days: 30));
       
+      final finalStartDate = startDate ?? defaultStartDate.toIso8601String().split('T')[0];
+      final finalEndDate = endDate ?? defaultEndDate.toIso8601String().split('T')[0];
+      
+      // 마지막 날짜 범위 저장
+      _lastStartDate = finalStartDate;
+      _lastEndDate = finalEndDate;
+      
       final compositions = await repository.getBodyCompositionInfo(
-        startDate: startDate ?? defaultStartDate.toIso8601String().split('T')[0],
-        endDate: endDate ?? defaultEndDate.toIso8601String().split('T')[0],
+        startDate: finalStartDate,
+        endDate: finalEndDate,
       );
       state = AsyncValue.data(compositions);
     } catch (e, st) {
@@ -135,7 +144,11 @@ class BodyCompositionNotifier extends StateNotifier<AsyncValue<List<BodyComposit
   Future<void> deleteBodyComposition(int id) async {
     try {
       await repository.deleteBodyComposition(id);
-      await loadBodyCompositions();
+      // 마지막에 사용한 날짜 범위로 다시 조회
+      await loadBodyCompositions(
+        startDate: _lastStartDate,
+        endDate: _lastEndDate,
+      );
     } catch (e) {
       throw e;
     }
@@ -173,12 +186,25 @@ class BodyImageNotifier extends StateNotifier<AsyncValue<List<BodyImageResponse>
       final defaultEndDate = DateTime.now();
       final defaultStartDate = defaultEndDate.subtract(const Duration(days: 30));
       
+      final finalStartDate = startDate ?? defaultStartDate.toIso8601String().split('T')[0];
+      final finalEndDate = endDate ?? defaultEndDate.toIso8601String().split('T')[0];
+      
+      print('=== Body Images Load Debug ===');
+      print('Loading body images from $finalStartDate to $finalEndDate');
+      
       final images = await repository.getBodyImages(
-        startDate: startDate ?? defaultStartDate.toIso8601String().split('T')[0],
-        endDate: endDate ?? defaultEndDate.toIso8601String().split('T')[0],
+        startDate: finalStartDate,
+        endDate: finalEndDate,
       );
+      
+      print('Loaded ${images.length} body images');
+      for (final image in images) {
+        print('Image: ${image.fileUrl} on ${image.recordDate}');
+      }
+      
       state = AsyncValue.data(images);
     } catch (e, st) {
+      print('Error loading body images: $e');
       state = AsyncValue.error(e, st);
     }
   }

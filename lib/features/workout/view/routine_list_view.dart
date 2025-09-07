@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../model/routine_models.dart';
 import '../viewmodel/routine_viewmodel.dart';
 import '../../../core/theme/notion_colors.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class RoutineListView extends ConsumerStatefulWidget {
   const RoutineListView({super.key});
@@ -25,79 +26,114 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
   Widget build(BuildContext context) {
     final routinesAsync = ref.watch(routineProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('내 루틴 목록'),
-        elevation: 0,
-        backgroundColor: NotionColors.white,
-        foregroundColor: NotionColors.black,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              context.push('/workout-routine-create');
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: Theme.of(context).textTheme.apply(
+          fontFamily: 'IBMPlexSansKR',
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            context.push('/workout-routine-create');
+          },
+          backgroundColor: const Color(0xFF4CAF50),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 28,
+          ),
+        ),
+        body: RefreshIndicator(
+          color: const Color(0xFF4CAF50),
+          onRefresh: () async {
+            ref.read(routineProvider.notifier).loadRoutines();
+          },
+          child: routinesAsync.when(
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF4CAF50),
+              ),
+            ),
+            error: (error, stackTrace) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFEBEE),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    '루틴 목록을 불러오는 중 오류가 발생했습니다',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ref.read(routineProvider.notifier).loadRoutines();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text(
+                      '다시 시도',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            data: (routines) {
+              if (routines.isEmpty) {
+                return _buildEmptyState();
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: routines.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                itemBuilder: (context, index) {
+                  final routine = routines[index];
+                  return _buildRoutineCard(routine);
+                },
+              );
             },
           ),
-        ],
-      ),
-      backgroundColor: NotionColors.gray50,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.read(routineProvider.notifier).loadRoutines();
-        },
-        child: routinesAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          error: (error, stackTrace) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: NotionColors.error,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '루틴 목록을 불러오는 중 오류가 발생했습니다',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: NotionColors.textSecondary,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    ref.read(routineProvider.notifier).loadRoutines();
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('다시 시도'),
-                ),
-              ],
-            ),
-          ),
-          data: (routines) {
-            if (routines.isEmpty) {
-              return _buildEmptyState();
-            }
-
-            return ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: routines.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final routine = routines[index];
-                return _buildRoutineCard(routine);
-              },
-            );
-          },
         ),
       ),
     );
@@ -110,48 +146,63 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: NotionColors.gray100,
-              shape: BoxShape.circle,
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F5E8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.fitness_center,
+                size: 80,
+                color: Color(0xFF4CAF50),
+              ),
             ),
-            child: Icon(
-              Icons.fitness_center,
-              size: 80,
-              color: NotionColors.textSecondary,
+            const SizedBox(height: 24),
+            const Text(
+              '저장된 루틴이 없습니다',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+                fontFamily: 'IBMPlexSansKR',
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            '저장된 루틴이 없습니다',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: NotionColors.textSecondary,
+            const SizedBox(height: 12),
+            const Text(
+              '첫 번째 운동 루틴을 만들어보세요!',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.push('/workout-routine-create');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4CAF50),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.add, size: 24),
+              label: const Text(
+                '루틴 만들기',
+                style: TextStyle(
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  fontFamily: 'IBMPlexSansKR',
                 ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '첫 번째 운동 루틴을 만들어보세요!',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: NotionColors.textSecondary,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              context.push('/workout-routine-create');
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('루틴 만들기'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: NotionColors.black,
-              foregroundColor: NotionColors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
@@ -160,12 +211,15 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
   Widget _buildRoutineCard(RoutineResponse routine) {
     return Container(
       decoration: BoxDecoration(
-        color: NotionColors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: NotionColors.border,
-          width: 1,
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -175,25 +229,26 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
             context.push('/workout-routine/${routine.id}');
           },
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: NotionColors.gray100,
-                        borderRadius: BorderRadius.circular(8),
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.fitness_center,
-                        color: NotionColors.black,
-                        size: 20,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,17 +257,19 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                             routine.name,
                             style: const TextStyle(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: NotionColors.black,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                              fontFamily: 'IBMPlexSansKR',
                             ),
                           ),
                           if (routine.description != null) ...[
                             const SizedBox(height: 4),
                             Text(
                               routine.description!,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 14,
-                                color: NotionColors.textSecondary,
+                                color: Colors.grey,
+                                fontFamily: 'IBMPlexSansKR',
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -222,6 +279,10 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                       ),
                     ),
                     PopupMenuButton<String>(
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: Colors.grey,
+                      ),
                       onSelected: (value) {
                         if (value == 'delete') {
                           _showDeleteConfirmDialog(routine);
@@ -232,9 +293,14 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete, color: NotionColors.error),
+                              Icon(Icons.delete, color: Colors.red),
                               SizedBox(width: 8),
-                              Text('삭제'),
+                              Text(
+                                '삭제',
+                                style: TextStyle(
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -242,14 +308,14 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     _buildInfoChip(
                       icon: Icons.list_alt,
                       label: '운동 수',
                       value: routine.routineExercises?.length.toString() ?? '0',
-                      color: NotionColors.black,
+                      color: const Color(0xFF4CAF50),
                     ),
                     const SizedBox(width: 12),
                     _buildInfoChip(
@@ -258,7 +324,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                       value: routine.createdAt != null
                           ? _formatDate(routine.createdAt!)
                           : '미정',
-                      color: NotionColors.black,
+                      color: const Color(0xFF4CAF50),
                     ),
                   ],
                 ),
@@ -278,20 +344,16 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 4),
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,16 +362,19 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                     label,
                     style: TextStyle(
                       color: color,
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     value,
-                    style: TextStyle(
-                      color: NotionColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -330,12 +395,35 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('루틴 삭제'),
-        content: Text('\'${routine.name}\' 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '루틴 삭제',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        content: Text(
+          '\'${routine.name}\' 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.',
+          style: const TextStyle(
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey,
+            ),
+            child: const Text(
+              '취소',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -346,20 +434,47 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                     .deleteRoutine(routine.id);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('루틴이 삭제되었습니다.')),
+                    const SnackBar(
+                      content: Text(
+                        '루틴이 삭제되었습니다.',
+                        style: TextStyle(
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      backgroundColor: Color(0xFF4CAF50),
+                    ),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString())),
+                    SnackBar(
+                      content: Text(
+                        e.toString(),
+                        style: const TextStyle(
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: NotionColors.error),
-            child: const Text('삭제'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '삭제',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
           ),
         ],
       ),

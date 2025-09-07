@@ -22,7 +22,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   List<Map<String, dynamic>> _availableExercises = [];
   bool _isLoading = false;
   final Map<int, bool> _expandedCards = {};
-  
+
   // 각 운동별 자동완성 컨트롤러와 선택된 운동 정보
   final Map<int, TextEditingController> _exerciseControllers = {};
   final Map<int, Exercise?> _selectedExercises = {};
@@ -54,11 +54,11 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   void _addExercise() {
     setState(() {
       final newIndex = _routineExercises.length;
-      
+
       // 새로운 운동용 컨트롤러 생성
       _exerciseControllers[newIndex] = TextEditingController();
       _selectedExercises[newIndex] = null;
-      
+
       _routineExercises.add(
         RoutineExercise(
           exerciseId: 0, // 선택되지 않은 상태
@@ -80,17 +80,17 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
     setState(() {
       _routineExercises.removeAt(index);
       _expandedCards.remove(index);
-      
+
       // 컨트롤러 정리
       _exerciseControllers[index]?.dispose();
       _exerciseControllers.remove(index);
       _selectedExercises.remove(index);
-      
+
       // 인덱스 재정렬
       final newExpandedCards = <int, bool>{};
       final newControllers = <int, TextEditingController>{};
       final newSelectedExercises = <int, Exercise?>{};
-      
+
       _expandedCards.forEach((key, value) {
         if (key > index) {
           newExpandedCards[key - 1] = value;
@@ -98,7 +98,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
           newExpandedCards[key] = value;
         }
       });
-      
+
       _exerciseControllers.forEach((key, value) {
         if (key > index) {
           newControllers[key - 1] = value;
@@ -106,7 +106,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
           newControllers[key] = value;
         }
       });
-      
+
       _selectedExercises.forEach((key, value) {
         if (key > index) {
           newSelectedExercises[key - 1] = value;
@@ -114,14 +114,14 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
           newSelectedExercises[key] = value;
         }
       });
-      
+
       _expandedCards.clear();
       _expandedCards.addAll(newExpandedCards);
       _exerciseControllers.clear();
       _exerciseControllers.addAll(newControllers);
       _selectedExercises.clear();
       _selectedExercises.addAll(newSelectedExercises);
-      
+
       for (int i = 0; i < _routineExercises.length; i++) {
         _routineExercises[i] = _routineExercises[i].copyWith(order: i + 1);
       }
@@ -139,7 +139,8 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
           reps: 0,
         ),
       );
-      _routineExercises[exerciseIndex] = exercise.copyWith(routineSets: newSets);
+      _routineExercises[exerciseIndex] =
+          exercise.copyWith(routineSets: newSets);
     });
   }
 
@@ -151,7 +152,8 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
       for (int i = 0; i < newSets.length; i++) {
         newSets[i] = newSets[i].copyWith(order: i + 1);
       }
-      _routineExercises[exerciseIndex] = exercise.copyWith(routineSets: newSets);
+      _routineExercises[exerciseIndex] =
+          exercise.copyWith(routineSets: newSets);
     });
   }
 
@@ -166,7 +168,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
     // 각 운동의 선택 및 세트 검증
     for (int i = 0; i < _routineExercises.length; i++) {
       final exercise = _routineExercises[i];
-      
+
       // 운동이 선택되었는지 확인
       if (_selectedExercises[i] == null || exercise.exerciseId == 0) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -174,7 +176,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
         );
         return;
       }
-      
+
       if (exercise.routineSets.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${i + 1}번째 운동에 최소 하나의 세트를 추가해주세요')),
@@ -184,17 +186,19 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
 
       for (int j = 0; j < exercise.routineSets.length; j++) {
         final set = exercise.routineSets[j];
-        
+
         if (set.weight < 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${i + 1}번째 운동 ${j + 1}세트: 무게는 0 이상이어야 합니다')),
+            SnackBar(
+                content: Text('${i + 1}번째 운동 ${j + 1}세트: 무게는 0 이상이어야 합니다')),
           );
           return;
         }
-        
+
         if (set.reps <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${i + 1}번째 운동 ${j + 1}세트: 횟수는 1 이상이어야 합니다')),
+            SnackBar(
+                content: Text('${i + 1}번째 운동 ${j + 1}세트: 횟수는 1 이상이어야 합니다')),
           );
           return;
         }
@@ -205,16 +209,17 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
 
     try {
       final request = CreateRoutineRequest(
-        name: _nameController.text.trim().isEmpty 
-            ? null 
+        name: _nameController.text.trim().isEmpty
+            ? null
             : _nameController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         routineExercises: _routineExercises,
       );
 
-      final response = await widget.viewModel.workoutApiService.createRoutine(request);
+      final response =
+          await widget.viewModel.workoutApiService.createRoutine(request);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('루틴이 성공적으로 저장되었습니다')),
@@ -263,41 +268,66 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   Widget _buildBasicInfoSection() {
     return Container(
       decoration: BoxDecoration(
-        color: NotionColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: NotionColors.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 1,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '루틴 기본 정보',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: NotionColors.black,
-              ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.fitness_center,
+                    color: Color(0xFF4CAF50),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Text(
+                  '루틴 기본 정보',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A1A),
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextField(
+            const SizedBox(height: 24),
+            _buildModernTextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '루틴 이름',
-                hintText: '예: 가슴/삼두 루틴',
-                border: OutlineInputBorder(),
-              ),
+              label: '루틴 이름',
+              hint: '예: 가슴/삼두 루틴',
+              icon: Icons.label_outline,
             ),
-            const SizedBox(height: 16),
-            TextField(
+            const SizedBox(height: 20),
+            _buildModernTextField(
               controller: _descriptionController,
+              label: '루틴 설명',
+              hint: '루틴에 대한 간단한 설명을 입력하세요',
+              icon: Icons.description_outlined,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: '루틴 설명',
-                hintText: '루틴에 대한 간단한 설명을 입력하세요',
-                border: OutlineInputBorder(),
-              ),
             ),
           ],
         ),
@@ -305,12 +335,94 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
     );
   }
 
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151),
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1A1A1A),
+              fontFamily: 'IBMPlexSansKR',
+            ),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey.shade500,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+              prefixIcon: Container(
+                margin: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: const Color(0xFF4CAF50),
+                  size: 18,
+                ),
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: Color(0xFF4CAF50),
+                  width: 2,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildExerciseSection() {
     return Container(
       decoration: BoxDecoration(
-        color: NotionColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: NotionColors.border),
+        border:
+            Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -330,9 +442,10 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: NotionColors.black,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: NotionColors.border),
+                    border: Border.all(
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -340,15 +453,20 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                       borderRadius: BorderRadius.circular(8),
                       onTap: _addExercise,
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.add, color: NotionColors.white),
+                            Icon(Icons.add, color: Color(0xFF4CAF50)),
                             SizedBox(width: 8),
                             Text(
                               '운동 추가',
-                              style: TextStyle(color: NotionColors.white, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                color: Color(0xFF4CAF50),
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
                             ),
                           ],
                         ),
@@ -387,16 +505,17 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
     final exercise = _routineExercises[exerciseIndex];
     final selectedExercise = _selectedExercises[exerciseIndex];
     final exerciseName = selectedExercise?.name ?? '운동을 선택해주세요';
-    
+
     final isExpanded = _expandedCards[exerciseIndex] ?? false;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: NotionColors.border,
+          color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -413,7 +532,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isExpanded ? NotionColors.gray100 : NotionColors.white,
+                color: Colors.white,
                 borderRadius: BorderRadius.vertical(
                   top: const Radius.circular(12),
                   bottom: isExpanded ? Radius.zero : const Radius.circular(12),
@@ -421,26 +540,24 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
               ),
               child: Row(
                 children: [
-                  // 순서 표시
+                  // 순서 표시 - 모던한 원형 배지
                   Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: NotionColors.black,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    width: 40,
+                    height: 40,
                     child: Center(
                       child: Text(
                         '${exerciseIndex + 1}',
                         style: const TextStyle(
-                          color: NotionColors.white,
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontFamily: 'IBMPlexSansKR',
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // 운동명
+                  // 운동명 - 개선된 타이포그래피
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,33 +565,70 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                         Text(
                           exerciseName,
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: NotionColors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                            fontFamily: 'IBMPlexSansKR',
+                            height: 1.2,
                           ),
                         ),
                         if (!isExpanded) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '${exercise.routineSets.length}세트',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: NotionColors.textSecondary,
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4CAF50)
+                                  .withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${exercise.routineSets.length}세트',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
                             ),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  // 삭제 버튼
-                  IconButton(
-                    onPressed: () => _removeExercise(exerciseIndex),
-                    icon: const Icon(Icons.delete_outline, color: NotionColors.error),
+                  // 삭제 버튼 - 모던한 원형 버튼
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD32F2F).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFFD32F2F).withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: IconButton(
+                      onPressed: () => _removeExercise(exerciseIndex),
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Color(0xFFD32F2F),
+                        size: 20,
+                      ),
+                    ),
                   ),
-                  // 펼치기/접기 아이콘
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: NotionColors.textSecondary,
+                  // 펼치기/접기 아이콘 - 애니메이션 효과
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: const Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -508,7 +662,8 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                         if (_selectedExercises[exerciseIndex]?.name != text) {
                           setState(() {
                             _selectedExercises[exerciseIndex] = null;
-                            _routineExercises[exerciseIndex] = exercise.copyWith(
+                            _routineExercises[exerciseIndex] =
+                                exercise.copyWith(
                               exerciseId: 0, // 선택되지 않은 상태
                             );
                           });
@@ -516,13 +671,12 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    // 세트 섹션
+                    // 세트 섹션 - 미니멀 디자인
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: NotionColors.gray100,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: NotionColors.border),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
                       ),
                       child: Column(
                         children: [
@@ -537,12 +691,27 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                                   color: NotionColors.black,
                                 ),
                               ),
-                              TextButton.icon(
-                                onPressed: () => _addSet(exerciseIndex),
-                                icon: const Icon(Icons.add_circle_outline, size: 20),
-                                label: const Text('세트 추가'),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: NotionColors.black,
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF4CAF50)
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: TextButton.icon(
+                                  onPressed: () => _addSet(exerciseIndex),
+                                  icon: const Icon(Icons.add, size: 18),
+                                  label: const Text(
+                                    '세트 추가',
+                                    style: TextStyle(
+                                      fontFamily: 'IBMPlexSansKR',
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF4CAF50),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                  ),
                                 ),
                               ),
                             ],
@@ -568,127 +737,185 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
     final set = _routineExercises[exerciseIndex].routineSets[setIndex];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: NotionColors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: NotionColors.border),
-      ),
-      child: Row(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 세트 번호
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: NotionColors.gray100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Text(
-                '${set.order}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+          // 세트 레이블과 삭제 버튼
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${set.order}세트',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2E7D32),
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // 무게 입력
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '무게 (kg)',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: NotionColors.textSecondary,
+              if (_routineExercises[exerciseIndex].routineSets.length > 1)
+                GestureDetector(
+                  onTap: () => _removeSet(exerciseIndex, setIndex),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD32F2F).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Color(0xFFD32F2F),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                TextFormField(
-                  initialValue: set.weight.toString(),
-                  decoration: InputDecoration(
-                    hintText: '0',
-                    filled: true,
-                    fillColor: NotionColors.gray100,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 입력 필드들
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              children: [
+                // 무게 입력
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '무게 (kg)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        initialValue: set.weight.toString(),
+                        decoration: InputDecoration(
+                          hintText: '0',
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          suffixText: 'kg',
+                          suffixStyle: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                        onChanged: (value) {
+                          final weight = double.tryParse(value) ?? 0;
+                          setState(() {
+                            final exercise = _routineExercises[exerciseIndex];
+                            final sets = List<RoutineSet>.from(exercise.routineSets);
+                            sets[setIndex] = sets[setIndex].copyWith(weight: weight);
+                            _routineExercises[exerciseIndex] =
+                                exercise.copyWith(routineSets: sets);
+                          });
+                        },
+                      ),
+                    ],
                   ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final weight = double.tryParse(value) ?? 0;
-                    setState(() {
-                      final exercise = _routineExercises[exerciseIndex];
-                      final sets = List<RoutineSet>.from(exercise.routineSets);
-                      sets[setIndex] = sets[setIndex].copyWith(weight: weight);
-                      _routineExercises[exerciseIndex] =
-                          exercise.copyWith(routineSets: sets);
-                    });
-                  },
+                ),
+                const SizedBox(width: 12),
+                // 횟수 입력
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '횟수',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        initialValue: set.reps.toString(),
+                        decoration: InputDecoration(
+                          hintText: '0',
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          suffixText: '회',
+                          suffixStyle: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                        onChanged: (value) {
+                          final reps = int.tryParse(value) ?? 0;
+                          setState(() {
+                            final exercise = _routineExercises[exerciseIndex];
+                            final sets = List<RoutineSet>.from(exercise.routineSets);
+                            sets[setIndex] = sets[setIndex].copyWith(reps: reps);
+                            _routineExercises[exerciseIndex] =
+                                exercise.copyWith(routineSets: sets);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          // 횟수 입력
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '횟수',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: NotionColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                TextFormField(
-                  initialValue: set.reps.toString(),
-                  decoration: InputDecoration(
-                    hintText: '0',
-                    filled: true,
-                    fillColor: NotionColors.gray100,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final reps = int.tryParse(value) ?? 0;
-                    setState(() {
-                      final exercise = _routineExercises[exerciseIndex];
-                      final sets = List<RoutineSet>.from(exercise.routineSets);
-                      sets[setIndex] = sets[setIndex].copyWith(reps: reps);
-                      _routineExercises[exerciseIndex] =
-                          exercise.copyWith(routineSets: sets);
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // 삭제 버튼
-          IconButton(
-            onPressed: _routineExercises[exerciseIndex].routineSets.length > 1
-                ? () => _removeSet(exerciseIndex, setIndex)
-                : null,
-            icon: Icon(
-              Icons.remove_circle_outline,
-              color: _routineExercises[exerciseIndex].routineSets.length > 1
-                  ? NotionColors.error
-                  : NotionColors.border,
-              size: 20,
             ),
           ),
         ],
@@ -699,36 +926,35 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
-      child: GestureDetector(
-        onTap: _isLoading ? null : _saveRoutine,
-        child: Container(
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _saveRoutine,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF4CAF50),
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: NotionColors.black,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: NotionColors.border),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Center(
-            child:
-            _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(NotionColors.white),
-                    ),
-                  )
-                : const Text(
-                    '루틴 저장',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: NotionColors.white,
-                    ),
-                  ),
-          ),
+          elevation: 0,
         ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Text(
+                '루틴 저장',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
       ),
     );
   }

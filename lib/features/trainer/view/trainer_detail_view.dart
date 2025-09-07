@@ -90,20 +90,30 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+              ),
+            ),
+          ),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => context.pop(),
           ),
           title: const Text(
-            'Trainer Profile',
+            '트레이너 프로필',
             style: TextStyle(
-              color: Colors.black,
+              color: Colors.white,
               fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
             ),
           ),
         ),
@@ -114,10 +124,11 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
               CircularProgressIndicator(),
               SizedBox(height: 16),
               Text(
-                'Loading trainer profile...',
+                '트레이너 정보를 불러오는 중...',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey,
+                  fontFamily: 'IBMPlexSansKR',
                 ),
               ),
             ],
@@ -128,12 +139,21 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
 
     if (_error != null || _trainerProfile == null) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+              ),
+            ),
+          ),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => context.pop(),
           ),
           title: const Text(
@@ -213,95 +233,169 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           '트레이너 프로필',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.black),
+            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
+            icon: const Icon(Icons.more_vert, color: Colors.white),
             onPressed: () {},
           ),
         ],
       ),
       body: Column(
         children: [
-          // Trainer Profile Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                // Profile Avatar with cached image
-                FutureBuilder<String?>(
-                  future: trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty
-                      ? ImageCacheManager().getCachedImage(
-                          imageUrl: trainer.profileImageUrl!,
-                          cacheKey: 'trainer_${trainer.trainerId}',
-                          type: ImageType.profile,
-                        )
-                      : Future.value(null),
-                  builder: (context, snapshot) {
-                    return CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.grey[200] ?? const Color(0xFFEEEEEE),
-                      backgroundImage: snapshot.hasData && snapshot.data != null
-                          ? FileImage(File(snapshot.data!))
-                          : null,
-                      child: snapshot.hasData && snapshot.data != null
-                          ? null
-                          : Icon(
-                              Icons.person,
-                              size: 30,
-                              color: Colors.grey[600] ?? Colors.grey,
-                            ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 16),
-                // Trainer Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        trainer.name,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        '시니어 퍼스널 트레이너',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Rating
+          // Trainer Profile Header with Image Background
+          FutureBuilder<String?>(
+            future: trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty
+                ? ImageCacheManager().getCachedImage(
+                    imageUrl: trainer.profileImageUrl!,
+                    cacheKey: 'trainer_${trainer.trainerId}',
+                    type: ImageType.profile,
+                  )
+                : Future.value(null),
+            builder: (context, snapshot) {
+              return Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      const Color(0xFF10B981).withOpacity(0.8),
+                      const Color(0xFF34D399).withOpacity(0.9),
                     ],
                   ),
                 ),
-              ],
-            ),
+                child: Stack(
+                  children: [
+                    // 배경 이미지
+                    if (snapshot.hasData && snapshot.data != null)
+                      Positioned.fill(
+                        child: Image.file(
+                          File(snapshot.data!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container();
+                          },
+                        ),
+                      ),
+                    // 그라디언트 오버레이
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // 프로필 정보
+                    Positioned(
+                      bottom: 20,
+                      left: 20,
+                      right: 20,
+                      child: Row(
+                        children: [
+                          // 프로필 아바타
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 3,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 40,
+                              backgroundColor: const Color(0xFF10B981),
+                              backgroundImage: snapshot.hasData && snapshot.data != null
+                                  ? FileImage(File(snapshot.data!))
+                                  : null,
+                              child: snapshot.hasData && snapshot.data != null
+                                  ? null
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Colors.white,
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // 트레이너 정보
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  trainer.name,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  trainer.specialties.isNotEmpty 
+                                      ? trainer.specialties.take(2).join(', ')
+                                      : '시니어 퍼스널 트레이너',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white70,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
 
           // Specialties Section

@@ -6,6 +6,7 @@ import '../model/pt_offering_model.dart';
 import '../viewmodel/pt_offering_viewmodel.dart';
 import '../../pt_applications/viewmodel/pt_application_viewmodel.dart';
 import '../../../core/theme/notion_colors.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class PtOfferingsListView extends ConsumerStatefulWidget {
   final int? trainerId; // null이면 현재 로그인한 트레이너의 상품, 값이 있으면 해당 트레이너의 상품
@@ -49,12 +50,36 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     final ptOfferingsAsync = ref.watch(ptOfferingProvider);
     
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(widget.isTrainerView ? 'PT 상품 관리' : 'PT 상품'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          widget.isTrainerView ? 'PT 상품 관리' : 'PT 상품',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
         actions: widget.isTrainerView
             ? [
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add, color: Colors.white),
                   onPressed: () async {
                     final result = await context.push('/pt-offerings/create');
                     if (result == true) {
@@ -86,7 +111,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 const SizedBox(height: 16),
                 Text(
                   'PT 상품을 불러오는 중 오류가 발생했습니다',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
@@ -98,10 +125,10 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton.icon(
+                NotionButton(
                   onPressed: _loadPtOfferings,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('다시 시도'),
+                  text: '다시 시도',
+                  icon: Icons.refresh,
                 ),
               ],
             ),
@@ -131,17 +158,33 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.fitness_center_outlined,
-            size: 80,
-            color: NotionColors.textSecondary,
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF10B981).withValues(alpha: 0.1),
+                  const Color(0xFF34D399).withValues(alpha: 0.1),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.fitness_center_outlined,
+              size: 60,
+              color: Color(0xFF10B981),
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             widget.isTrainerView ? '등록된 PT 상품이 없습니다' : '해당 트레이너의 PT 상품이 없습니다',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: NotionColors.textSecondary,
+              color: const Color(0xFF10B981),
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
@@ -149,23 +192,22 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 ? '새로운 PT 상품을 추가해보세요'
                 : '다른 트레이너의 상품을 확인해보세요',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: NotionColors.textSecondary,
+              color: Colors.grey[600],
+              fontFamily: 'IBMPlexSansKR',
             ),
+            textAlign: TextAlign.center,
           ),
           if (widget.isTrainerView) ...[
             const SizedBox(height: 32),
-            ElevatedButton.icon(
+            NotionButton(
               onPressed: () async {
                 final result = await context.push('/pt-offerings/create');
                 if (result == true) {
                   _loadPtOfferings();
                 }
               },
-              icon: const Icon(Icons.add),
-              label: const Text('PT 상품 추가'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
+              text: 'PT 상품 추가',
+              icon: Icons.add,
             ),
           ],
         ],
@@ -177,31 +219,44 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: NotionColors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: NotionColors.border,
-          width: 1,
+          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Clean header
+            // Modern header
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: NotionColors.gray100,
-                    borderRadius: BorderRadius.circular(8),
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF10B981).withValues(alpha: 0.1),
+                        const Color(0xFF34D399).withValues(alpha: 0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    Icons.fitness_center_outlined,
-                    color: NotionColors.textSecondary,
-                    size: 18,
+                  child: const Icon(
+                    Icons.fitness_center,
+                    color: Color(0xFF10B981),
+                    size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -212,9 +267,10 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                       Text(
                         offering.title,
                         style: const TextStyle(
-                          color: NotionColors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF10B981),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'IBMPlexSansKR',
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -224,8 +280,10 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                         Text(
                           '${offering.trainerName} 트레이너',
                           style: TextStyle(
-                            color: NotionColors.textSecondary,
-                            fontSize: 13,
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'IBMPlexSansKR',
                           ),
                         ),
                       ],

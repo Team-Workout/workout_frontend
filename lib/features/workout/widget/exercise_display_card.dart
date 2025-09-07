@@ -30,16 +30,17 @@ class ExerciseDisplayCard extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: NotionColors.black,
+                  color: const Color(0xFF4CAF50),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Text(
                     '${index + 1}',
                     style: const TextStyle(
-                      color: NotionColors.white,
+                      color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                   ),
                 ),

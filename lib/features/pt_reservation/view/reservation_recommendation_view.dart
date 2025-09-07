@@ -6,6 +6,7 @@ import '../../pt_contract/model/pt_contract_models.dart';
 import '../../pt_contract/viewmodel/pt_contract_viewmodel.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../common/widgets/simple_time_picker.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class ReservationRecommendationView extends ConsumerStatefulWidget {
   const ReservationRecommendationView({super.key});
@@ -115,11 +116,11 @@ class _ReservationRecommendationViewState extends ConsumerState<ReservationRecom
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
+              NotionButton(
                 onPressed: () {
                   ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
                 },
-                child: const Text('다시 시도'),
+                text: '다시 시도',
               ),
             ],
           ),
@@ -414,31 +415,10 @@ class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child: ElevatedButton(
+                  child: NotionButton(
                     onPressed: _canSubmit() && !isLoading ? _submitAppointment : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Text(
-                            '약속 생성하기',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                    text: '약속 생성하기',
+                    isLoading: isLoading,
                   ),
                 ),
               ],

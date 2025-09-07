@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../model/reservation_models.dart';
 import '../viewmodel/reservation_viewmodel.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class ReservationHistoryView extends ConsumerStatefulWidget {
   const ReservationHistoryView({super.key});
@@ -107,14 +108,14 @@ class _ReservationHistoryViewState extends ConsumerState<ReservationHistoryView>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    NotionButton(
                       onPressed: () {
                         ref.read(reservationHistoryViewModelProvider.notifier).loadHistory(
                           startDate: startDate,
                           endDate: endDate,
                         );
                       },
-                      child: const Text('다시 시도'),
+                      text: '다시 시도',
                     ),
                   ],
                 ),
@@ -246,16 +247,9 @@ class _ReservationHistoryViewState extends ConsumerState<ReservationHistoryView>
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: NotionButton(
                 onPressed: _applyDateFilter,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: const Text(
-                  '적용',
-                  style: TextStyle(color: Colors.white),
-                ),
+                text: '적용',
               ),
             ),
           ],

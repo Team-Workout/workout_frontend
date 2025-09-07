@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
 import 'exercise_input_card.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
-class WorkoutRecordTab extends StatelessWidget {
+class WorkoutRecordTabBackup extends StatelessWidget {
   final WorkoutRecordViewmodel viewModel;
 
-  const WorkoutRecordTab({super.key, required this.viewModel});
+  const WorkoutRecordTabBackup({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -129,17 +130,10 @@ class WorkoutRecordTab extends StatelessWidget {
                     color: Color(0xFF2C3E50),
                   ),
                 ),
-                ElevatedButton.icon(
+                NotionButton(
+                  text: '운동 추가',
+                  icon: Icons.add,
                   onPressed: viewModel.addExercise,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('운동 추가'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3E50),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
                 ),
               ],
             ),
