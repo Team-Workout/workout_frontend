@@ -99,7 +99,40 @@ class LocalStorageService {
       print('🗄️ 트랜잭션 시작');
       return await db.transaction((txn) async {
         try {
-          // 1. 운동 기록 저장
+          // 1. 기존 데이터 삭제 (덮어쓰기 위해)
+          print('🗄️ 기존 데이터 삭제 시작 - 날짜: ${request.workoutDate}');
+          
+          // 해당 날짜의 기존 workout_log_id들을 조회
+          final existingLogs = await txn.query(
+            'workout_logs',
+            columns: ['id'],
+            where: 'workout_date = ? AND user_id = ?',
+            whereArgs: [request.workoutDate, userId],
+          );
+          
+          // 기존 데이터 삭제
+          for (var log in existingLogs) {
+            final workoutLogId = log['id'] as int;
+            print('🗄️ 기존 workout_log 삭제 - ID: $workoutLogId');
+            
+            // 세트 삭제
+            await txn.delete('workout_sets', 
+              where: 'workout_exercise_id IN (SELECT id FROM workout_exercises WHERE workout_log_id = ?)', 
+              whereArgs: [workoutLogId]);
+            
+            // 운동 삭제  
+            await txn.delete('workout_exercises', 
+              where: 'workout_log_id = ?', 
+              whereArgs: [workoutLogId]);
+            
+            // 운동 기록 삭제
+            await txn.delete('workout_logs', 
+              where: 'id = ?', 
+              whereArgs: [workoutLogId]);
+          }
+          print('🗄️ 기존 데이터 삭제 완료');
+
+          // 2. 새로운 운동 기록 저장
           print('🗄️ workout_logs 테이블에 저장 시작');
           final workoutLogData = {
             'workout_date': request.workoutDate,
@@ -113,7 +146,7 @@ class LocalStorageService {
           final workoutLogId = await txn.insert('workout_logs', workoutLogData);
           print('🗄️ workout_logs 저장 성공 - ID: $workoutLogId');
           
-          // 2. 각 운동 저장
+          // 3. 각 운동 저장
           for (var exerciseIndex = 0; exerciseIndex < request.workoutExercises.length; exerciseIndex++) {
             final exercise = request.workoutExercises[exerciseIndex];
             print('🗄️ 운동 $exerciseIndex 저장 시작 - exerciseId: ${exercise.exerciseId}');
@@ -121,9 +154,9 @@ class LocalStorageService {
             final exerciseData = {
               'workout_log_id': workoutLogId,
               'exercise_id': exercise.exerciseId,
-              'exercise_name': 'Exercise ${exercise.exerciseId}', // 실제로는 exerciseId로 이름 조회
+              'exercise_name': exercise.exerciseName ?? 'Exercise ${exercise.exerciseId}', // 실제 운동 이름 사용
               'log_order': exercise.logOrder,
-              'memo': '', // memo가 있다면 추가
+              'memo': exercise.exerciseMemo ?? '', // 실제 운동 메모 사용
               'created_at': now,
             };
             print('🗄️ workout_exercises 데이터: $exerciseData');
@@ -131,7 +164,7 @@ class LocalStorageService {
             final exerciseDbId = await txn.insert('workout_exercises', exerciseData);
             print('🗄️ workout_exercises 저장 성공 - ID: $exerciseDbId');
             
-            // 3. 각 세트 저장
+            // 4. 각 세트 저장
             for (var setIndex = 0; setIndex < exercise.workoutSets.length; setIndex++) {
               final set = exercise.workoutSets[setIndex];
               print('🗄️ 세트 $setIndex 저장 시작');

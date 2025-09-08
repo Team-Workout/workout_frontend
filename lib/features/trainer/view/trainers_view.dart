@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodel/trainer_viewmodel.dart';
 import '../model/trainer_model.dart';
+import '../../../core/config/api_config.dart';
 import '../../../services/image_cache_manager.dart';
 import 'trainer_detail_view.dart';
 import '../../dashboard/widgets/notion_button.dart';
@@ -256,285 +257,276 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
   }
 
   Widget _buildTrainerCard(TrainerProfile trainer) {
-    return FutureBuilder<String?>(
-      future: trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty
-          ? ImageCacheManager().getCachedImage(
-              imageUrl: trainer.profileImageUrl!,
-              cacheKey: 'trainer_${trainer.trainerId}',
-              type: ImageType.profile,
-            )
-          : Future.value(null),
-      builder: (context, snapshot) {
-        return GestureDetector(
-          onTap: () {
-            // 트레이너 상세 페이지로 이동
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TrainerDetailView(
-                  trainerId: trainer.trainerId,
-                  trainer: trainer, // 캐시된 데이터 전달
-                ),
-              ),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-            height: 200,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            child: Stack(
-              children: [
-                // 배경 이미지 또는 그라디언트
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: snapshot.hasData && snapshot.data != null
-                      ? Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.file(
-                              File(snapshot.data!),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        const Color(0xFF10B981).withOpacity(0.8),
-                                        const Color(0xFF34D399).withOpacity(0.9),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                            // 어두운 그라디언트 오버레이
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.black.withOpacity(0.7),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                const Color(0xFF10B981).withOpacity(0.8),
-                                const Color(0xFF34D399).withOpacity(0.9),
-                              ],
-                            ),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Colors.white.withOpacity(0.5),
-                            ),
-                          ),
-                        ),
-                ),
-                Positioned(
-                  bottom: 16,
-                  left: 16,
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 3,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          radius: 30,
-                          backgroundColor: const Color(0xFF10B981),
-                          backgroundImage: snapshot.hasData && snapshot.data != null
-                              ? FileImage(File(snapshot.data!))
-                              : null,
-                          child: snapshot.hasData && snapshot.data != null
-                              ? null
-                              : const Icon(
-                                  Icons.person,
-                                  size: 30,
-                                  color: Colors.white,
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            trainer.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            trainer.specialties.isNotEmpty 
-                                ? trainer.specialties.take(2).join(', ')
-                                : '전문 분야',
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // 자격증 개수 표시
-                if (trainer.certifications.isNotEmpty)
-                  Positioned(
-                    bottom: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '자격증 ${trainer.certifications.length}개',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 전문 분야 표시
-                if (trainer.specialties.isNotEmpty)
-                  Wrap(
-                    spacing: 8,
-                    children: trainer.specialties.map((specialty) {
-                      return Chip(
-                        label: Text(
-                          specialty,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        backgroundColor: Colors.grey[200],
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      );
-                    }).toList(),
-                  ),
-                const SizedBox(height: 12),
-                if (trainer.introduction != null && trainer.introduction!.isNotEmpty)
-                  Text(
-                    trainer.introduction!,
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // 자격증과 경력 정보 표시
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (trainer.workExperiences.isNotEmpty)
-                            Text(
-                              '경력 ${trainer.workExperiences.length}개',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          if (trainer.certifications.isNotEmpty)
-                            Text(
-                              '자격증 ${trainer.certifications.length}개',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    NotionButton(
-                      onPressed: () {
-                        // 트레이너 상세 페이지로 이동
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TrainerDetailView(
-                              trainerId: trainer.trainerId,
-                              trainer: trainer,
-                            ),
-                          ),
-                        );
-                      },
-                      text: '프로필 보기',
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        // 트레이너 상세 페이지로 이동
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TrainerDetailView(
+              trainerId: trainer.trainerId,
+              trainer: trainer,
             ),
           ),
         );
       },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Stack(
+                children: [
+                  // 배경 이미지 또는 그라디언트
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Builder(
+                                builder: (context) {
+                                  final imageUrl = trainer.profileImageUrl!.startsWith('http')
+                                      ? trainer.profileImageUrl!
+                                      : trainer.profileImageUrl!.startsWith('/')
+                                          ? '${ApiConfig.imageBaseUrl}${trainer.profileImageUrl!}'
+                                          : '${ApiConfig.imageBaseUrl}/images/${trainer.profileImageUrl!}';
+                                  print('🔍 Loading trainer image: $imageUrl (original: ${trainer.profileImageUrl})');
+                                  return Image.network(
+                                    imageUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      print('❌ Failed to load trainer image: $imageUrl');
+                                      print('Error: $error');
+                                      
+                                      // 404 에러인 경우 default-profile.png로 fallback 시도
+                                      if (error.toString().contains('404') && !imageUrl.contains('default-profile.png')) {
+                                        final defaultImageUrl = '${ApiConfig.imageBaseUrl}/images/default-profile.png';
+                                        print('🔄 Trying fallback to default image: $defaultImageUrl');
+                                        return Image.network(
+                                          defaultImageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            print('❌ Even default image failed: $defaultImageUrl');
+                                            return Container(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.topCenter,
+                                                  end: Alignment.bottomCenter,
+                                                  colors: [
+                                                    const Color(0xFF10B981).withOpacity(0.8),
+                                                    const Color(0xFF34D399).withOpacity(0.9),
+                                                  ],
+                                                ),
+                                              ),
+                                              child: Center(
+                                                child: Icon(
+                                                  Icons.person,
+                                                  size: 60,
+                                                  color: Colors.white.withOpacity(0.5),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      }
+                                      
+                                      // 다른 에러이거나 이미 default인 경우 그라디언트 표시
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              const Color(0xFF10B981).withOpacity(0.8),
+                                              const Color(0xFF34D399).withOpacity(0.9),
+                                            ],
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: Colors.white.withOpacity(0.5),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              const Color(0xFF10B981).withOpacity(0.8),
+                                              const Color(0xFF34D399).withOpacity(0.9),
+                                            ],
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                            value: loadingProgress.expectedTotalBytes != null
+                                                ? loadingProgress.cumulativeBytesLoaded /
+                                                    loadingProgress.expectedTotalBytes!
+                                                : null,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                              // 어두운 그라디언트 오버레이
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withOpacity(0.7),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  const Color(0xFF10B981).withOpacity(0.8),
+                                  const Color(0xFF34D399).withOpacity(0.9),
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.person,
+                                size: 60,
+                                color: Colors.white.withOpacity(0.5),
+                              ),
+                            ),
+                          ),
+                  ),
+                  // 트레이너 정보 (원형 아바타 제거)
+                  Positioned(
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          trainer.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          trainer.specialties.isNotEmpty 
+                              ? trainer.specialties.take(2).join(', ')
+                              : '시니어 퍼스널 트레이너',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 전문 분야 표시 - 해시태그 스타일
+                  if (trainer.specialties.isNotEmpty)
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: trainer.specialties.map((specialty) {
+                        return Text(
+                          '#$specialty',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF10B981),
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  const SizedBox(height: 12),
+                  if (trainer.introduction != null && trainer.introduction!.isNotEmpty)
+                    Text(
+                      trainer.introduction!,
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      NotionButton(
+                        onPressed: () {
+                          // 트레이너 상세 페이지로 이동
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TrainerDetailView(
+                                trainerId: trainer.trainerId,
+                                trainer: trainer,
+                              ),
+                            ),
+                          );
+                        },
+                        text: '프로필 보기',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

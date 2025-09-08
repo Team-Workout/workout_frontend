@@ -4,6 +4,7 @@ import 'package:pt_service/core/services/api_service.dart';
 import 'package:pt_service/core/services/session_service.dart';
 import 'package:image_picker/image_picker.dart';
 import '../model/profile_image_model.dart';
+import '../model/privacy_settings_model.dart';
 
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   final dio = ref.watch(dioProvider);
@@ -36,7 +37,7 @@ class SettingsRepository {
       // 파일 확장자와 MIME 타입 확인
       final String fileName = imageFile.name.toLowerCase();
       String mimeType;
-      
+
       if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
         mimeType = 'image/jpeg';
       } else if (fileName.endsWith('.png')) {
@@ -63,7 +64,8 @@ class SettingsRepository {
       // Request 헤더와 세션 정보 확인
       print('Request headers: ${_dio.options.headers}');
       print('Base URL: ${_dio.options.baseUrl}');
-      print('Request URL: ${_dio.options.baseUrl}/common/members/me/profile-image');
+      print(
+          'Request URL: ${_dio.options.baseUrl}/common/members/me/profile-image');
       print('Session has session: ${_sessionService.hasSession}');
       print('Session ID: ${_sessionService.sessionId}');
       print('Session Token: ${_sessionService.sessionToken}');
@@ -80,9 +82,10 @@ class SettingsRepository {
       );
 
       print('Upload success: ${response.statusCode} - ${response.data}');
-      
+
       // Handle response format like {"data": {fileId: 2, fileUrl: "...", ...}}
-      if (response.data is Map<String, dynamic> && response.data['data'] != null) {
+      if (response.data is Map<String, dynamic> &&
+          response.data['data'] != null) {
         return ProfileImageResponse.fromJson(response.data['data']);
       } else {
         return ProfileImageResponse.fromJson(response.data);
@@ -98,7 +101,7 @@ class SettingsRepository {
         print('Request path: ${e.requestOptions.path}');
         print('Request headers: ${e.requestOptions.headers}');
         print('Request base URL: ${e.requestOptions.baseUrl}');
-        
+
         if (e.response?.statusCode == 401) {
           print('=== 401 Authentication Error ===');
           print('This usually means:');
@@ -117,14 +120,16 @@ class SettingsRepository {
   Future<ProfileImageInfo?> getProfileImage() async {
     try {
       print('=== Profile Image Get Debug ===');
-      print('Request URL: ${_dio.options.baseUrl}/common/members/me/profile-image');
+      print(
+          'Request URL: ${_dio.options.baseUrl}/common/members/me/profile-image');
       print('Request headers: ${_dio.options.headers}');
       print('Session has session: ${_sessionService.hasSession}');
       print('Session ID: ${_sessionService.sessionId}');
       print('Session Token: ${_sessionService.sessionToken}');
-      
+
       final response = await _dio.post('/common/members/me/profile-image');
-      print('Get profile image success: ${response.statusCode} - ${response.data}');
+      print(
+          'Get profile image success: ${response.statusCode} - ${response.data}');
       return ProfileImageInfo.fromJson(response.data);
     } catch (e) {
       print('=== Get Profile Image Error ===');
@@ -134,7 +139,7 @@ class SettingsRepository {
         print('Status message: ${e.response?.statusMessage}');
         print('Response data: ${e.response?.data}');
         print('Request headers: ${e.requestOptions.headers}');
-        
+
         if (e.response?.statusCode == 401) {
           print('=== 401 Authentication Error in Get Profile Image ===');
           print('User might not be authenticated for image retrieval');
@@ -143,13 +148,75 @@ class SettingsRepository {
           print('User might not have a profile image set');
         } else if (e.response?.statusCode == 500) {
           print('=== 500 Server Error ===');
-          print('Server internal error - profile image feature might not be fully implemented');
+          print(
+              'Server internal error - profile image feature might not be fully implemented');
           // Return null or default instead of throwing exception
           return null;
         }
       }
       print('Get profile image error: $e');
       throw Exception('프로필 이미지 조회 실패: $e');
+    }
+  }
+
+  /// 프로필 이미지 삭제
+  Future<void> deleteProfileImage() async {
+    try {
+      print('=== Profile Image Delete Debug ===');
+      print(
+          'Request URL: ${_dio.options.baseUrl}/common/members/me/profile-image');
+      print('Request headers: ${_dio.options.headers}');
+      print('Session has session: ${_sessionService.hasSession}');
+
+      final response = await _dio.delete('/common/members/me/profile-image');
+      print(
+          'Delete profile image success: ${response.statusCode} - ${response.data}');
+    } catch (e) {
+      print('=== Delete Profile Image Error ===');
+      if (e is DioException) {
+        print('Error type: ${e.type}');
+        print('Status code: ${e.response?.statusCode}');
+        print('Status message: ${e.response?.statusMessage}');
+        print('Response data: ${e.response?.data}');
+
+        if (e.response?.statusCode == 401) {
+          print('=== 401 Authentication Error in Delete Profile Image ===');
+        } else if (e.response?.statusCode == 404) {
+          print('=== 404 Not Found - No profile image to delete ===');
+          // 이미 삭제된 경우이므로 성공으로 처리
+          return;
+        }
+      }
+      print('Delete profile image error: $e');
+      throw Exception('프로필 이미지 삭제 실패: $e');
+    }
+  }
+
+  /// 내 정보 조회 (프라이버시 설정 포함)
+  Future<MemberInfo> getMemberInfo() async {
+    try {
+      final response = await _dio.get('/member/me');
+      return MemberInfo.fromJson(response.data['data']);
+    } catch (e) {
+      print('Get member info error: $e');
+      throw Exception('회원 정보 조회 실패: $e');
+    }
+  }
+
+  /// 개인정보 공개 설정 변경
+  Future<void> updatePrivacySettings(PrivacySettings settings) async {
+    try {
+      await _dio.put(
+        '/member/me/settings/privacy',
+        data: {
+          'isOpenWorkoutRecord': settings.isOpenWorkoutRecord,
+          'isOpenBodyImg': settings.isOpenBodyImg,
+          'isOpenBodyComposition': settings.isOpenBodyComposition,
+        },
+      );
+    } catch (e) {
+      print('Update privacy settings error: $e');
+      throw Exception('개인정보 공개 설정 변경 실패: $e');
     }
   }
 }

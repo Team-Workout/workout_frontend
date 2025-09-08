@@ -14,7 +14,7 @@ class DateRangeDisplay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dateRange = ref.watch(dateRangeProvider);
-    final dateFormat = DateFormat('MMM dd, yyyy');
+    final dateFormat = DateFormat('yyyy년 MM월 dd일');
 
     return Column(
       children: [

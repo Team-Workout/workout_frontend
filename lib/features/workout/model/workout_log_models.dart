@@ -19,11 +19,15 @@ class WorkoutLogRequest {
 
 class WorkoutExercise {
   final int exerciseId;
+  final String? exerciseName; // 로컬 저장을 위한 운동 이름 추가
+  final String? exerciseMemo; // 운동 메모 추가
   final int logOrder;
   final List<WorkoutSetData> workoutSets;
 
   WorkoutExercise({
     required this.exerciseId,
+    this.exerciseName,
+    this.exerciseMemo,
     required this.logOrder,
     required this.workoutSets,
   });
@@ -32,6 +36,8 @@ class WorkoutExercise {
     'exerciseId': exerciseId,
     'logOrder': logOrder,
     'workoutSets': workoutSets.map((s) => s.toJson()).toList(),
+    if (exerciseMemo != null && exerciseMemo!.isNotEmpty)
+      'memo': exerciseMemo,
   };
 }
 

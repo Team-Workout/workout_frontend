@@ -72,7 +72,7 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
     await _localStorageService.checkDatabaseStatus();
     
     // 필요시 데이터 초기화 (개발 중에만 사용)
-    await _localStorageService.clearAllData();
+    // await _localStorageService.clearAllData(); // 데이터 보존을 위해 주석 처리
   }
 
   Future<void> _loadAvailableExercises() async {
@@ -181,20 +181,16 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
     }
   }
 
-  // 로컬 저장소 동기화 (삭제 후 재저장)
+  // 로컬 저장소 동기화 (운동 삭제/추가시 서버와 즉시 동기화)
   Future<void> _syncLocalStorage() async {
     try {
-      final dateString = DateFormat('yyyy-MM-dd').format(_selectedDate);
-      
-      // 기존 데이터 삭제
-      await _localStorageService.deleteWorkoutLogsByDate(dateString);
-      
-      // 현재 운동이 있다면 다시 저장
-      if (_exercises.isNotEmpty) {
-        await saveWorkoutToAPI();
-      }
+      // 운동이 있든 없든 항상 현재 상태를 서버에 동기화
+      print('🔄 서버와 동기화 시작 - 현재 운동 개수: ${_exercises.length}');
+      await saveWorkoutToAPI();
+      print('🔄 서버 동기화 완료');
     } catch (e) {
       // 로컬 동기화 실패해도 UI는 업데이트됨
+      print('⚠️ 서버 동기화 실패: $e');
     }
   }
 
@@ -314,6 +310,10 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
           try {
             workoutExercises.add(WorkoutExercise(
               exerciseId: exerciseId,
+              exerciseName: exerciseName, // 실제 운동 이름 전달
+              exerciseMemo: exercise.memoController.text.trim().isNotEmpty 
+                  ? exercise.memoController.text.trim() 
+                  : null, // 운동 메모 전달
               logOrder: exerciseIndex + 1,
               workoutSets: workoutSets,
             ));
@@ -324,7 +324,8 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
       }
 
       if (workoutExercises.isEmpty) {
-        throw Exception('저장할 운동 데이터가 없습니다.');
+        // 빈 운동 데이터인 경우 서버에서 해당 날짜 데이터 삭제를 위해 빈 배열로 요청
+        print('🗑️ 빈 운동 데이터 - 서버에 삭제 요청을 보냅니다');
       }
 
       // API 요청 객체 생성
@@ -364,11 +365,16 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
 
       // 2. 서버에 저장 시도
       try {
+        print('💾 서버 저장 시작...');
         final response = await _apiService.saveWorkoutLog(request);
+        print('💾 서버 저장 성공');
 
         // 3. 서버 저장 성공 시 동기화 상태 업데이트
         await _localStorageService.markAsSynced(localWorkoutLogId);
+        print('💾 동기화 상태 업데이트 완료');
       } catch (serverError) {
+        print('⚠️ 서버 저장 실패: $serverError');
+        print('💾 로컬 저장은 완료되었습니다. 나중에 동기화됩니다.');
         // 서버 저장 실패해도 로컬은 저장되었으므로 계속 진행
         // 나중에 동기화할 수 있도록 unsync 상태로 유지
       }

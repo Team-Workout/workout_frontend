@@ -435,7 +435,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
               '${set.weight}kg × ${set.reps}회',
               style: const TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.normal,
                 color: Colors.black,
                 fontFamily: 'IBMPlexSansKR',
               ),

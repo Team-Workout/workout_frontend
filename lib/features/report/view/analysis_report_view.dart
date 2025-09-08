@@ -247,7 +247,7 @@ class AnalysisReportView extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '체중 변화 추이',
+                    '변화 추이',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 24),

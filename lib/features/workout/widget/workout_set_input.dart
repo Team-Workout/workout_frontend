@@ -202,9 +202,12 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.yellow.shade100, // 임시로 눈에 띄는 색상
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.red.shade300, width: 2), // 임시로 빨간 테두리
+              color: const Color(0xFF10B981).withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,25 +232,35 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                TextField(
-                  controller: set.memoController,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '이 세트에 대한 메모를 입력하세요 (선택사항)',
-                    hintStyle: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade500,
-                      fontFamily: 'IBMPlexSansKR',
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.2),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                  ),
+                  child: TextField(
+                    controller: set.memoController,
+                    maxLines: 2,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'IBMPlexSansKR',
+                      color: Colors.black87,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '💡 이 세트에 대한 메모를 입력하세요',
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: const Color(0xFF10B981).withValues(alpha: 0.7),
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ),

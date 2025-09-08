@@ -25,14 +25,18 @@ class ApiAuthRepository implements AuthRepository {
 
       final userData = response.data;
       
+      // 서버 응답이 {data: {...}} 구조인지 확인
+      final actualUserData = userData['data'] ?? userData;
 
       // Session is automatically handled by SessionService via interceptor
 
       // role을 확인하여 UserType 결정
       UserType userType;
-      if (userData['role'] == 'TRAINER') {
+      final roleValue = actualUserData['role']?.toString()?.toUpperCase();
+      
+      if (roleValue == 'TRAINER') {
         userType = UserType.trainer;
-      } else if (userData['role'] == 'MANAGER') {
+      } else if (roleValue == 'MANAGER') {
         userType = UserType.manager;
       } else {
         userType = UserType.member; // 기본값 (MEMBER or USER)
@@ -40,9 +44,9 @@ class ApiAuthRepository implements AuthRepository {
 
       // 간단한 응답 처리: id와 name만 받음
       return User(
-        id: userData['id']?.toString() ?? '',
+        id: actualUserData['id']?.toString() ?? '',
         email: email, // 로그인 시 입력한 이메일 사용
-        name: userData['name'] ?? '',
+        name: actualUserData['name'] ?? '',
         userType: userType,
         phoneNumber: null,
         createdAt: DateTime.now(),

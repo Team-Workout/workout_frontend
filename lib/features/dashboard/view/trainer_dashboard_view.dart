@@ -144,20 +144,72 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
     ) ?? 0;
     
     return Scaffold(
-      backgroundColor: NotionColors.gray50,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: NotionColors.white,
-        title: const Text('트레이너 대시보드'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              context.push('/settings');
-            },
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          '트레이너 대시보드',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('알림 기능은 준비 중입니다')),
+                );
+              },
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              onPressed: () {
+                context.push('/settings');
+              },
+            ),
           ),
         ],
       ),
@@ -167,25 +219,124 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '안녕하세요, ${user?.name ?? '트레이너'}님!',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '이번 주 PT 일정을 한눈에 확인해보세요',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: NotionColors.textSecondary,
+            // 🎉 Welcome Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.waving_hand,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '안녕하세요!',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                            Text(
+                              '${user?.name ?? '트레이너'}님',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '오늘도 회원들과 함께 건강한 하루를 만들어가세요! 💪',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 16,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.calendar_today,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '오늘 일정: $todayPtCount건',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             
             // 📊 이번 주 PT 현황 차트 (맨 위로 이동)
             Container(
               decoration: BoxDecoration(
-                color: NotionColors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: NotionColors.border),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -193,39 +344,73 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '이번 주 PT 현황',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF34D399)],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '일별 수업 스케줄',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: NotionColors.textSecondary,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.bar_chart,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '이번 주 PT 현황',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
                               ),
-                            ),
-                          ],
+                              Text(
+                                '일별 수업 스케줄 분석',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: NotionColors.gray100,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '이번 달: ${monthlyPtCount}건',
-                            style: const TextStyle(
-                              color: NotionColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF34D399)],
                             ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.calendar_month,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '이번 달: ${monthlyPtCount}건',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -244,12 +429,16 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                               barTouchData: BarTouchData(
                                 enabled: true,
                                 touchTooltipData: BarTouchTooltipData(
-                                  getTooltipColor: (group) => NotionColors.black,
+                                  getTooltipColor: (group) => const Color(0xFF10B981),
                                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                                     const days = ['월', '화', '수', '목', '금', '토', '일'];
                                     return BarTooltipItem(
                                       '${days[groupIndex]}\n${rod.toY.toInt()}건',
-                                      const TextStyle(color: NotionColors.white),
+                                      const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'IBMPlexSansKR',
+                                      ),
                                     );
                                   },
                                 ),
@@ -328,7 +517,11 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                   barRods: [
                                     BarChartRodData(
                                       toY: entry.value.toDouble(),
-                                      color: NotionColors.black,
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                      ),
                                       width: 24,
                                       borderRadius: const BorderRadius.only(
                                         topLeft: Radius.circular(6),
@@ -363,33 +556,86 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
             ),
             
             // 📅 오늘의 PT 일정
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Container(
               decoration: BoxDecoration(
-                color: NotionColors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: NotionColors.border),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(24),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '오늘의 PT 일정',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            context.push('/pt-schedule');
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: NotionColors.textSecondary,
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Text('전체보기'),
+                          child: const Icon(
+                            Icons.schedule,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '오늘의 PT 일정',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                              Text(
+                                '예정된 PT 수업 $todayPtCount건',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextButton(
+                            onPressed: () {
+                              context.push('/pt-schedule');
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF10B981),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            ),
+                            child: const Text(
+                              '전체보기',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -483,52 +729,98 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
             ),
             
             // 📋 카테고리별 관리 메뉴
-            const SizedBox(height: 24),
-            Text(
-              '관리 메뉴',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.dashboard_customize,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    '관리 메뉴',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             
             // 탭 바
             Container(
               decoration: BoxDecoration(
-                color: NotionColors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: NotionColors.border),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: NotionColors.black,
-                    unselectedLabelColor: NotionColors.textSecondary,
-                    indicatorColor: NotionColors.black,
-                    indicatorWeight: 2,
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.normal,
-                      fontSize: 14,
+                    child: TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.grey[600],
+                      indicator: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                      tabs: const [
+                        Tab(
+                          icon: Icon(Icons.calendar_today, size: 18),
+                          text: '일정 관리',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.people, size: 18),
+                          text: '회원 관리',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.fitness_center, size: 18),
+                          text: 'PT 운영',
+                        ),
+                      ],
                     ),
-                    tabs: const [
-                      Tab(
-                        icon: Icon(Icons.calendar_today, size: 20),
-                        text: '일정 관리',
-                      ),
-                      Tab(
-                        icon: Icon(Icons.people, size: 20),
-                        text: '회원 관리',
-                      ),
-                      Tab(
-                        icon: Icon(Icons.fitness_center, size: 20),
-                        text: 'PT 운영',
-                      ),
-                    ],
                   ),
                   SizedBox(
                     height: 400,
@@ -710,8 +1002,12 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -724,6 +1020,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    fontFamily: 'IBMPlexSansKR',
                   ),
                 ),
                 Text(
@@ -731,6 +1028,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.8),
                     fontSize: 14,
+                    fontFamily: 'IBMPlexSansKR',
                   ),
                 ),
               ],

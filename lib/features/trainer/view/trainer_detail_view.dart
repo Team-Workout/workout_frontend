@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../model/trainer_model.dart';
 import '../repository/trainer_repository.dart';
 import '../viewmodel/trainer_viewmodel.dart';
+import '../../../core/config/api_config.dart';
 import '../../../services/image_cache_manager.dart';
 import '../../pt_offerings/view/pt_offerings_list_view.dart';
 
@@ -273,132 +274,134 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
       body: Column(
         children: [
           // Trainer Profile Header with Image Background
-          FutureBuilder<String?>(
-            future: trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty
-                ? ImageCacheManager().getCachedImage(
-                    imageUrl: trainer.profileImageUrl!,
-                    cacheKey: 'trainer_${trainer.trainerId}',
-                    type: ImageType.profile,
-                  )
-                : Future.value(null),
-            builder: (context, snapshot) {
-              return Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF10B981).withOpacity(0.8),
-                      const Color(0xFF34D399).withOpacity(0.9),
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  const Color(0xFF10B981).withOpacity(0.8),
+                  const Color(0xFF34D399).withOpacity(0.9),
+                ],
+              ),
+            ),
+            child: Stack(
+              children: [
+                // 배경 이미지
+                if (trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty)
+                  Positioned.fill(
+                    child: Image.network(
+                      trainer.profileImageUrl!.startsWith('http')
+                          ? trainer.profileImageUrl!
+                          : trainer.profileImageUrl!.startsWith('/')
+                              ? '${ApiConfig.imageBaseUrl}${trainer.profileImageUrl!}'
+                              : '${ApiConfig.imageBaseUrl}/images/${trainer.profileImageUrl!}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        final imageUrl = trainer.profileImageUrl!.startsWith('http')
+                            ? trainer.profileImageUrl!
+                            : trainer.profileImageUrl!.startsWith('/')
+                                ? '${ApiConfig.imageBaseUrl}${trainer.profileImageUrl!}'
+                                : '${ApiConfig.imageBaseUrl}/images/${trainer.profileImageUrl!}';
+                        
+                        print('❌ Failed to load trainer detail image: $imageUrl');
+                        print('Error: $error');
+                        
+                        // 404 에러인 경우 default-profile.png로 fallback 시도
+                        if (error.toString().contains('404') && !imageUrl.contains('default-profile.png')) {
+                          final defaultImageUrl = '${ApiConfig.imageBaseUrl}/images/default-profile.png';
+                          print('🔄 Trying fallback to default image: $defaultImageUrl');
+                          return Image.network(
+                            defaultImageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('❌ Even default image failed in detail: $defaultImageUrl');
+                              return Container();
+                            },
+                          );
+                        }
+                        
+                        return Container();
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                const Color(0xFF10B981).withOpacity(0.8),
+                                const Color(0xFF34D399).withOpacity(0.9),
+                              ],
+                            ),
+                          ),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                // 그라디언트 오버레이
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.7),
+                      ],
+                    ),
+                  ),
+                ),
+                // 트레이너 정보 (프로필 아바타 제거)
+                Positioned(
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        trainer.name,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        trainer.specialties.isNotEmpty 
+                            ? trainer.specialties.take(2).join(', ')
+                            : '시니어 퍼스널 트레이너',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    // 배경 이미지
-                    if (snapshot.hasData && snapshot.data != null)
-                      Positioned.fill(
-                        child: Image.file(
-                          File(snapshot.data!),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container();
-                          },
-                        ),
-                      ),
-                    // 그라디언트 오버레이
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.7),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // 프로필 정보
-                    Positioned(
-                      bottom: 20,
-                      left: 20,
-                      right: 20,
-                      child: Row(
-                        children: [
-                          // 프로필 아바타
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              radius: 40,
-                              backgroundColor: const Color(0xFF10B981),
-                              backgroundImage: snapshot.hasData && snapshot.data != null
-                                  ? FileImage(File(snapshot.data!))
-                                  : null,
-                              child: snapshot.hasData && snapshot.data != null
-                                  ? null
-                                  : const Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: Colors.white,
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          // 트레이너 정보
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  trainer.name,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontFamily: 'IBMPlexSansKR',
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  trainer.specialties.isNotEmpty 
-                                      ? trainer.specialties.take(2).join(', ')
-                                      : '시니어 퍼스널 트레이너',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white70,
-                                    fontFamily: 'IBMPlexSansKR',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+              ],
+            ),
           ),
 
-          // Specialties Section
+          // Specialties Section - 해시태그 스타일
           if (trainer.specialties.isNotEmpty) ...[
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -411,35 +414,21 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
+                    spacing: 12,
+                    runSpacing: 8,
                     children: trainer.specialties
-                        .map((specialty) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[50] ??
-                                    Colors.blue.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.blue[200] ??
-                                      Colors.blue.withValues(alpha: 0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                specialty,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.blue[700] ?? Colors.blue,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                        .map((specialty) => Text(
+                              '#$specialty',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF10B981),
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'IBMPlexSansKR',
                               ),
                             ))
                         .toList(),

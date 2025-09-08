@@ -702,46 +702,46 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               ),
                               const SizedBox(height: 24),
                               // Terms Agreement
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        color: _agreedToTerms 
-                                            ? const Color(0xFF10B981) 
-                                            : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(
-                                          color: const Color(0xFF10B981),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: _agreedToTerms
-                                          ? const Icon(
-                                              Icons.check,
-                                              color: Colors.white,
-                                              size: 14,
-                                            )
-                                          : null,
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _agreedToTerms = !_agreedToTerms;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _agreedToTerms = !_agreedToTerms;
-                                          });
-                                        },
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          color: _agreedToTerms 
+                                              ? const Color(0xFF10B981) 
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: const Color(0xFF10B981),
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: _agreedToTerms
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: Colors.white,
+                                                size: 14,
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
                                         child: RichText(
                                           text: TextSpan(
                                             style: const TextStyle(
@@ -773,8 +773,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 32),

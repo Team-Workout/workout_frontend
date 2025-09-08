@@ -83,7 +83,7 @@ class _CalendarViewState extends State<CalendarView> {
             color: Colors.white,
             padding: const EdgeInsets.all(16),
             child: TableCalendar<WorkoutDayRecord>(
-                firstDay: DateTime.utc(2020, 1, 1),
+                firstDay: DateTime.utc(1900, 1, 1),
                 lastDay: DateTime.utc(2030, 12, 31),
                 focusedDay: widget.viewModel.focusedDate,
                 selectedDayPredicate: (day) => isSameDay(widget.viewModel.selectedDate, day),

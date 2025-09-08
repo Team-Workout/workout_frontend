@@ -48,49 +48,33 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
   @override
   Widget build(BuildContext context) {
     final ptOfferingsAsync = ref.watch(ptOfferingProvider);
+    final user = ref.watch(currentUserProvider);
+    final isOwnOfferings = widget.trainerId == null || 
+                          (user?.id != null && widget.trainerId == int.parse(user!.id));
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
-            ),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          widget.isTrainerView ? 'PT 상품 관리' : 'PT 상품',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+      // 트레이너가 직접 접근했을 때만 AppBar 표시 (자신의 상품 관리)
+      appBar: isOwnOfferings && widget.isTrainerView ? AppBar(
+        title: const Text(
+          'PT 상품 관리',
+          style: TextStyle(
             fontFamily: 'IBMPlexSansKR',
+            fontWeight: FontWeight.bold,
           ),
         ),
-        actions: widget.isTrainerView
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  onPressed: () async {
-                    final result = await context.push('/pt-offerings/create');
-                    if (result == true) {
-                      _loadPtOfferings();
-                    }
-                  },
-                  tooltip: 'PT 상품 추가',
-                ),
-              ]
-            : null,
-      ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              context.push('/pt-offerings/create');
+            },
+          ),
+        ],
+      ) : null,
       body: RefreshIndicator(
         onRefresh: () async {
           _loadPtOfferings();
@@ -823,29 +807,31 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
   }
 
   Future<void> _performBooking(PtOffering offering) async {
-    try {
-      // 로딩 표시
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('PT를 신청하고 있습니다...'),
-            ],
-          ),
+    // 로딩 표시
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogContext) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('PT를 신청하고 있습니다...'),
+          ],
         ),
-      );
+      ),
+    );
 
+    try {
       final success = await ref
           .read(ptApplicationProvider.notifier)
           .createPtApplication(offering.id);
 
       if (mounted) {
-        Navigator.pop(context); // 로딩 다이얼로그 닫기
+        // 로딩 다이얼로그 닫기 - rootNavigator 사용
+        Navigator.of(context, rootNavigator: true).pop();
 
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -858,7 +844,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // 로딩 다이얼로그 닫기
+        // 로딩 다이얼로그 닫기 - rootNavigator 사용
+        Navigator.of(context, rootNavigator: true).pop();
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),

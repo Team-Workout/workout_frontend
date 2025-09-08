@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +18,8 @@ import '../widget/body_stats_card.dart';
 import '../widget/body_profile_section.dart';
 import '../widget/combined_progress_section.dart';
 import '../widget/date_range_display.dart';
+import '../widget/date_range_selector.dart';
 import '../widget/weight_trend_section.dart';
-import '../widget/body_data_list_section.dart';
 import '../widget/custom_date_picker.dart';
 
 class BodyCompositionView extends ConsumerStatefulWidget {
@@ -43,13 +42,13 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
       final dateRange = ref.read(dateRangeProvider);
       final startDate = dateRange.startDate.toIso8601String().split('T')[0];
       final endDate = dateRange.endDate.toIso8601String().split('T')[0];
-      
+
       // 체성분 데이터 로드
       ref.read(bodyCompositionNotifierProvider.notifier).loadBodyCompositions(
             startDate: startDate,
             endDate: endDate,
           );
-      
+
       // 몸 사진 데이터 로드
       ref.read(bodyImageNotifierProvider.notifier).loadBodyImages(
             startDate: startDate,
@@ -62,6 +61,27 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
   Widget build(BuildContext context) {
     final bodyStats = ref.watch(bodyStatsProvider);
     final bodyCompositions = ref.watch(bodyCompositionListProvider);
+
+    // dateRangeProvider 변경사항 실시간 감지
+    ref.listen<DateRange>(dateRangeProvider, (previous, next) {
+      if (previous?.startDate != next.startDate ||
+          previous?.endDate != next.endDate) {
+        final startDate = next.startDate.toIso8601String().split('T')[0];
+        final endDate = next.endDate.toIso8601String().split('T')[0];
+
+        // 체성분 데이터 재로드
+        ref.read(bodyCompositionNotifierProvider.notifier).loadBodyCompositions(
+              startDate: startDate,
+              endDate: endDate,
+            );
+
+        // 몸 사진 데이터 재로드
+        ref.read(bodyImageNotifierProvider.notifier).loadBodyImages(
+              startDate: startDate,
+              endDate: endDate,
+            );
+      }
+    });
 
     return Scaffold(
       backgroundColor: NotionColors.gray50,
@@ -89,19 +109,19 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
-              ),
-              child: const Icon(Icons.calendar_today,
-                  color: Colors.white, size: 20),
-            ),
-            onPressed: () => _showDateRangePickerDialog(),
-          ),
+          // IconButton(
+          //   icon: Container(
+          //     padding: const EdgeInsets.all(8),
+          //     decoration: BoxDecoration(
+          //       color: Colors.white.withOpacity(0.2),
+          //       borderRadius: BorderRadius.circular(10),
+          //       border: Border.all(color: Colors.white.withOpacity(0.3)),
+          //     ),
+          //     child: const Icon(Icons.calendar_today,
+          //         color: Colors.white, size: 20),
+          //   ),
+          //   onPressed: () => _showDateRangePickerDialog(),
+          // ),
         ],
       ),
       body: bodyCompositions.when(
@@ -118,29 +138,35 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DateRangeDisplay(
-                    onShowDatePicker: _showDateRangePickerDialog,
-                  ),
+                  // DateRangeDisplay(
+                  //   onShowDatePicker: _showDateRangePickerDialog,
+                  // ),
+                  const DateRangeSelector(),
                   const SizedBox(height: 16),
-                  BodyProfileSection(compositions: compositions),
+                  // BodyProfileSection(compositions: compositions),
                   const SizedBox(height: 20),
                   BodyStatsCard(stats: bodyStats),
                   const SizedBox(height: 20),
-                  _buildGoalProgress(bodyStats),
+                  // 체중변화 추이를 BMI 카드 바로 밑으로 이동
+                  _buildWeightTrendWithImages(compositions),
                   const SizedBox(height: 24),
-                  CombinedProgressSection(compositions: compositions),
-                  const SizedBox(height: 24),
-                  WeightTrendSection(compositions: compositions),
-                  const SizedBox(height: 24),
-                  _buildBodyCompositionChart(compositions),
-                  const SizedBox(height: 24),
-                  BodyDataListSection(compositions: compositions),
+                  // CombinedProgressSection(compositions: compositions),
+                  // 나의 변화 기록 관련 섹션들 주석 처리
+                  // const SizedBox(height: 24),
+                  // CombinedProgressSection(compositions: compositions),
+                  // 체성분 구성 그래프 주석 처리
+                  // const SizedBox(height: 24),
+                  // _buildBodyCompositionChart(compositions),
+                  // 체성분 데이터 목록 주석 처리
+                  // const SizedBox(height: 24),
+                  // BodyDataListSection(compositions: compositions),
                   const SizedBox(height: 24),
                   _buildBodyImagesSection(),
                   const SizedBox(height: 24),
-                  _buildKeyMeasurements(),
-                  const SizedBox(height: 24),
-                  _buildTrainerFeedback(),
+                  // 더미 UI 제거
+                  // const KeyMeasurementsSection(),
+                  // const SizedBox(height: 24),
+                  // const TrainerFeedbackSection(),
                 ],
               ),
             ),
@@ -166,106 +192,6 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildProfileSection(List<BodyComposition> compositions) {
-    if (compositions.isEmpty) return const SizedBox.shrink();
-
-    final latestData = compositions.first;
-    final dateFormat = DateFormat('MMM d, yyyy');
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.grey[200],
-            child: Icon(Icons.person, size: 35, color: Colors.grey[600]),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '회원 프로필',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1F36),
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '최근 업데이트: ${dateFormat.format(DateTime.parse(latestData.measurementDate))}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsCards(BodyStats? stats) {
-    if (stats == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            '체중',
-            '${stats.currentWeight.toStringAsFixed(1)} kg',
-            stats.weightChange > 0
-                ? '+${stats.weightChange.toStringAsFixed(1)} kg'
-                : '${stats.weightChange.toStringAsFixed(1)} kg',
-            stats.weightChange < 0 ? Colors.green : Colors.red,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            '체지방',
-            '${stats.bodyFatPercentage.toStringAsFixed(1)}%',
-            stats.fatChange > 0
-                ? '+${stats.fatChange.toStringAsFixed(1)}%'
-                : '${stats.fatChange.toStringAsFixed(1)}%',
-            stats.fatChange < 0 ? Colors.green : Colors.red,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            'BMI',
-            stats.bmi.toStringAsFixed(1),
-            stats.bmiChange > 0
-                ? '+${stats.bmiChange.toStringAsFixed(1)}'
-                : '${stats.bmiChange.toStringAsFixed(1)}',
-            stats.bmiChange < 0 ? Colors.green : Colors.red,
-          ),
-        ),
-      ],
     );
   }
 
@@ -329,133 +255,26 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     );
   }
 
-  Widget _buildGoalProgress(BodyStats? stats) {
-    // Remove this section as it uses hardcoded goal data
-    return const SizedBox.shrink();
-  }
-
-  // 🔥 NEW: 몸무게와 사진을 합친 타임라인 섹션
-  Widget _buildCombinedProgressSection(List<BodyComposition> compositions) {
+  Widget _buildWeightTrendWithImages(List<BodyComposition> compositions) {
     final bodyImagesAsync = ref.watch(bodyImagesProvider);
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: NotionColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: NotionColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '나의 변화 기록',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: NotionColors.black,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: NotionColors.gray100,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '몸무게 + 사진',
-                  style: TextStyle(
-                    color: NotionColors.black,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          bodyImagesAsync.when(
-            data: (images) => _buildCombinedTimeline(compositions, images),
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            error: (error, _) => _buildWeightOnlyTimeline(compositions),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCombinedTimeline(
-      List<BodyComposition> compositions, List<BodyImageResponse> images) {
-    // 데이터를 날짜순으로 합치기
-    final combinedData = <Map<String, dynamic>>[];
-
-    // 체성분 데이터 추가
-    for (final comp in compositions) {
-      combinedData.add({
-        'type': 'weight',
-        'date': DateTime.parse(comp.measurementDate),
-        'weight': comp.weightKg,
-        'data': comp,
-      });
-    }
-
-    // 사진 데이터 추가
-    for (final img in images) {
-      combinedData.add({
-        'type': 'photo',
-        'date': DateTime.parse(img.recordDate),
-        'data': img,
-      });
-    }
-
-    // 날짜순 정렬 (최신순)
-    combinedData.sort(
-        (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
-
-    if (combinedData.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return Column(
-      children: [
-        // 최근 3개월 요약 차트
-        SizedBox(
-          height: 120,
-          child: _buildMiniWeightChart(compositions),
-        ),
-        const SizedBox(height: 20),
-        Divider(thickness: 1, color: NotionColors.border),
-        const SizedBox(height: 16),
-        // 타임라인
-        ...combinedData
-            .take(10)
-            .map((item) => _buildTimelineItem(item))
-            .toList(),
-        if (combinedData.length > 10)
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: TextButton(
-              onPressed: () => _showAllProgressHistory(combinedData),
-              child: Text(
-                '전체 기록 보기 (${combinedData.length}개)',
-                style: TextStyle(
-                  color: NotionColors.black,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-      ],
+    return bodyImagesAsync.when(
+      data: (bodyImages) {
+        print(
+            '_buildWeightTrendWithImages: bodyImages loaded, count = ${bodyImages.length}');
+        return WeightTrendSection(
+          compositions: compositions,
+          bodyImages: bodyImages,
+        );
+      },
+      loading: () {
+        print('_buildWeightTrendWithImages: loading bodyImages');
+        return WeightTrendSection(compositions: compositions);
+      },
+      error: (error, _) {
+        print('_buildWeightTrendWithImages: error loading bodyImages: $error');
+        return WeightTrendSection(compositions: compositions);
+      },
     );
   }
 
@@ -713,32 +532,6 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     );
   }
 
-  Widget _buildWeightOnlyTimeline(List<BodyComposition> compositions) {
-    return Column(
-      children: [
-        const Icon(
-          Icons.info_outline,
-          color: Color(0xFF6B7280),
-          size: 20,
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          '사진 데이터를 불러오는 중입니다.\n체중 기록만 표시됩니다.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Color(0xFF6B7280),
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 120,
-          child: _buildMiniWeightChart(compositions),
-        ),
-      ],
-    );
-  }
-
   Widget _buildEmptyState() {
     return Container(
       padding: const EdgeInsets.all(32),
@@ -823,71 +616,6 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeightTrendSection(List<BodyComposition> compositions) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '체중 변화 추이',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: _buildWeightChart(compositions),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPeriodButton(String text, bool isSelected) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedPeriod = text;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2C3E50) : Colors.grey[200],
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
           ),
         ),
       ),
@@ -1042,52 +770,6 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     );
   }
 
-  Widget _buildBodyCompositionChart(List<BodyComposition> compositions) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '체성분 구성',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 180, // Increased height for better display
-            child: _buildCompositionBars(compositions),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLegendItem('근육', const Color(0xFF10B981)),
-              const SizedBox(width: 24),
-              _buildLegendItem('지방', Colors.grey[400]!),
-              const SizedBox(width: 24),
-              _buildLegendItem('기타', const Color(0xFF6366F1)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildCompositionBars(List<BodyComposition> compositions) {
     if (compositions.isEmpty) {
       return const Center(
@@ -1226,57 +908,6 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
           style: const TextStyle(fontSize: 12),
         ),
       ],
-    );
-  }
-
-  Widget _buildDataListSection(List<BodyComposition> compositions) {
-    if (compositions.isEmpty) return const SizedBox.shrink();
-
-    final sortedCompositions = List<BodyComposition>.from(compositions)
-      ..sort((a, b) => b.measurementDate.compareTo(a.measurementDate));
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '체성분 데이터 목록',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                '${sortedCompositions.length}개 항목',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...sortedCompositions
-              .map((composition) => _buildDataListItem(composition))
-              .toList(),
-        ],
-      ),
     );
   }
 
@@ -1452,322 +1083,64 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     );
   }
 
-  Widget _buildKeyMeasurements() {
-    // Remove this section as it uses hardcoded measurement data
-    return const SizedBox.shrink();
-  }
+  // void _showDateRangePickerDialog() async {
+  //   final DateTimeRange? picked = await showDateRangePicker(
+  //     context: context,
+  //     firstDate: DateTime(2020),
+  //     lastDate: DateTime.now(),
+  //     initialDateRange: DateTimeRange(
+  //       start: ref.read(dateRangeProvider).startDate,
+  //       end: ref.read(dateRangeProvider).endDate,
+  //     ),
+  //     locale: const Locale('ko', 'KR'),
+  //     builder: (context, child) {
+  //       return Theme(
+  //         data: Theme.of(context).copyWith(
+  //           colorScheme: const ColorScheme.light(
+  //             primary: Color(0xFF10B981),
+  //             onPrimary: Colors.white,
+  //             surface: Colors.white,
+  //             onSurface: Colors.black,
+  //             secondary: Color(0xFF34D399),
+  //             onSecondary: Colors.white,
+  //           ),
+  //         ),
+  //         child: child!,
+  //       );
+  //     },
+  //   );
 
-  Widget _buildMeasurementItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          height: 4,
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: FractionallySizedBox(
-            widthFactor: 0.7,
-            alignment: Alignment.centerLeft,
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF6366F1),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  //   if (picked != null) {
+  //     ref.read(dateRangeProvider.notifier).updateDateRange(
+  //           picked.start,
+  //           picked.end,
+  //         );
 
-  Widget _buildTrainerFeedback() {
-    // Remove this section as it uses hardcoded feedback data
-    return const SizedBox.shrink();
-  }
+  //     final startDate = picked.start.toIso8601String().split('T')[0];
+  //     final endDate = picked.end.toIso8601String().split('T')[0];
 
-  Widget _buildFeedbackItem(String trainerName, String date, String feedback) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.grey[300],
-                child: Icon(Icons.person, size: 18, color: Colors.grey[600]),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      trainerName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      date,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            feedback,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
+  //     // 체성분 데이터 새로고침
+  //     ref.read(bodyCompositionNotifierProvider.notifier).loadBodyCompositions(
+  //           startDate: startDate,
+  //           endDate: endDate,
+  //         );
 
-  Widget _buildDateRangeDisplay() {
-    final dateRange = ref.watch(dateRangeProvider);
-    final dateFormat = DateFormat('MMM dd, yyyy');
+  //     // 몸 사진 데이터 새로고침
+  //     ref.read(bodyImageNotifierProvider.notifier).loadBodyImages(
+  //           startDate: startDate,
+  //           endDate: endDate,
+  //         );
 
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                const Color(0xFF6366F1).withOpacity(0.08),
-                const Color(0xFF8B5CF6).withOpacity(0.05),
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.2)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.date_range,
-                    color: Color(0xFF6366F1), size: 18),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '${dateFormat.format(dateRange.startDate)} - ${dateFormat.format(dateRange.endDate)}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF1A1F36),
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => _showDateRangePickerDialog(),
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF6366F1),
-                ),
-                child: const Text(
-                  '변경',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildQuickDateButton('최근 7일', () {
-                final endDate = DateTime.now();
-                final startDate = endDate.subtract(const Duration(days: 7));
-                _updateDateRange(startDate, endDate);
-              }),
-              const SizedBox(width: 8),
-              _buildQuickDateButton('최근 30일', () {
-                final endDate = DateTime.now();
-                final startDate = endDate.subtract(const Duration(days: 30));
-                _updateDateRange(startDate, endDate);
-              }),
-              const SizedBox(width: 8),
-              _buildQuickDateButton('최근 3개월', () {
-                final endDate = DateTime.now();
-                final startDate =
-                    DateTime(endDate.year, endDate.month - 3, endDate.day);
-                _updateDateRange(startDate, endDate);
-              }),
-              const SizedBox(width: 8),
-              _buildQuickDateButton('최근 6개월', () {
-                final endDate = DateTime.now();
-                final startDate =
-                    DateTime(endDate.year, endDate.month - 6, endDate.day);
-                _updateDateRange(startDate, endDate);
-              }),
-              const SizedBox(width: 8),
-              _buildQuickDateButton('최근 1년', () {
-                final endDate = DateTime.now();
-                final startDate =
-                    DateTime(endDate.year - 1, endDate.month, endDate.day);
-                _updateDateRange(startDate, endDate);
-              }),
-              const SizedBox(width: 8),
-              _buildQuickDateButton('전체 기간', () {
-                final endDate = DateTime.now();
-                final startDate = DateTime(2020, 1, 1);
-                _updateDateRange(startDate, endDate);
-              }),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickDateButton(String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(25),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6366F1).withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF6366F1),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _updateDateRange(DateTime startDate, DateTime endDate) {
-    ref.read(dateRangeProvider.notifier).updateDateRange(startDate, endDate);
-
-    ref.read(bodyCompositionNotifierProvider.notifier).loadBodyCompositions(
-          startDate: startDate.toIso8601String().split('T')[0],
-          endDate: endDate.toIso8601String().split('T')[0],
-        );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '날짜 범위 업데이트: ${DateFormat('MM/dd').format(startDate)} - ${DateFormat('MM/dd').format(endDate)}',
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _showDateRangePickerDialog() async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      initialDateRange: DateTimeRange(
-        start: ref.read(dateRangeProvider).startDate,
-        end: ref.read(dateRangeProvider).endDate,
-      ),
-      locale: const Locale('ko', 'KR'),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF10B981),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-              secondary: Color(0xFF34D399),
-              onSecondary: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      ref.read(dateRangeProvider.notifier).updateDateRange(
-            picked.start,
-            picked.end,
-          );
-      
-      final startDate = picked.start.toIso8601String().split('T')[0];
-      final endDate = picked.end.toIso8601String().split('T')[0];
-
-      // 체성분 데이터 새로고침
-      ref.read(bodyCompositionNotifierProvider.notifier).loadBodyCompositions(
-            startDate: startDate,
-            endDate: endDate,
-          );
-      
-      // 몸 사진 데이터 새로고침
-      ref.read(bodyImageNotifierProvider.notifier).loadBodyImages(
-            startDate: startDate,
-            endDate: endDate,
-          );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '날짜 범위 업데이트: ${DateFormat('MM/dd').format(picked.start)} - ${DateFormat('MM/dd').format(picked.end)}',
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  }
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(
+  //           '날짜 범위 업데이트: ${DateFormat('MM/dd').format(picked.start)} - ${DateFormat('MM/dd').format(picked.end)}',
+  //         ),
+  //         backgroundColor: Colors.green,
+  //       ),
+  //     );
+  //   }
+  // }
 
   void _showAddDataDialog(BuildContext context) {
     final weightController = TextEditingController();
@@ -1949,7 +1322,7 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                             final picked = await showCustomDatePicker(
                               context: context,
                               initialDate: selectedDate,
-                              firstDate: DateTime(2020),
+                              firstDate: DateTime(1900),
                               lastDate: DateTime.now(),
                             );
                             if (picked != null) {
@@ -2947,7 +2320,7 @@ class _BodyImageUploadDialogState
                                         final date = await showCustomDatePicker(
                                           context: context,
                                           initialDate: selectedDate,
-                                          firstDate: DateTime(2020),
+                                          firstDate: DateTime(1900),
                                           lastDate: DateTime.now(),
                                         );
                                         if (date != null) {

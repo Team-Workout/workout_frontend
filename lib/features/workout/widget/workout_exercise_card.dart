@@ -87,7 +87,7 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             
             // 운동명
             Expanded(
@@ -176,13 +176,42 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
           TextField(
             controller: widget.exercise.memoController,
             maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: '운동 메모 (선택)',
+            decoration: InputDecoration(
+              labelText: '🏋️ 운동 메모',
               hintText: '이 운동에 대한 전체 메모를 입력하세요',
-              border: OutlineInputBorder(),
+              labelStyle: const TextStyle(
+                color: Color(0xFF10B981),
+                fontWeight: FontWeight.w600,
+              ),
+              hintStyle: TextStyle(
+                color: const Color(0xFF10B981).withValues(alpha: 0.6),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Color(0xFF10B981),
+                  width: 1.5,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Color(0xFF10B981),
+                  width: 2,
+                ),
+              ),
+              filled: true,
+              fillColor: const Color(0xFF10B981).withValues(alpha: 0.05),
             ),
             style: const TextStyle(
               fontFamily: 'IBMPlexSansKR',
+              color: Colors.black87,
             ),
           ),
         ],

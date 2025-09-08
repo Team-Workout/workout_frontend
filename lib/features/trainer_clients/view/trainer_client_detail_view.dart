@@ -15,10 +15,12 @@ class TrainerClientDetailView extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TrainerClientDetailView> createState() => _TrainerClientDetailViewState();
+  ConsumerState<TrainerClientDetailView> createState() =>
+      _TrainerClientDetailViewState();
 }
 
-class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailView> 
+class _TrainerClientDetailViewState
+    extends ConsumerState<TrainerClientDetailView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _startDate = '';
@@ -28,13 +30,13 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // 기본적으로 최근 3개월 데이터를 조회
     final now = DateTime.now();
     final threeMonthsAgo = DateTime(now.year, now.month - 3, now.day);
     _startDate = _formatDate(threeMonthsAgo);
     _endDate = _formatDate(now);
-    
+
     // 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
@@ -53,14 +55,16 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
 
   void _loadData() {
     // 체성분 데이터 로드
-    ref.read(memberBodyCompositionsProvider(widget.client.memberId).notifier)
+    ref
+        .read(memberBodyCompositionsProvider(widget.client.memberId).notifier)
         .loadBodyCompositions(
           startDate: _startDate,
           endDate: _endDate,
         );
-    
+
     // 몸 사진 데이터 로드
-    ref.read(memberBodyImagesProvider(widget.client.memberId).notifier)
+    ref
+        .read(memberBodyImagesProvider(widget.client.memberId).notifier)
         .loadBodyImages(
           startDate: _startDate,
           endDate: _endDate,
@@ -77,7 +81,7 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
         end: DateTime.parse(_endDate),
       ),
     );
-    
+
     if (picked != null) {
       setState(() {
         _startDate = _formatDate(picked.start);
@@ -118,7 +122,7 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
         children: [
           // 회원 정보 헤더
           _buildMemberHeader(),
-          
+
           // 탭 바
           Container(
             color: Colors.white,
@@ -133,7 +137,7 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
               ],
             ),
           ),
-          
+
           // 탭 뷰
           Expanded(
             child: TabBarView(
@@ -151,7 +155,8 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
 
   Widget _buildMemberHeader() {
     return FutureBuilder<String?>(
-      future: widget.client.profileImageUrl != null && widget.client.profileImageUrl!.isNotEmpty
+      future: widget.client.profileImageUrl != null &&
+              widget.client.profileImageUrl!.isNotEmpty
           ? ImageCacheManager().getCachedImage(
               imageUrl: widget.client.profileImageUrl!,
               cacheKey: 'member_${widget.client.memberId}',
@@ -178,9 +183,7 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
                         color: Colors.blue[600],
                       ),
               ),
-              
               const SizedBox(width: 20),
-              
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,8 +212,8 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: widget.client.gender == 'MALE' 
-                                ? Colors.blue[100] 
+                            color: widget.client.gender == 'MALE'
+                                ? Colors.blue[100]
                                 : Colors.pink[100],
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -219,8 +222,8 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: widget.client.gender == 'MALE' 
-                                  ? Colors.blue[700] 
+                              color: widget.client.gender == 'MALE'
+                                  ? Colors.blue[700]
                                   : Colors.pink[700],
                             ),
                           ),
@@ -257,7 +260,6 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
                   ],
                 ),
               ),
-              
               Text(
                 '$_startDate\n~\n$_endDate',
                 textAlign: TextAlign.center,
@@ -274,12 +276,13 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
   }
 
   Widget _buildBodyCompositionTab() {
-    final compositionsState = ref.watch(memberBodyCompositionsProvider(widget.client.memberId));
+    final compositionsState =
+        ref.watch(memberBodyCompositionsProvider(widget.client.memberId));
 
     return compositionsState.when(
       data: (compositionsResponse) {
         final compositions = compositionsResponse.data;
-        
+
         if (compositions.isEmpty) {
           return const Center(
             child: Column(
@@ -304,7 +307,7 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
               // 체중 변화 차트
               _buildWeightChart(compositions),
               const SizedBox(height: 24),
-              
+
               // 체성분 목록
               _buildCompositionList(compositions),
             ],
@@ -336,16 +339,16 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
 
   Widget _buildWeightChart(List<MemberBodyComposition> compositions) {
     // null이 아닌 체중 데이터만 필터링
-    final validCompositions = compositions
-        .where((comp) => comp.weightKg != null)
-        .toList();
-    
+    final validCompositions =
+        compositions.where((comp) => comp.weightKg != null).toList();
+
     if (validCompositions.length < 2) {
       return const SizedBox.shrink();
     }
 
-    final sortedCompositions = [...validCompositions]
-      ..sort((a, b) => DateTime.parse(a.measurementDate).compareTo(DateTime.parse(b.measurementDate)));
+    final sortedCompositions = [...validCompositions]..sort((a, b) =>
+        DateTime.parse(a.measurementDate)
+            .compareTo(DateTime.parse(b.measurementDate)));
 
     return Card(
       child: Padding(
@@ -354,7 +357,7 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '체중 변화 추이',
+              '변화 추이',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -383,7 +386,8 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
                         getTitlesWidget: (value, meta) {
                           return Text(
                             '${value.toInt()}kg',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[600]),
                           );
                         },
                       ),
@@ -393,25 +397,32 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
                         showTitles: true,
                         reservedSize: 30,
                         getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= 0 && value.toInt() < sortedCompositions.length) {
-                            final date = DateTime.parse(sortedCompositions[value.toInt()].measurementDate);
+                          if (value.toInt() >= 0 &&
+                              value.toInt() < sortedCompositions.length) {
+                            final date = DateTime.parse(
+                                sortedCompositions[value.toInt()]
+                                    .measurementDate);
                             return Text(
                               '${date.month}/${date.day}',
-                              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                              style: TextStyle(
+                                  fontSize: 10, color: Colors.grey[600]),
                             );
                           }
                           return const Text('');
                         },
                       ),
                     ),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
                       spots: sortedCompositions.asMap().entries.map((entry) {
-                        return FlSpot(entry.key.toDouble(), entry.value.weightKg!);
+                        return FlSpot(
+                            entry.key.toDouble(), entry.value.weightKg!);
                       }).toList(),
                       isCurved: true,
                       gradient: LinearGradient(
@@ -452,8 +463,9 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
   }
 
   Widget _buildCompositionList(List<MemberBodyComposition> compositions) {
-    final sortedCompositions = [...compositions]
-      ..sort((a, b) => DateTime.parse(b.measurementDate).compareTo(DateTime.parse(a.measurementDate)));
+    final sortedCompositions = [...compositions]..sort((a, b) =>
+        DateTime.parse(b.measurementDate)
+            .compareTo(DateTime.parse(a.measurementDate)));
 
     return Card(
       child: Column(
@@ -477,7 +489,7 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
             itemBuilder: (context, index) {
               final composition = sortedCompositions[index];
               final date = DateTime.parse(composition.measurementDate);
-              
+
               return ListTile(
                 title: Text(
                   '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}',
@@ -485,11 +497,14 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
                 ),
                 subtitle: Row(
                   children: [
-                    Text('체중: ${composition.weightKg?.toStringAsFixed(1) ?? '-'}kg'),
+                    Text(
+                        '체중: ${composition.weightKg?.toStringAsFixed(1) ?? '-'}kg'),
                     const SizedBox(width: 16),
-                    Text('체지방: ${composition.fatKg?.toStringAsFixed(1) ?? '-'}kg'),
+                    Text(
+                        '체지방: ${composition.fatKg?.toStringAsFixed(1) ?? '-'}kg'),
                     const SizedBox(width: 16),
-                    Text('근육량: ${composition.muscleMassKg?.toStringAsFixed(1) ?? '-'}kg'),
+                    Text(
+                        '근육량: ${composition.muscleMassKg?.toStringAsFixed(1) ?? '-'}kg'),
                   ],
                 ),
               );
@@ -501,12 +516,13 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
   }
 
   Widget _buildBodyImagesTab() {
-    final imagesState = ref.watch(memberBodyImagesProvider(widget.client.memberId));
+    final imagesState =
+        ref.watch(memberBodyImagesProvider(widget.client.memberId));
 
     return imagesState.when(
       data: (imagesResponse) {
         final images = imagesResponse.data;
-        
+
         if (images.isEmpty) {
           return const Center(
             child: Column(
@@ -523,8 +539,9 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
           );
         }
 
-        final sortedImages = [...images]
-          ..sort((a, b) => DateTime.parse(b.recordDate).compareTo(DateTime.parse(a.recordDate)));
+        final sortedImages = [...images]..sort((a, b) =>
+            DateTime.parse(b.recordDate)
+                .compareTo(DateTime.parse(a.recordDate)));
 
         return GridView.builder(
           padding: const EdgeInsets.all(16),
@@ -566,7 +583,7 @@ class _TrainerClientDetailViewState extends ConsumerState<TrainerClientDetailVie
 
   Widget _buildImageCard(MemberBodyImage image) {
     final date = DateTime.parse(image.recordDate);
-    
+
     return FutureBuilder<String?>(
       future: ImageCacheManager().getCachedImage(
         imageUrl: image.fileUrl,

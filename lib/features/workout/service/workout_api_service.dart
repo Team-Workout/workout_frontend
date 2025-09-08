@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/api_service.dart';
 import '../model/workout_log_models.dart';
@@ -12,7 +13,7 @@ class WorkoutApiService {
   Future<Map<String, dynamic>> saveWorkoutLog(WorkoutLogRequest request) async {
     try {
       final response = await _apiService.post(
-        '/workout-logs',
+        '/workout/logs',
         data: request.toJson(),
       );
 
@@ -55,7 +56,7 @@ class WorkoutApiService {
       int year, int month) async {
     try {
       final response = await _apiService.get(
-        '/api/workout/me/logs/$year/$month',
+        '/workout/me/logs/$year/$month',
       );
       return List<Map<String, dynamic>>.from(response.data);
     } catch (e) {
@@ -73,7 +74,7 @@ class WorkoutApiService {
   Future<Map<String, dynamic>> getWorkoutLogDetail(int logId) async {
     try {
       final response = await _apiService.get(
-        '/api/workout/logs/$logId',
+        '/workout/logs/$logId',
       );
       return response.data;
     } catch (e) {
@@ -112,22 +113,41 @@ class WorkoutApiService {
         data: request.toJson(),
       );
 
-      if (response.statusCode == 201) {
-        return RoutineResponse.fromJson(response.data);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // 서버에서 ID만 반환하는 경우 처리
+        if (response.data is Map<String, dynamic> && response.data['data'] is int) {
+          final routineId = response.data['data'] as int;
+          print('✅ 루틴 생성 성공 - ID: $routineId');
+          
+          // 생성된 루틴의 상세 정보를 가져오기
+          return await getRoutineDetail(routineId);
+        } else if (response.data is Map<String, dynamic>) {
+          // 전체 객체가 반환되는 경우
+          return RoutineResponse.fromJson(response.data);
+        } else {
+          throw Exception('예상치 못한 응답 형식입니다.');
+        }
       } else {
         throw Exception('루틴 생성에 실패했습니다.');
       }
-    } catch (e) {
-      final errorMessage = e.toString();
-      if (errorMessage.contains('401')) {
-        throw Exception('인증이 필요합니다. 다시 로그인해주세요.');
-      } else if (errorMessage.contains('403')) {
-        throw Exception('루틴 생성 권한이 없습니다.');
-      } else if (errorMessage.contains('400')) {
-        throw Exception('잘못된 요청입니다. 입력 데이터를 확인해주세요.');
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final statusCode = e.response!.statusCode;
+        switch (statusCode) {
+          case 401:
+            throw Exception('인증이 필요합니다. 다시 로그인해주세요.');
+          case 403:
+            throw Exception('루틴 생성 권한이 없습니다.');
+          case 400:
+            throw Exception('잘못된 요청입니다. 입력 데이터를 확인해주세요.');
+          default:
+            throw Exception('루틴 생성 실패: 서버 오류가 발생했습니다.');
+        }
       } else {
-        throw Exception('루틴 생성 실패: 서버 오류가 발생했습니다.');
+        throw Exception('네트워크 연결을 확인해주세요.');
       }
+    } catch (e) {
+      throw Exception('루틴 생성 실패: 알 수 없는 오류가 발생했습니다.');
     }
   }
 
@@ -137,7 +157,8 @@ class WorkoutApiService {
       final response = await _apiService.get('/workout/me/routines');
 
       // 응답 구조: {"data": [...]}
-      if (response.data is Map<String, dynamic> && response.data['data'] is List) {
+      if (response.data is Map<String, dynamic> &&
+          response.data['data'] is List) {
         return (response.data['data'] as List)
             .map((json) => RoutineResponse.fromJson(json))
             .toList();
@@ -167,9 +188,10 @@ class WorkoutApiService {
   Future<RoutineResponse> getRoutineDetail(int routineId) async {
     try {
       final response = await _apiService.get('/workout/routine/$routineId');
-      
+
       // 응답 구조: {"data": {...}}
-      if (response.data is Map<String, dynamic> && response.data['data'] is Map<String, dynamic>) {
+      if (response.data is Map<String, dynamic> &&
+          response.data['data'] is Map<String, dynamic>) {
         return RoutineResponse.fromJson(response.data['data']);
       } else if (response.data is Map<String, dynamic>) {
         // 기존 방식도 호환 유지

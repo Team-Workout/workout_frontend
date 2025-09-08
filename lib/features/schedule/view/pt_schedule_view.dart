@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pt_service/features/pt_schedule/model/pt_schedule_models.dart';
 import 'package:pt_service/features/pt_schedule/viewmodel/pt_schedule_viewmodel.dart';
 import 'package:pt_service/features/pt_schedule/widget/schedule_change_request_dialog.dart';
@@ -11,7 +12,12 @@ import '../widget/weekly_timetable_widget.dart';
 import '../../dashboard/widgets/notion_button.dart';
 
 class PTScheduleView extends ConsumerStatefulWidget {
-  const PTScheduleView({super.key});
+  final bool isDirectAccess;
+  
+  const PTScheduleView({
+    super.key,
+    this.isDirectAccess = false,
+  });
 
   @override
   ConsumerState<PTScheduleView> createState() => _PTScheduleViewState();
@@ -45,71 +51,169 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     final schedulesAsync = ref.watch(ptScheduleViewModelProvider);
     final user = ref.watch(currentUserProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('PT 일정 시간표'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadWeeklySchedule,
+    // 직접 접근시 또는 트레이너일 때 Scaffold로 감싸고 AppBar 추가
+    // widget.isDirectAccess가 true이거나 트레이너인 경우 AppBar 표시
+    if (widget.isDirectAccess || user?.userType == UserType.trainer) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        appBar: AppBar(
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+              ),
+            ),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 주 선택 컨트롤
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedWeek = _selectedWeek.subtract(const Duration(days: 7));
-                    });
-                    _loadWeeklySchedule();
-                  },
-                  icon: const Icon(Icons.chevron_left),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'PT 시간표',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: _buildScheduleContent(schedulesAsync, user),
+      );
+    }
+
+    // 탭 뷰에서 사용시 Container로 반환
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      child: _buildScheduleContent(schedulesAsync, user),
+    );
+  }
+
+  Widget _buildScheduleContent(
+    AsyncValue<List<PtSchedule>> schedulesAsync,
+    User? user,
+  ) {
+    return Column(
+      children: [
+        // 헤더 영역
+        Container(
+            margin: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedWeek,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _selectedWeek = picked;
-                      });
-                      _loadWeeklySchedule();
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${DateFormat('yyyy년 M월').format(_selectedWeek)} ${(_selectedWeek.day / 7).ceil()}주차',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+              ],
+            ),
+            child: Column(
+              children: [
+                // 새로고침 버튼
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'PT 일정표',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'IBMPlexSansKR',
+                          color: Color(0xFF1F2937),
+                        ),
                       ),
-                    ),
+                      IconButton(
+                        onPressed: _loadWeeklySchedule,
+                        icon: const Icon(
+                          Icons.refresh,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedWeek = _selectedWeek.add(const Duration(days: 7));
-                    });
-                    _loadWeeklySchedule();
-                  },
-                  icon: const Icon(Icons.chevron_right),
+                // 주 선택 컨트롤
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedWeek = _selectedWeek.subtract(const Duration(days: 7));
+                          });
+                          _loadWeeklySchedule();
+                        },
+                        icon: const Icon(
+                          Icons.chevron_left,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedWeek,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: Color(0xFF10B981),
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              _selectedWeek = picked;
+                            });
+                            _loadWeeklySchedule();
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${DateFormat('yyyy년 M월').format(_selectedWeek)} ${(_selectedWeek.day / 7).ceil()}주차',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedWeek = _selectedWeek.add(const Duration(days: 7));
+                          });
+                          _loadWeeklySchedule();
+                        },
+                        icon: const Icon(
+                          Icons.chevron_right,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -139,14 +243,47 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                 onScheduleTap: (schedule) => _showScheduleDetail(context, schedule),
                 onScheduleAction: (schedule, action) => _handleScheduleAction(context, schedule, action),
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF10B981),
+                  strokeWidth: 3,
+                ),
+              ),
               error: (error, stack) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.error_outline, 
+                        size: 48, 
+                        color: Colors.red
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    Text('오류가 발생했습니다: $error'),
+                    const Text(
+                      '일정을 불러오는데 실패했습니다',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF64748B),
+                        fontFamily: 'IBMPlexSansKR',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '네트워크를 확인하고 다시 시도해주세요',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     NotionButton(
                       onPressed: _loadWeeklySchedule,
@@ -158,593 +295,91 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTrailingWidget(PtSchedule schedule) {
-    final userType = ref.watch(currentUserProvider)?.userType.name;
-
-    if (userType == 'trainer') {
-      // 트레이너용 메뉴
-      return PopupMenuButton<String>(
-        onSelected: (value) async {
-          await _handleScheduleAction(context, schedule, value);
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 'detail',
-            child: Text('상세보기'),
-          ),
-          if (schedule.hasChangeRequest == true &&
-              schedule.changeRequestBy == 'member') ...[
-            const PopupMenuItem(
-              value: 'approve_change',
-              child: Text('시간 변경 승인'),
-            ),
-            const PopupMenuItem(
-              value: 'reject_change',
-              child: Text('시간 변경 거절'),
-            ),
-          ],
-          if (schedule.status == 'SCHEDULED' &&
-              schedule.hasChangeRequest != true) ...[
-            const PopupMenuItem(
-              value: 'trainer_request_change',
-              child: Text('시간 변경 요청'),
-            ),
-            const PopupMenuItem(
-              value: 'complete',
-              child: Text('수업 완료'),
-            ),
-            const PopupMenuItem(
-              value: 'cancel',
-              child: Text('수업 취소'),
-            ),
-          ],
-        ],
       );
-    } else if (userType == 'member') {
-      // 회원용 메뉴
-      return PopupMenuButton<String>(
-        onSelected: (value) async {
-          await _handleScheduleAction(context, schedule, value);
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 'detail',
-            child: Text('상세보기'),
-          ),
-          if (schedule.hasChangeRequest == true &&
-              schedule.changeRequestBy == 'trainer') ...[
-            const PopupMenuItem(
-              value: 'member_approve_change',
-              child: Text('시간 변경 승인'),
-            ),
-            const PopupMenuItem(
-              value: 'member_reject_change',
-              child: Text('시간 변경 거절'),
-            ),
-          ],
-          if (schedule.status == 'SCHEDULED' &&
-              schedule.hasChangeRequest != true) ...[
-            const PopupMenuItem(
-              value: 'request_change',
-              child: Text('시간 변경 요청'),
-            ),
-          ],
-        ],
-      );
-    }
-
-    return const Icon(Icons.arrow_forward_ios, size: 16);
-  }
-
-  Future<void> _handleScheduleAction(
-      BuildContext context, PtSchedule schedule, String action) async {
-    switch (action) {
-      case 'detail':
-        _showScheduleDetail(context, schedule);
-        break;
-      case 'complete':
-        await _showPtSessionCreateDialog(context, schedule);
-        break;
-      case 'cancel':
-        await _updateScheduleStatus(
-            context, schedule, 'CANCELLED', '수업을 취소로 표시하시겠습니까?');
-        break;
-      case 'request_change':
-        _showScheduleChangeRequestDialog(context, schedule, isTrainer: false);
-        break;
-      case 'trainer_request_change':
-        print('🔄 [UI] 트레이너 시간 변경 요청 다이얼로그 호출');
-        _showScheduleChangeRequestDialog(context, schedule, isTrainer: true);
-        break;
-      case 'approve_change':
-        await _approveScheduleChange(context, schedule);
-        break;
-      case 'reject_change':
-        await _rejectScheduleChange(context, schedule);
-        break;
-      case 'member_approve_change':
-        await _memberApproveScheduleChange(context, schedule);
-        break;
-      case 'member_reject_change':
-        await _memberRejectScheduleChange(context, schedule);
-        break;
-    }
-  }
-
-  Future<void> _updateScheduleStatus(BuildContext context, PtSchedule schedule,
-      String status, String confirmMessage) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('상태 변경'),
-        content: Text(confirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await ref
-            .read(ptScheduleViewModelProvider.notifier)
-            .updateAppointmentStatus(
-              appointmentId: schedule.appointmentId,
-              status: status,
-            );
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  '수업 상태가 ${status == 'COMPLETED' ? '완료' : '취소'}로 변경되었습니다.'),
-              backgroundColor:
-                  status == 'COMPLETED' ? Colors.green : Colors.orange,
-            ),
-          );
-          // 시간표 새로고침
-          _loadWeeklySchedule();
-        }
-      } catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('상태 변경 실패: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  void _showScheduleChangeRequestDialog(
-      BuildContext context, PtSchedule schedule,
-      {required bool isTrainer}) {
-    print('🔄 [UI] showDialog 호출 시작');
-    showDialog(
-      context: context,
-      builder: (context) {
-        print('🔄 [UI] ScheduleChangeRequestDialog 생성');
-        return ScheduleChangeRequestDialog(
-          schedule: schedule,
-          isTrainerRequest: isTrainer,
-        );
-      },
-    );
-  }
-
-  Future<void> _memberApproveScheduleChange(
-      BuildContext context, PtSchedule schedule) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('시간 변경 승인'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('${schedule.trainerName} 트레이너의 시간 변경 요청을 승인하시겠습니까?'),
-            if (schedule.requestedStartTime != null &&
-                schedule.requestedEndTime != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '변경 요청 시간',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      DateFormat('yyyy년 M월 d일')
-                          .format(DateTime.parse(schedule.requestedStartTime!)),
-                    ),
-                    Text(
-                      '${DateFormat('HH:mm').format(DateTime.parse(schedule.requestedStartTime!))} - ${DateFormat('HH:mm').format(DateTime.parse(schedule.requestedEndTime!))}',
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('승인'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await ref
-            .read(ptScheduleViewModelProvider.notifier)
-            .memberApproveScheduleChange(
-              appointmentId: schedule.appointmentId,
-            );
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('시간 변경 요청이 승인되었습니다.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          _loadWeeklySchedule();
-        }
-      } catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('승인 실패: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _memberRejectScheduleChange(
-      BuildContext context, PtSchedule schedule) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('시간 변경 거절'),
-        content: Text('${schedule.trainerName} 트레이너의 시간 변경 요청을 거절하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('거절'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      // 회원의 거절은 기존 reject API를 재사용
-      try {
-        await ref
-            .read(ptScheduleViewModelProvider.notifier)
-            .rejectScheduleChange(
-              appointmentId: schedule.appointmentId,
-            );
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('시간 변경 요청이 거절되었습니다.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-          _loadWeeklySchedule();
-        }
-      } catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('거절 실패: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _approveScheduleChange(
-      BuildContext context, PtSchedule schedule) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('시간 변경 승인'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('${schedule.memberName}님의 시간 변경 요청을 승인하시겠습니까?'),
-            if (schedule.requestedStartTime != null &&
-                schedule.requestedEndTime != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '변경 요청 시간',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${DateFormat('yyyy년 M월 d일').format(DateTime.parse(schedule.requestedStartTime!))}',
-                    ),
-                    Text(
-                      '${DateFormat('HH:mm').format(DateTime.parse(schedule.requestedStartTime!))} - ${DateFormat('HH:mm').format(DateTime.parse(schedule.requestedEndTime!))}',
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('승인'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await ref
-            .read(ptScheduleViewModelProvider.notifier)
-            .approveScheduleChange(
-              appointmentId: schedule.appointmentId,
-            );
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('시간 변경 요청이 승인되었습니다.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          _loadWeeklySchedule();
-        }
-      } catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('승인 실패: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _rejectScheduleChange(
-      BuildContext context, PtSchedule schedule) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('시간 변경 거절'),
-        content: Text('${schedule.memberName}님의 시간 변경 요청을 거절하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('거절'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await ref
-            .read(ptScheduleViewModelProvider.notifier)
-            .rejectScheduleChange(
-              appointmentId: schedule.appointmentId,
-            );
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('시간 변경 요청이 거절되었습니다.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-          _loadWeeklySchedule();
-        }
-      } catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('거절 실패: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _showPtSessionCreateDialog(
-      BuildContext context, PtSchedule schedule) async {
-    final user = ref.read(currentUserProvider);
-
-    // Only trainers can create PT sessions
-    if (user?.userType != UserType.trainer) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PT 세션 기록은 트레이너만 가능합니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final sessionCreated = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PtSessionCreateDialog(
-        appointmentId: schedule.appointmentId,
-        trainerName: schedule.trainerName,
-        memberName: schedule.memberName,
-        sessionDate: DateTime.parse(schedule.startTime),
-      ),
-    );
-
-    if (sessionCreated == true) {
-      // After creating the session, mark the appointment as completed
-      try {
-        await ref
-            .read(ptScheduleViewModelProvider.notifier)
-            .updateAppointmentStatus(
-              appointmentId: schedule.appointmentId,
-              status: 'COMPLETED',
-            );
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('수업이 완료되었습니다.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          _loadWeeklySchedule();
-        }
-      } catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('상태 업데이트 실패: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
   }
 
   void _showScheduleDetail(BuildContext context, PtSchedule schedule) {
-    final startTime = DateTime.parse(schedule.startTime);
-    final endTime = DateTime.parse(schedule.endTime);
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('일정 상세'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailRow('트레이너', schedule.trainerName),
-            _buildDetailRow('회원', schedule.memberName),
-            _buildDetailRow('날짜', DateFormat('yyyy년 M월 d일').format(startTime)),
-            _buildDetailRow('시간',
-                '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime)}'),
-            _buildDetailRow('상태', _getStatusText(schedule.status)),
-            if (schedule.hasChangeRequest == true) ...[
-              const SizedBox(height: 8),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.3,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(6),
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.schedule, size: 16, color: Colors.orange[700]),
-                    const SizedBox(width: 8),
-                    Text(
-                      '시간 변경 요청 대기 중',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange[700],
-                        fontWeight: FontWeight.w500,
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'PT 세션 상세',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      _buildDetailRow('트레이너', schedule.trainerName),
+                      _buildDetailRow('회원', schedule.memberName),
+                      _buildDetailRow('시간', '${schedule.startTime} - ${schedule.endTime}'),
+                      _buildDetailRow('상태', _getStatusText(schedule.status)),
+                    ],
+                  ),
                 ),
               ),
             ],
-            _buildDetailRow('예약 ID', schedule.appointmentId.toString()),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String title, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontFamily: 'IBMPlexSansKR',
+              ),
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
           ),
         ],
       ),
@@ -754,39 +389,67 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   String _getStatusText(String status) {
     switch (status) {
       case 'SCHEDULED':
-        return '예약됨';
+        return '예정됨';
       case 'COMPLETED':
-        return '완료';
+        return '완료됨';
       case 'CANCELLED':
-        return '취소';
+        return '취소됨';
       default:
         return status;
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'SCHEDULED':
-        return Colors.blue;
-      case 'COMPLETED':
-        return Colors.green;
-      case 'CANCELLED':
-        return Colors.red;
-      default:
-        return Colors.grey;
+  void _handleScheduleAction(BuildContext context, PtSchedule schedule, String action) {
+    switch (action) {
+      case 'change_request':
+        _showChangeRequestDialog(context, schedule);
+        break;
+      case 'cancel':
+        _showCancelConfirmDialog(context, schedule);
+        break;
+      case 'complete':
+        _markAsCompleted(schedule);
+        break;
     }
   }
 
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'SCHEDULED':
-        return Icons.schedule;
-      case 'COMPLETED':
-        return Icons.check_circle;
-      case 'CANCELLED':
-        return Icons.cancel;
-      default:
-        return Icons.help_outline;
-    }
+  void _showChangeRequestDialog(BuildContext context, PtSchedule schedule) {
+    showDialog(
+      context: context,
+      builder: (context) => ScheduleChangeRequestDialog(
+        schedule: schedule,
+      ),
+    ).then((_) {
+      _loadWeeklySchedule(); // 새로고침
+    });
+  }
+
+  void _showCancelConfirmDialog(BuildContext context, PtSchedule schedule) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('세션 취소'),
+        content: const Text('정말로 이 세션을 취소하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('아니오'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // 취소 처리 로직
+              _loadWeeklySchedule();
+            },
+            child: const Text('예'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _markAsCompleted(PtSchedule schedule) {
+    // 완료 처리 로직
+    _loadWeeklySchedule();
   }
 }

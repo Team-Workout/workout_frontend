@@ -164,15 +164,14 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
       children: List.generate(
         widget.viewModel.exercises.length,
         (index) {
-          // 역순으로 표시 (최신 운동이 위에)
-          final reversedIndex = widget.viewModel.exercises.length - 1 - index;
-          final exercise = widget.viewModel.exercises[reversedIndex];
+          // 정순으로 표시 (1, 2, 3번 순서)
+          final exercise = widget.viewModel.exercises[index];
           return WorkoutExerciseCard(
             exercise: exercise,
-            index: reversedIndex,
-            isExpanded: _expandedStates[reversedIndex] ?? false,
-            onToggleExpanded: () => _toggleCardExpansion(reversedIndex),
-            onRemove: () => _removeExercise(reversedIndex),
+            index: index,
+            isExpanded: _expandedStates[index] ?? false,
+            onToggleExpanded: () => _toggleCardExpansion(index),
+            onRemove: () => _removeExercise(index),
             onRemoveSet: (ex, setIndex) {
               setState(() {
                 ex.removeSet(setIndex);
@@ -374,10 +373,38 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
         TextField(
           controller: _memoController,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: '메모 (선택)',
+          decoration: InputDecoration(
+            labelText: '🏋️ 운동 메모',
             hintText: '운동에 대한 메모를 입력하세요',
-            border: OutlineInputBorder(),
+            labelStyle: const TextStyle(
+              color: Color(0xFF10B981),
+              fontWeight: FontWeight.w600,
+            ),
+            hintStyle: TextStyle(
+              color: const Color(0xFF10B981).withValues(alpha: 0.6),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF10B981),
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF10B981),
+                width: 2,
+              ),
+            ),
+            filled: true,
+            fillColor: const Color(0xFF10B981).withValues(alpha: 0.05),
             alignLabelWithHint: true,
           ),
         ),
@@ -608,25 +635,35 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                TextField(
-                  controller: set.memoController,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '이 세트에 대한 메모를 입력하세요 (선택사항)',
-                    hintStyle: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade500,
-                      fontFamily: 'IBMPlexSansKR',
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.2),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                  ),
+                  child: TextField(
+                    controller: set.memoController,
+                    maxLines: 2,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'IBMPlexSansKR',
+                      color: Colors.black87,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '💡 이 세트에 대한 메모를 입력하세요',
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: const Color(0xFF10B981).withValues(alpha: 0.7),
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ),
@@ -1011,7 +1048,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           child: const Text('취소'),
         ),
       ],

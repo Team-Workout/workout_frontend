@@ -198,10 +198,38 @@ class ExerciseInputCard extends StatelessWidget {
               const SizedBox(height: 16),
               TextField(
                 controller: exercise.memoController,
-                decoration: const InputDecoration(
-                  labelText: '운동 메모 (선택)',
+                decoration: InputDecoration(
+                  labelText: '🏋️ 운동 메모',
                   hintText: '세트별 느낌, 폼 체크 포인트 등',
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  hintStyle: TextStyle(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.6),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF10B981),
+                      width: 1.5,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF10B981),
+                      width: 2,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFF10B981).withValues(alpha: 0.05),
                 ),
                 maxLines: 3,
               ),

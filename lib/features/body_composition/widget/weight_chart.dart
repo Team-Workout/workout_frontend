@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../model/body_composition_model.dart';
+import '../model/body_image_model.dart';
+import '../../../core/config/api_config.dart';
 
 class WeightChart extends StatelessWidget {
   final List<BodyComposition> compositions;
+  final List<BodyImageResponse>? bodyImages;
 
   const WeightChart({
     Key? key,
     required this.compositions,
+    this.bodyImages,
   }) : super(key: key);
 
   @override
@@ -52,10 +56,43 @@ class WeightChart extends StatelessWidget {
     // Ensure minY is not negative (weights can't be negative)
     minY = minY < 0 ? 0 : minY;
 
+    // Map dates to body images
+    final Map<String, List<BodyImageResponse>> imagesByDate = {};
+    if (bodyImages != null) {
+      print('WeightChart: bodyImages count = ${bodyImages!.length}');
+      for (var image in bodyImages!) {
+        final date = image.recordDate.split('T')[0];
+        imagesByDate[date] = (imagesByDate[date] ?? [])..add(image);
+        print('WeightChart: mapped image for date $date');
+      }
+    } else {
+      print('WeightChart: bodyImages is null');
+    }
+
     return LineChart(
       LineChartData(
         lineTouchData: LineTouchData(
           enabled: true,
+          handleBuiltInTouches: false,
+          touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
+            if (event is FlTapUpEvent && touchResponse != null) {
+              final spot = touchResponse.lineBarSpots?.firstOrNull;
+              if (spot != null) {
+                final index = spot.x.toInt();
+                if (index >= 0 && index < sortedData.length) {
+                  final date = sortedData[index].measurementDate.split('T')[0];
+                  final images = imagesByDate[date];
+                  if (images != null && images.isNotEmpty) {
+                    try {
+                      _showPhotoDialog(context, images, date);
+                    } catch (e) {
+                      // Handle dialog show error gracefully
+                    }
+                  }
+                }
+              }
+            }
+          },
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (touchedSpot) => const Color(0xFF1A1F36),
             tooltipRoundedRadius: 8,
@@ -147,11 +184,13 @@ class WeightChart extends StatelessWidget {
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, barData, index) {
+                final date = sortedData[spot.x.toInt()].measurementDate.split('T')[0];
+                final hasPhoto = imagesByDate.containsKey(date);
                 return FlDotCirclePainter(
-                  radius: 6,
-                  color: Colors.white,
+                  radius: hasPhoto ? 8 : 6,
+                  color: hasPhoto ? const Color(0xFF10B981) : Colors.white,
                   strokeWidth: 3,
-                  strokeColor: const Color(0xFF10B981),
+                  strokeColor: hasPhoto ? Colors.white : const Color(0xFF10B981),
                 );
               },
             ),
@@ -169,6 +208,89 @@ class WeightChart extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPhotoDialog(BuildContext context, List<BodyImageResponse> images, String date) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      DateFormat('yyyy년 MM월 dd일').format(DateTime.parse(date)),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: PageView.builder(
+                  itemCount: images.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          images[index].fileUrl.startsWith('http') 
+                            ? images[index].fileUrl 
+                            : '${ApiConfig.imageBaseUrl}${images[index].fileUrl}',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (images.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    '${images.length}장의 사진',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

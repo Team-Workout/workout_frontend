@@ -16,7 +16,7 @@ class PtApplicationApiService {
       );
 
       // 200 OK 응답이면 신청 성공
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
       } else {
         throw Exception('PT 신청에 실패했습니다.');
@@ -42,16 +42,19 @@ class PtApplicationApiService {
       // 응답이 래핑된 객체로 오는 경우: {"data": {"applications": []}}
       if (response.data is Map<String, dynamic>) {
         final responseMap = response.data as Map<String, dynamic>;
-        
+
         // Check if data key exists and contains applications
-        if (responseMap['data'] != null && responseMap['data'] is Map<String, dynamic>) {
+        if (responseMap['data'] != null &&
+            responseMap['data'] is Map<String, dynamic>) {
           final dataMap = responseMap['data'] as Map<String, dynamic>;
-          final ptApplicationsResponse = PtApplicationsResponse.fromJson(dataMap);
+          final ptApplicationsResponse =
+              PtApplicationsResponse.fromJson(dataMap);
           return ptApplicationsResponse.applications;
         }
         // Handle direct applications in response.data
         else if (responseMap['applications'] != null) {
-          final ptApplicationsResponse = PtApplicationsResponse.fromJson(responseMap);
+          final ptApplicationsResponse =
+              PtApplicationsResponse.fromJson(responseMap);
           return ptApplicationsResponse.applications;
         }
         // Handle empty data

@@ -30,7 +30,7 @@ class AppScaffoldWithNav extends StatelessWidget {
               context.go('/body-composition');
               break;
             case 3:
-              context.go('/trainers');
+              context.go('/pt-main');
               break;
             case 4:
               context.go('/settings');

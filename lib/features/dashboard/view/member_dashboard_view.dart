@@ -6,12 +6,30 @@ import '../../settings/viewmodel/settings_viewmodel.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/config/api_config.dart';
 import '../widgets/dashboard_weight_chart.dart';
+import '../widgets/today_pt_schedule_card.dart';
 
-class MemberDashboardView extends ConsumerWidget {
+class MemberDashboardView extends ConsumerStatefulWidget {
   const MemberDashboardView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MemberDashboardView> createState() => _MemberDashboardViewState();
+}
+
+class _MemberDashboardViewState extends ConsumerState<MemberDashboardView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 체성분 데이터 로드  
+      ref.read(bodyCompositionNotifierProvider.notifier).loadBodyCompositions(
+            startDate: DateTime.now().subtract(const Duration(days: 30)).toIso8601String().split('T')[0],
+            endDate: DateTime.now().toIso8601String().split('T')[0],
+          );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: Theme.of(context).textTheme.apply(
@@ -21,7 +39,25 @@ class MemberDashboardView extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
         appBar: _buildAppBar(context),
-        body: const _FitProTab(),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 오늘의 PT 일정 카드
+              const TodayPTScheduleCard(),
+              const SizedBox(height: 20),
+
+              // 실제 체성분 데이터 카드 (기존 데이터 유지)
+              _buildRealBodyStatsCard(),
+              const SizedBox(height: 20),
+
+              // 실제 체중 차트 카드 (기존 데이터 유지)
+              _buildRealWeightChartCard(),
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -45,9 +81,9 @@ class MemberDashboardView extends ConsumerWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             child: const Icon(
               Icons.fitness_center,
@@ -94,21 +130,7 @@ class MemberDashboardView extends ConsumerWidget {
             if (profileImage?.profileImageUrl != null && profileImage!.profileImageUrl.isNotEmpty) {
               return _buildProfileImageAvatar(profileImage.profileImageUrl, user?.name);
             } else {
-              return CircleAvatar(
-                radius: 16,
-                backgroundColor: const Color(0xFF4CAF50),
-                child: Text(
-                  (user?.name != null && user!.name.isNotEmpty) 
-                      ? user.name.substring(0, 1).toUpperCase() 
-                      : 'U',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                ),
-              );
+              return _buildProfileImageAvatar('/images/default-profile.png', user?.name);
             }
           },
           loading: () => CircleAvatar(
@@ -123,21 +145,7 @@ class MemberDashboardView extends ConsumerWidget {
               ),
             ),
           ),
-          error: (_, __) => CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFF4CAF50),
-            child: Text(
-              (user?.name != null && user!.name.isNotEmpty) 
-                  ? user.name.substring(0, 1).toUpperCase() 
-                  : 'U',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontFamily: 'IBMPlexSansKR',
-              ),
-            ),
-          ),
+          error: (_, __) => _buildProfileImageAvatar('/images/default-profile.png', user?.name),
         );
       },
     );
@@ -169,15 +177,19 @@ class MemberDashboardView extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Text(
-                  (userName != null && userName.isNotEmpty) 
-                      ? userName.substring(0, 1).toUpperCase() 
-                      : 'U',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'IBMPlexSansKR',
+                child: ClipOval(
+                  child: Image.network(
+                    '${ApiConfig.baseUrl.replaceAll('/api', '')}/images/default-profile.png',
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 16,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -208,45 +220,6 @@ class MemberDashboardView extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _FitProTab extends ConsumerStatefulWidget {
-  const _FitProTab();
-
-  @override
-  ConsumerState<_FitProTab> createState() => _FitProTabState();
-}
-
-class _FitProTabState extends ConsumerState<_FitProTab> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(bodyCompositionNotifierProvider.notifier).loadBodyCompositions(
-            startDate: DateTime.now().subtract(const Duration(days: 30)).toIso8601String().split('T')[0],
-            endDate: DateTime.now().toIso8601String().split('T')[0],
-          );
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 실제 체성분 데이터 카드 (기존 데이터 유지)
-          _buildRealBodyStatsCard(),
-          const SizedBox(height: 20),
-
-          // 실제 체중 차트 카드 (기존 데이터 유지)
-          _buildRealWeightChartCard(),
-          const SizedBox(height: 100),
-        ],
-      ),
-    );
-  }
 
   Widget _buildRealBodyStatsCard() {
     return Consumer(
@@ -261,7 +234,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -286,13 +259,13 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.1),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
                           Icons.analytics_outlined,
                           size: 48,
-                          color: const Color(0xFF10B981).withOpacity(0.7),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -353,8 +326,12 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -461,5 +438,4 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
       ],
     );
   }
-
 }

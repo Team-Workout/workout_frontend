@@ -280,12 +280,37 @@ class _YearMonthPickerDialog extends StatefulWidget {
 class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
   late int selectedYear;
   late int selectedMonth;
+  late ScrollController _yearScrollController;
 
   @override
   void initState() {
     super.initState();
     selectedYear = widget.initialYear;
     selectedMonth = widget.initialMonth;
+    
+    _yearScrollController = ScrollController();
+    
+    // 위젯이 빌드된 후 스크롤 위치 조정
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_yearScrollController.hasClients) {
+        // 선택된 년도가 화면 중앙에 오도록 스크롤
+        final int selectedIndex = selectedYear - widget.firstYear;
+        final double itemHeight = 40.0; // margin + padding 포함한 아이템 높이
+        final double targetOffset = selectedIndex * itemHeight - 80.0; // 위쪽에 약간 여백
+        
+        _yearScrollController.animateTo(
+          targetOffset.clamp(0.0, _yearScrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _yearScrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -393,6 +418,7 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
         const SizedBox(height: 8),
         Expanded(
           child: ListView.builder(
+            controller: _yearScrollController,
             itemCount: widget.lastYear - widget.firstYear + 1,
             itemBuilder: (context, index) {
               final year = widget.firstYear + index;

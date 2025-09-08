@@ -25,39 +25,44 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
   Widget build(BuildContext context) {
     final contractsState = ref.watch(ptContractViewModelProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.grey[50],
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        title: const Text(
-          '내 PT 계약',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: contractsState.when(
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      child: contractsState.when(
         data: (response) {
           if (response == null || response.data.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.assignment_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.assignment_outlined, 
+                      size: 48, 
+                      color: const Color(0xFF10B981).withValues(alpha: 0.7)
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
                     'PT 계약이 없습니다',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey,
+                      color: Color(0xFF64748B),
+                      fontFamily: 'IBMPlexSansKR',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'PT를 시작하려면 트레이너를 찾아보세요!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      fontFamily: 'IBMPlexSansKR',
                     ),
                   ),
                 ],
@@ -66,6 +71,8 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
           }
 
           return RefreshIndicator(
+            color: const Color(0xFF10B981),
+            backgroundColor: Colors.white,
             onRefresh: () async {
               await ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
             },
@@ -82,7 +89,12 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF10B981),
+            strokeWidth: 3,
+          ),
+        ),
         error: (error, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

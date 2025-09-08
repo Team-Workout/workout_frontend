@@ -10,22 +10,63 @@ final bodyCompositionRepositoryProvider = Provider<BodyCompositionRepository>((r
   return BodyCompositionRepository(dio);
 });
 
+enum DateRangeType { oneWeek, oneMonth, threeMonths, sixMonths, oneYear }
+
 class DateRangeNotifier extends StateNotifier<DateRange> {
   DateRangeNotifier() : super(DateRange(
     startDate: DateTime.now().subtract(const Duration(days: 30)),
     endDate: DateTime.now(),
+    selectedType: DateRangeType.oneMonth,
   ));
 
-  void updateDateRange(DateTime startDate, DateTime endDate) {
-    state = DateRange(startDate: startDate, endDate: endDate);
+  void updateDateRange(DateTime startDate, DateTime endDate, {DateRangeType? selectedType}) {
+    state = DateRange(
+      startDate: startDate, 
+      endDate: endDate,
+      selectedType: selectedType ?? state.selectedType,
+    );
+  }
+
+  void setQuickDateRange(DateRangeType type) {
+    final now = DateTime.now();
+    DateTime startDate;
+    
+    switch (type) {
+      case DateRangeType.oneWeek:
+        startDate = now.subtract(const Duration(days: 7));
+        break;
+      case DateRangeType.oneMonth:
+        startDate = now.subtract(const Duration(days: 30));
+        break;
+      case DateRangeType.threeMonths:
+        startDate = now.subtract(const Duration(days: 90));
+        break;
+      case DateRangeType.sixMonths:
+        startDate = now.subtract(const Duration(days: 180));
+        break;
+      case DateRangeType.oneYear:
+        startDate = now.subtract(const Duration(days: 365));
+        break;
+    }
+    
+    state = DateRange(
+      startDate: startDate,
+      endDate: now,
+      selectedType: type,
+    );
   }
 }
 
 class DateRange {
   final DateTime startDate;
   final DateTime endDate;
+  final DateRangeType selectedType;
 
-  DateRange({required this.startDate, required this.endDate});
+  DateRange({
+    required this.startDate, 
+    required this.endDate, 
+    required this.selectedType
+  });
 }
 
 final dateRangeProvider = StateNotifierProvider<DateRangeNotifier, DateRange>((ref) {

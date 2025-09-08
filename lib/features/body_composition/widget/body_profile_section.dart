@@ -15,7 +15,7 @@ class BodyProfileSection extends StatelessWidget {
     if (compositions.isEmpty) return const SizedBox.shrink();
 
     final latestData = compositions.first;
-    final dateFormat = DateFormat('MMM d, yyyy');
+    final dateFormat = DateFormat('yyyy년 MM월 dd일');
 
     return Container(
       padding: const EdgeInsets.all(18),

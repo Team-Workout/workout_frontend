@@ -32,6 +32,7 @@ import 'package:pt_service/features/pt_reservation/view/reservation_recommendati
 import 'package:pt_service/features/pt_reservation/view/appointment_confirmation_view.dart';
 import 'package:pt_service/features/pt_reservation/view/my_appointment_requests_view.dart';
 import 'package:pt_service/features/pt_reservation/view/reservation_history_view.dart';
+import 'package:pt_service/features/pt/view/pt_main_view.dart';
 
 import '../../features/auth/model/user_model.dart';
 
@@ -98,7 +99,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           if (currentPath == '/dashboard') currentIndex = 0;
           else if (currentPath == '/workout-record') currentIndex = 1;
           else if (currentPath == '/body-composition') currentIndex = 2;
-          else if (currentPath == '/trainers' || currentPath == '/pt-applications') currentIndex = 3;
+          else if (currentPath == '/pt-main') currentIndex = 3;
           else if (currentPath == '/settings') currentIndex = 4;
           
           return AppScaffoldWithNav(
@@ -120,12 +121,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const BodyCompositionView(),
           ),
           GoRoute(
-            path: '/trainers',
-            builder: (context, state) => const TrainersView(),
-          ),
-          GoRoute(
-            path: '/pt-applications',
-            builder: (context, state) => const PtApplicationsListView(),
+            path: '/pt-main',
+            builder: (context, state) => const PTMainView(),
           ),
           GoRoute(
             path: '/settings',
@@ -273,6 +270,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/my-appointment-requests',
         builder: (context, state) => const MyAppointmentRequestsView(),
+      ),
+      GoRoute(
+        path: '/pt-applications',
+        builder: (context, state) => const PtApplicationsListView(
+          isTrainerView: true, // 트레이너용 뷰로 설정
+        ),
+      ),
+      GoRoute(
+        path: '/pt-offerings',
+        builder: (context, state) => const PtOfferingsListView(),
+      ),
+      GoRoute(
+        path: '/pt-schedule',
+        builder: (context, state) => const PTScheduleView(
+          isDirectAccess: true, // 직접 접근임을 표시
+        ),
       ),
     ],
   );

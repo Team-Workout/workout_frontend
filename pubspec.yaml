@@ -46,7 +46,10 @@ dependencies:
   
   # Image Picker
   image_picker: ^1.1.2
-  firebase_core: ^4.1.0
+  
+  # Firebase
+  firebase_core: ^3.15.2
+  firebase_messaging: ^15.1.5
 
 dev_dependencies:
   flutter_test:
