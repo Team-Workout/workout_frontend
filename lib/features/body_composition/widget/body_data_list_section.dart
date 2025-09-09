@@ -346,8 +346,16 @@ class BodyDataListSection extends ConsumerWidget {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF6B6B),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () async {
                               Navigator.pop(context);
                               try {
                                 // 체성분 데이터 삭제
@@ -385,21 +393,18 @@ class BodyDataListSection extends ConsumerWidget {
                                 }
                               }
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFF6B6B),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: const Text(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  child: const Text(
                               '삭제',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'IBMPlexSansKR',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),

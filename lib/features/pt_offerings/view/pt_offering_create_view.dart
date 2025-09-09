@@ -82,25 +82,60 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NotionColors.gray50,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: NotionColors.white,
-        foregroundColor: NotionColors.black,
-        title: const Text('PT 상품 생성'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+            ),
+          ),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'PT 상품 생성',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        centerTitle: true,
         actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _createPtOffering,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('생성'),
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            child: TextButton(
+              onPressed: _isLoading ? null : _createPtOffering,
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      '생성',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+            ),
           ),
         ],
       ),
@@ -113,28 +148,68 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: NotionColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: NotionColors.border),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '기본 정보',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.edit_note,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            '기본 정보',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _titleController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: '상품명',
                           hintText: '예: 초급자 대상 PT 10회 패키지',
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.label_outline, color: const Color(0xFF10B981)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF10B981)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -146,10 +221,23 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _descriptionController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: '상품 설명',
                           hintText: '헬스를 처음 시작하는 분들을 위한 맞춤형 트레이닝입니다.',
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.description_outlined, color: Color(0xFF10B981)),
+                          alignLabelWithHint: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF10B981)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
                         ),
                         maxLines: 4,
                         validator: (value) {
@@ -166,20 +254,48 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
               const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
-                  color: NotionColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: NotionColors.border),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '가격 및 세션',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.payments_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            '가격 및 세션',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -187,11 +303,23 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
                           Expanded(
                             child: TextFormField(
                               controller: _priceController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: '가격 (원)',
                                 hintText: '500000',
-                                border: OutlineInputBorder(),
                                 prefixText: '₩ ',
+                                prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF10B981)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF10B981)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                ),
                               ),
                               keyboardType: TextInputType.number,
                               inputFormatters: [
@@ -216,11 +344,23 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
                           Expanded(
                             child: TextFormField(
                               controller: _totalSessionsController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: '총 세션 수',
                                 hintText: '10',
-                                border: OutlineInputBorder(),
                                 suffixText: '회',
+                                prefixIcon: const Icon(Icons.fitness_center, color: Color(0xFF10B981)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF10B981)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                ),
                               ),
                               keyboardType: TextInputType.number,
                               inputFormatters: [
@@ -249,36 +389,59 @@ class _PtOfferingCreateViewState extends ConsumerState<PtOfferingCreateView> {
               ),
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: NotionColors.gray100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: NotionColors.border),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF10B981).withOpacity(0.05),
+                      const Color(0xFF34D399).withOpacity(0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: NotionColors.black),
-                        const SizedBox(width: 8),
-                        Text(
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.info_outline,
+                            color: Color(0xFF10B981),
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
                           '안내사항',
                           style: TextStyle(
-                            color: NotionColors.black,
+                            color: Color(0xFF10B981),
                             fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontFamily: 'IBMPlexSansKR',
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
                       '• PT 상품 생성 후 회원들이 바로 예약할 수 있습니다.\n'
                       '• 상품 정보는 언제든지 수정할 수 있습니다.\n'
                       '• 가격과 세션 수는 신중히 설정해주세요.',
                       style: TextStyle(
-                        color: Colors.blue.shade700,
+                        color: Colors.grey[700],
                         fontSize: 14,
+                        height: 1.6,
+                        fontFamily: 'IBMPlexSansKR',
                       ),
                     ),
                   ],

@@ -199,22 +199,30 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
               ),
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              widget.onDateSelected(currentDate);
-              Navigator.of(context).pop(currentDate);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
-              '선택',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  widget.onDateSelected(currentDate);
+                  Navigator.of(context).pop(currentDate);
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  child: Text(
+                    '선택',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -378,22 +386,30 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
                     ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    widget.onYearMonthSelected(selectedYear, selectedMonth);
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    '선택',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        widget.onYearMonthSelected(selectedYear, selectedMonth);
+                        Navigator.of(context).pop();
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        child: Text(
+                          '선택',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],

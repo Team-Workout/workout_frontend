@@ -18,45 +18,43 @@ class BodyStatsCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: IntrinsicHeight( // 자동으로 가장 높은 카드에 맞춰 높이 조정
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildModernStatCard(
-                '현재 체중',
-                '${stats!.currentWeight.toStringAsFixed(1)}kg',
-                stats!.weightChange >= 0
-                    ? '+${stats!.weightChange.toStringAsFixed(1)}kg'
-                    : '${stats!.weightChange.toStringAsFixed(1)}kg',
-                const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
-                Icons.monitor_weight,
-                (stats!.currentWeight / 120).clamp(0.0, 1.0),
-              ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildModernStatCard(
+              '현재 체중',
+              '${stats!.currentWeight.toStringAsFixed(1)}kg',
+              stats!.weightChange >= 0
+                  ? '+${stats!.weightChange.toStringAsFixed(1)}kg'
+                  : '${stats!.weightChange.toStringAsFixed(1)}kg',
+              const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
+              Icons.monitor_weight,
+              (stats!.currentWeight / 120).clamp(0.0, 1.0),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildModernStatCard(
-                'BMI',
-                stats!.bmi.toStringAsFixed(1),
-                _getBMICategory(stats!.bmi),
-                const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
-                Icons.health_and_safety,
-                _getBMIProgress(stats!.bmi),
-              ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildModernStatCard(
+              'BMI',
+              stats!.bmi.toStringAsFixed(1),
+              _getBMICategory(stats!.bmi),
+              const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
+              Icons.health_and_safety,
+              _getBMIProgress(stats!.bmi),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildModernStatCard(
-                '체지방률',
-                '${stats!.bodyFatPercentage.toStringAsFixed(1)}%',
-                _getBodyFatCategory(stats!.bodyFatPercentage),
-                const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
-                Icons.speed,
-                (stats!.bodyFatPercentage / 35).clamp(0.0, 1.0),
-              ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildModernStatCard(
+              '체지방률',
+              '${stats!.bodyFatPercentage.toStringAsFixed(1)}%',
+              _getBodyFatCategory(stats!.bodyFatPercentage),
+              const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
+              Icons.speed,
+              (stats!.bodyFatPercentage / 35).clamp(0.0, 1.0),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -64,22 +62,21 @@ class BodyStatsCard extends StatelessWidget {
   Widget _buildEmptyStatsCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: IntrinsicHeight( // 자동으로 가장 높은 카드에 맞춰 높이 조정
-        child: Row(
-          children: [
-            Expanded(child: _buildEmptyCard('체중')),
-            const SizedBox(width: 8),
-            Expanded(child: _buildEmptyCard('BMI')),
-            const SizedBox(width: 8),
-            Expanded(child: _buildEmptyCard('체지방률')),
-          ],
-        ),
+      child: Row(
+        children: [
+          Expanded(child: _buildEmptyCard('체중')),
+          const SizedBox(width: 8),
+          Expanded(child: _buildEmptyCard('BMI')),
+          const SizedBox(width: 8),
+          Expanded(child: _buildEmptyCard('체지방률')),
+        ],
       ),
     );
   }
 
   Widget _buildEmptyCard(String title) {
     return Container(
+      height: 250, // 고정 높이 설정 (데이터 있는 카드와 동일)
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -96,57 +93,56 @@ class BodyStatsCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // 내용에 따라 높이 결정
         children: [
           // 상단: 아이콘
-          Row(
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.help_outline, 
+              size: 20, 
+              color: Colors.grey[400]
+            ),
+          ),
+          const SizedBox(height: 24), // 아이콘과 텍스트 사이 간격
+          // 중간: 제목과 값
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: NotionColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
                 ),
-                child: Icon(
-                  Icons.help_outline, 
-                  size: 20, 
-                  color: Colors.grey[400]
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                '-- ',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: NotionColors.textSecondary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              // 부제목
+              const Text(
+                '데이터 없음',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: NotionColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          // 제목
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: NotionColors.textSecondary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: 6),
-          // 값
-          const Text(
-            '-- ',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: NotionColors.textSecondary,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 4),
-          // 부제목
-          const Text(
-            '데이터 없음',
-            style: TextStyle(
-              fontSize: 10,
-              color: NotionColors.textSecondary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
           ),
         ],
       ),
@@ -162,6 +158,7 @@ class BodyStatsCard extends StatelessWidget {
     double progress,
   ) {
     return Container(
+      height: 250, // 고정 높이 설정
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -178,52 +175,52 @@ class BodyStatsCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // 내용에 따라 높이 결정
         children: [
           // 상단: 아이콘
-          Row(
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _getIconColor(title).withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: _getIconColor(title)),
+          ),
+          const SizedBox(height: 24), // 아이콘과 텍스트 사이 간격
+          // 중간: 제목과 값
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _getIconColor(title).withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
                 ),
-                child: Icon(icon, size: 20, color: _getIconColor(title)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: _getIconColor(title),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              // 하단: 부제목
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: _getIconColor(title).withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          // 중간: 제목과 값
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: _getIconColor(title),
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 4),
-          // 하단: 부제목
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 10,
-              color: _getIconColor(title).withValues(alpha: 0.8),
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
           ),
         ],
       ),

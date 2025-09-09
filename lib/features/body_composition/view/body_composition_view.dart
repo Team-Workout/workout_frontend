@@ -127,8 +127,37 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
       body: bodyCompositions.when(
         data: (compositions) {
           if (compositions.isEmpty) {
-            return const Center(
-              child: Text('체성분 데이터가 없습니다'),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.event_available,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '체성분 데이터가 없습니다',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF64748B),
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '하단의 데이터 추가 버튼을 눌러\n체성분을 기록해보세요!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             );
           }
 
@@ -186,7 +215,7 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
         label: const Text(
           '데이터 추가',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 24,
             fontWeight: FontWeight.w600,
             letterSpacing: -0.3,
           ),
@@ -1587,7 +1616,7 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              fontSize: 18,
                             ),
                           ),
                         ],
@@ -2309,13 +2338,22 @@ class _BodyImageUploadDialogState
                                 ),
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF6366F1),
-                                    borderRadius: BorderRadius.circular(8),
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF10B981).withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
                                   child: Material(
                                     color: Colors.transparent,
                                     child: InkWell(
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(12),
                                       onTap: () async {
                                         final date = await showCustomDatePicker(
                                           context: context,
@@ -2331,14 +2369,21 @@ class _BodyImageUploadDialogState
                                       },
                                       child: const Padding(
                                         padding: EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 6),
-                                        child: Text(
-                                          '변경',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                            horizontal: 16, vertical: 8),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.edit, color: Colors.white, size: 16),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              '변경',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -2358,42 +2403,46 @@ class _BodyImageUploadDialogState
                             child: Container(
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF6366F1),
-                                    Color(0xFF8B5CF6)
-                                  ],
+                                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF6366F1)
-                                        .withOpacity(0.2),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                                    color: const Color(0xFF10B981).withOpacity(0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
                                   ),
                                 ],
                               ),
                               child: Material(
                                 color: Colors.transparent,
                                 child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                   onTap: () => _pickImages(ImageSource.camera),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.camera_alt,
-                                            color: Colors.white),
-                                        SizedBox(width: 8),
-                                        Text(
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.camera_alt,
+                                              color: Color(0xFF10B981), size: 20),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Text(
                                           '카메라',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w600,
+                                            fontSize: 15,
                                           ),
                                         ),
                                       ],
@@ -2403,46 +2452,51 @@ class _BodyImageUploadDialogState
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.grey[700]!,
-                                    Colors.grey[800]!
-                                  ],
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.3),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                                    color: const Color(0xFF6366F1).withOpacity(0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
                                   ),
                                 ],
                               ),
                               child: Material(
                                 color: Colors.transparent,
                                 child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                   onTap: () => _pickImages(ImageSource.gallery),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.photo_library,
-                                            color: Colors.white),
-                                        SizedBox(width: 8),
-                                        Text(
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.photo_library,
+                                              color: Color(0xFF6366F1), size: 20),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Text(
                                           '갤러리',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w600,
+                                            fontSize: 15,
                                           ),
                                         ),
                                       ],
@@ -2629,26 +2683,50 @@ class _BodyImageUploadDialogState
                                     : _uploadImages,
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 12),
-                                  child: isUploading
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
+                                      horizontal: 24, vertical: 16),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (isUploading) ...[
+                                        const SizedBox(
+                                          width: 20,
+                                          height: 20,
                                           child: CircularProgressIndicator(
-                                            strokeWidth: 2,
+                                            strokeWidth: 2.5,
                                             color: Colors.white,
                                           ),
-                                        )
-                                      : Text(
-                                          '업로드',
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Text(
+                                          '업로드 중...',
                                           style: TextStyle(
-                                            color: isUploading ||
-                                                    selectedImages.isEmpty
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ] else ...[
+                                        Icon(
+                                          Icons.add,
+                                          color: selectedImages.isEmpty
+                                              ? Colors.grey[600]
+                                              : Colors.white,
+                                          size: 22,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '추가',
+                                          style: TextStyle(
+                                            color: selectedImages.isEmpty
                                                 ? Colors.grey[600]
                                                 : Colors.white,
                                             fontWeight: FontWeight.w600,
+                                            fontSize: 16,
                                           ),
                                         ),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),

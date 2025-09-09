@@ -23,10 +23,12 @@ class NotionDashboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: NotionColors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isHighlighted ? NotionColors.black : NotionColors.border,
+          color: isHighlighted 
+              ? const Color(0xFF10B981) 
+              : const Color(0xFF10B981).withOpacity(0.2),
           width: isHighlighted ? 1.5 : 1,
         ),
       ),
@@ -40,62 +42,70 @@ class NotionDashboardCard extends StatelessWidget {
           splashColor: NotionColors.gray100,
           highlightColor: NotionColors.selected,
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(14),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 아이콘
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
-                    color: isHighlighted ? NotionColors.black : NotionColors.gray100,
-                    borderRadius: BorderRadius.circular(8),
+                    color: isHighlighted 
+                        ? const Color(0xFF10B981) 
+                        : const Color(0xFF10B981).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
                     icon,
-                    color: isHighlighted ? NotionColors.white : NotionColors.gray600,
-                    size: 20,
+                    color: isHighlighted 
+                        ? Colors.white 
+                        : const Color(0xFF10B981),
+                    size: 18,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 // 콘텐츠
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: NotionColors.textTertiary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0.5,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      value,
-                      style: TextStyle(
-                        color: isHighlighted ? NotionColors.black : NotionColors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w500,
+                      const SizedBox(height: 2),
+                      Text(
+                        value,
+                        style: TextStyle(
+                          color: isHighlighted 
+                              ? const Color(0xFF10B981) 
+                              : const Color(0xFF10B981).withOpacity(0.9),
+                          fontSize: 13,
+                          fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 // 화살표 아이콘 (우측 하단)
                 Align(
                   alignment: Alignment.bottomRight,
                   child: Icon(
                     Icons.arrow_forward,
-                    color: NotionColors.gray300,
-                    size: 14,
+                    color: const Color(0xFF10B981).withOpacity(0.4),
+                    size: 12,
                   ),
                 ),
               ],

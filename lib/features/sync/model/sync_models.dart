@@ -38,6 +38,28 @@ enum MuscleGroup {
   abs,
 }
 
+extension MuscleGroupExtension on MuscleGroup {
+  String get koreanName {
+    switch (this) {
+      case MuscleGroup.chest:
+        return '가슴';
+      case MuscleGroup.back:
+        return '등';
+      case MuscleGroup.shoulders:
+      case MuscleGroup.shoulder:
+        return '어깨';
+      case MuscleGroup.arms:
+        return '팔';
+      case MuscleGroup.legs:
+        return '다리';
+      case MuscleGroup.core:
+        return '코어';
+      case MuscleGroup.abs:
+        return '복근';
+    }
+  }
+}
+
 @freezed
 class VersionCheckRequest with _$VersionCheckRequest {
   const factory VersionCheckRequest({

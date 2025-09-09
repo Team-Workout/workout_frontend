@@ -438,6 +438,80 @@ class LocalStorageService {
   }
 
   
+  // 기간별 운동 기록 조회 (통계용)
+  Future<List<Map<String, dynamic>>> getWorkoutLogsByDateRange(
+      String startDate, String endDate) async {
+    final db = await database;
+    
+    final workoutLogs = await db.query(
+      'workout_logs',
+      where: 'workout_date >= ? AND workout_date <= ?',
+      whereArgs: [startDate, endDate],
+      orderBy: 'workout_date ASC',
+    );
+    
+    List<Map<String, dynamic>> result = [];
+    
+    for (var log in workoutLogs) {
+      final exercises = await db.rawQuery('''
+        SELECT we.*, ws.set_number, ws.weight, ws.reps, ws.memo as set_memo
+        FROM workout_exercises we
+        LEFT JOIN workout_sets ws ON we.id = ws.workout_exercise_id
+        WHERE we.workout_log_id = ?
+        ORDER BY we.log_order, ws.set_number
+      ''', [log['id']]);
+      
+      // 운동별로 세트 정보 그룹핑
+      Map<int, Map<String, dynamic>> exerciseMap = {};
+      
+      for (var exercise in exercises) {
+        final exerciseIdValue = exercise['id'];
+        int exerciseId;
+        if (exerciseIdValue is int) {
+          exerciseId = exerciseIdValue;
+        } else if (exerciseIdValue is String) {
+          exerciseId = int.tryParse(exerciseIdValue) ?? 0;
+        } else {
+          exerciseId = 0;
+        }
+        
+        if (!exerciseMap.containsKey(exerciseId)) {
+          exerciseMap[exerciseId] = {
+            'id': exerciseId,
+            'exercise_id': _safeInt(exercise['exercise_id']),
+            'exercise_name': exercise['exercise_name']?.toString() ?? '',
+            'log_order': _safeInt(exercise['log_order']),
+            'memo': exercise['memo']?.toString() ?? '',
+            'sets': <Map<String, dynamic>>[],
+          };
+        }
+        
+        // 세트가 있는 경우만 추가
+        if (exercise['set_number'] != null) {
+          (exerciseMap[exerciseId]!['sets'] as List<Map<String, dynamic>>).add({
+            'set_number': _safeInt(exercise['set_number']),
+            'weight': _safeDouble(exercise['weight']),
+            'reps': _safeInt(exercise['reps']),
+            'memo': exercise['set_memo']?.toString() ?? '',
+          });
+        }
+      }
+      
+      result.add({
+        'id': log['id'],
+        'workout_date': log['workout_date'],
+        'user_id': log['user_id'],
+        'log_feedback': log['log_feedback'],
+        'created_at': log['created_at'],
+        'updated_at': log['updated_at'],
+        'synced_to_server': log['synced_to_server'],
+        'exercises': exerciseMap.values.toList(),
+      });
+    }
+    
+    return result;
+  }
+
   // 안전한 타입 변환 헬퍼 메서드들
   int _safeInt(dynamic value) {
     if (value is int) return value;

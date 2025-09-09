@@ -279,29 +279,59 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                       ),
                     ),
                     PopupMenuButton<String>(
-                      icon: const Icon(
-                        Icons.more_vert,
-                        color: Colors.grey,
+                      icon: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.more_vert,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
                       ),
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      color: Colors.white,
                       onSelected: (value) {
                         if (value == 'delete') {
                           _showDeleteConfirmDialog(routine);
                         }
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text(
-                                '삭제',
-                                style: TextStyle(
-                                  fontFamily: 'IBMPlexSansKR',
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                    size: 18,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 12),
+                                const Text(
+                                  '삭제',
+                                  style: TextStyle(
+                                    fontFamily: 'IBMPlexSansKR',
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -309,24 +339,54 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildInfoChip(
-                      icon: Icons.list_alt,
-                      label: '운동 수',
-                      value: routine.routineExercises?.length.toString() ?? '0',
-                      color: const Color(0xFF4CAF50),
-                    ),
-                    const SizedBox(width: 12),
-                    _buildInfoChip(
-                      icon: Icons.calendar_today,
-                      label: '생성일',
-                      value: routine.createdAt != null
-                          ? _formatDate(routine.createdAt!)
-                          : '미정',
-                      color: const Color(0xFF4CAF50),
-                    ),
-                  ],
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.list_alt,
+                          size: 16,
+                          color: Color(0xFF4CAF50),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '운동 수',
+                            style: TextStyle(
+                              color: Color(0xFF4CAF50),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${routine.routineExercises?.length ?? 0}개 운동',
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -394,89 +454,257 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
   void _showDeleteConfirmDialog(RoutineResponse routine) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      barrierDismissible: false,
+      builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(32),
         ),
-        title: const Text(
-          '루틴 삭제',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontFamily: 'IBMPlexSansKR',
-          ),
-        ),
-        content: Text(
-          '\'${routine.name}\' 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.',
-          style: const TextStyle(
-            fontFamily: 'IBMPlexSansKR',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
-            child: const Text(
-              '취소',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontFamily: 'IBMPlexSansKR',
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+                spreadRadius: 0,
               ),
-            ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref
-                    .read(routineProvider.notifier)
-                    .deleteRoutine(routine.id);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        '루틴이 삭제되었습니다.',
-                        style: TextStyle(
-                          fontFamily: 'IBMPlexSansKR',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with gradient
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.delete_forever_rounded,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '루틴 삭제',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3),
                         ),
                       ),
-                      backgroundColor: Color(0xFF4CAF50),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        e.toString(),
-                        style: const TextStyle(
-                          fontFamily: 'IBMPlexSansKR',
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '삭제할 루틴:',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            routine.name,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ],
                       ),
-                      backgroundColor: Colors.red,
                     ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 16),
+                    Text(
+                      '삭제된 루틴은 복구할 수 없습니다.\n정말로 삭제하시겠습니까?',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 16,
+                        fontFamily: 'IBMPlexSansKR',
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                              ),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () => Navigator.pop(context),
+                                child: Center(
+                                  child: Text(
+                                    '취소',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () async {
+                                  Navigator.pop(context);
+                                  try {
+                                    await ref
+                                        .read(routineProvider.notifier)
+                                        .deleteRoutine(routine.id);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: const Text(
+                                            '루틴이 삭제되었습니다.',
+                                            style: TextStyle(
+                                              fontFamily: 'IBMPlexSansKR',
+                                            ),
+                                          ),
+                                          backgroundColor: const Color(0xFF4CAF50),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            e.toString(),
+                                            style: const TextStyle(
+                                              fontFamily: 'IBMPlexSansKR',
+                                            ),
+                                          ),
+                                          backgroundColor: Colors.red,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: const Center(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.delete_forever,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        '삭제하기',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'IBMPlexSansKR',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: const Text(
-              '삭제',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontFamily: 'IBMPlexSansKR',
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/api_service.dart';
 import '../model/workout_log_models.dart';
 import '../model/routine_models.dart';
+import '../model/workout_stats_models.dart';
 
 class WorkoutApiService {
   final ApiService _apiService;
@@ -229,6 +230,66 @@ class WorkoutApiService {
         throw Exception('루틴 삭제 권한이 없습니다.');
       } else {
         throw Exception('루틴 삭제 실패: 서버 오류가 발생했습니다.');
+      }
+    }
+  }
+
+  // 운동 통계 조회 API
+  Future<WorkoutStatsResponse> getWorkoutStats(WorkoutStatsRequest request) async {
+    try {
+      final response = await _apiService.get(
+        '/workout/logs/stats',
+        queryParameters: {
+          'startDate': request.startDate,
+          'endDate': request.endDate,
+        },
+      );
+
+      if (response.data is Map<String, dynamic>) {
+        return WorkoutStatsResponse.fromJson(response.data);
+      } else {
+        throw Exception('예상치 못한 응답 형식입니다.');
+      }
+    } catch (e) {
+      final errorMessage = e.toString();
+      if (errorMessage.contains('401')) {
+        throw Exception('인증이 필요합니다. 다시 로그인해주세요.');
+      } else if (errorMessage.contains('400')) {
+        throw Exception('잘못된 요청입니다. 날짜 형식을 확인해주세요.');
+      } else {
+        throw Exception('운동 통계 조회 실패: 서버 오류가 발생했습니다.');
+      }
+    }
+  }
+
+  // 기간별 운동 로그 조회 (로컬에서 통계 계산용)
+  Future<List<Map<String, dynamic>>> getWorkoutLogsByPeriod(
+      String startDate, String endDate) async {
+    try {
+      final response = await _apiService.get(
+        '/workout/logs/period',
+        queryParameters: {
+          'startDate': startDate,
+          'endDate': endDate,
+        },
+      );
+
+      if (response.data is List) {
+        return List<Map<String, dynamic>>.from(response.data);
+      } else if (response.data is Map<String, dynamic> &&
+          response.data['data'] is List) {
+        return List<Map<String, dynamic>>.from(response.data['data']);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      final errorMessage = e.toString();
+      if (errorMessage.contains('401')) {
+        throw Exception('인증이 필요합니다. 다시 로그인해주세요.');
+      } else if (errorMessage.contains('404')) {
+        return []; // 해당 기간에 기록이 없는 경우
+      } else {
+        throw Exception('기간별 운동 기록 조회 실패: 서버 오류가 발생했습니다.');
       }
     }
   }

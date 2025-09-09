@@ -287,6 +287,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           isDirectAccess: true, // 직접 접근임을 표시
         ),
       ),
+      GoRoute(
+        path: '/trainer-settings',
+        builder: (context, state) => const SettingsView(),
+      ),
     ],
   );
 });

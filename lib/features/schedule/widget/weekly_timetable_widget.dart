@@ -21,7 +21,8 @@ class WeeklyTimetableWidget extends StatefulWidget {
 }
 
 class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
-  bool _isCompactMode = false;
+  // 압축 모드는 항상 true로 고정
+  final bool _isCompactMode = true;
   
   // 스크롤 컨트롤러들
   late ScrollController _horizontalController;
@@ -116,17 +117,44 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
       }
     }
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.all(16),
-      elevation: 2,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF10B981).withValues(alpha: 0.03),
+            const Color(0xFF34D399).withValues(alpha: 0.05),
+            const Color(0xFF6EE7B7).withValues(alpha: 0.03),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           // 헤더
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF10B981),
+                  Color(0xFF34D399),
+                ],
+              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -137,48 +165,17 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                       '주간 시간표',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // 컴팩트 모드 토글
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isCompactMode = !_isCompactMode;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _isCompactMode ? Theme.of(context).colorScheme.primary : Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _isCompactMode ? Icons.compress : Icons.expand,
-                              size: 16,
-                              color: _isCompactMode ? Colors.white : Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _isCompactMode ? '압축' : '전체',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _isCompactMode ? Colors.white : Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
                 Text(
                   '${DateFormat('M월 d일').format(mondayOfWeek)} - ${DateFormat('M월 d일').format(mondayOfWeek.add(const Duration(days: 6)))}',
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -201,7 +198,9 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                       top: headerHeight,
                       right: 0,
                       bottom: 0,
-                      child: SingleChildScrollView(
+                      child: Container(
+                        color: Colors.white,
+                        child: SingleChildScrollView(
                         controller: _horizontalController,
                         scrollDirection: Axis.horizontal,
                         child: SizedBox(
@@ -251,6 +250,7 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                           ),
                         ),
                       ),
+                      ),
                     ),
                     
                     // 고정 요일 헤더
@@ -263,7 +263,7 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade300, width: 2),
+                            bottom: BorderSide(color: const Color(0xFF10B981).withValues(alpha: 0.2), width: 2),
                           ),
                         ),
                         child: SingleChildScrollView(
@@ -282,10 +282,10 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: isToday 
-                                      ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+                                      ? const Color(0xFF10B981).withValues(alpha: 0.15)
                                       : hasSchedule 
-                                          ? Colors.blue.shade50
-                                          : Colors.white,
+                                          ? const Color(0xFF10B981).withValues(alpha: 0.05)
+                                          : Colors.white.withValues(alpha: 0.5),
                                   border: Border(
                                     right: BorderSide(color: Colors.grey.shade300),
                                   ),
@@ -355,8 +355,8 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                                 ),
                                 child: Text(
                                   '${hour.toString().padLeft(2, '0')}:00',
-                                  style: TextStyle(
-                                    fontSize: _isCompactMode ? 10 : 12,
+                                  style: const TextStyle(
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -382,11 +382,11 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                             bottom: BorderSide(color: Colors.grey.shade300, width: 2),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           '시간',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: _isCompactMode ? 10 : 12,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 10,
                           ),
                         ),
                       ),
@@ -401,8 +401,8 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+              color: const Color(0xFF10B981).withValues(alpha: 0.05),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -453,24 +453,23 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      schedule.memberName.length > 3 
-                          ? '${schedule.memberName.substring(0, 3)}..'
+                      schedule.memberName.length > 4 
+                          ? '${schedule.memberName.substring(0, 4)}'
                           : schedule.memberName,
                       style: const TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    if (duration != 60)
-                      Text(
-                        '${duration}분',
-                        style: const TextStyle(
-                          fontSize: 8,
-                          color: Colors.white70,
-                        ),
+                    Text(
+                      '${DateFormat('HH:mm').format(startTime)}',
+                      style: const TextStyle(
+                        fontSize: 8,
+                        color: Colors.white70,
                       ),
+                    ),
                   ],
                 ),
               )
@@ -710,13 +709,13 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
   Color _getScheduleColor(String status) {
     switch (status) {
       case 'SCHEDULED':
-        return Colors.blue;
+        return Colors.blue.withValues(alpha: 0.7);
       case 'COMPLETED':
-        return Colors.green;
+        return Colors.green.withValues(alpha: 0.7);
       case 'CANCELLED':
-        return Colors.red;
+        return Colors.red.withValues(alpha: 0.6);
       default:
-        return Colors.grey;
+        return Colors.grey.withValues(alpha: 0.6);
     }
   }
 }

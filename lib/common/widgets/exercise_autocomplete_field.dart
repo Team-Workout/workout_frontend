@@ -132,8 +132,14 @@ class _ExerciseAutocompleteFieldState extends ConsumerState<ExerciseAutocomplete
           child: Material(
             elevation: 4,
             borderRadius: BorderRadius.circular(8),
+            color: Colors.transparent,
             child: Container(
               constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
               child: ListView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,

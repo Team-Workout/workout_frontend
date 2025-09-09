@@ -8,11 +8,15 @@ import '../../../core/config/api_config.dart';
 class WeightChart extends StatelessWidget {
   final List<BodyComposition> compositions;
   final List<BodyImageResponse>? bodyImages;
+  final List<String>? sortedAllDates;
+  final Map<String, List<BodyImageResponse>>? imagesByDate;
 
   const WeightChart({
     Key? key,
     required this.compositions,
     this.bodyImages,
+    this.sortedAllDates,
+    this.imagesByDate,
   }) : super(key: key);
 
   @override
@@ -26,12 +30,14 @@ class WeightChart extends StatelessWidget {
     final sortedData = List<BodyComposition>.from(compositions)
       ..sort((a, b) => a.measurementDate.compareTo(b.measurementDate));
 
-    final spots = sortedData.asMap().entries.map((entry) {
-      return FlSpot(
-        entry.key.toDouble(),
-        entry.value.weightKg,
-      );
-    }).toList();
+    // Use provided unified data or create fallback
+    final Map<String, List<BodyImageResponse>> finalImagesByDate = imagesByDate ?? {};
+    if (finalImagesByDate.isEmpty && bodyImages != null) {
+      for (var image in bodyImages!) {
+        final date = image.recordDate.split('T')[0];
+        finalImagesByDate[date] = (finalImagesByDate[date] ?? [])..add(image);
+      }
+    }
 
     // Calculate dynamic min/max values based on actual data
     double minWeight =
@@ -55,44 +61,120 @@ class WeightChart extends StatelessWidget {
     
     // Ensure minY is not negative (weights can't be negative)
     minY = minY < 0 ? 0 : minY;
-
-    // Map dates to body images
-    final Map<String, List<BodyImageResponse>> imagesByDate = {};
-    if (bodyImages != null) {
-      print('WeightChart: bodyImages count = ${bodyImages!.length}');
-      for (var image in bodyImages!) {
-        final date = image.recordDate.split('T')[0];
-        imagesByDate[date] = (imagesByDate[date] ?? [])..add(image);
-        print('WeightChart: mapped image for date $date');
-      }
-    } else {
-      print('WeightChart: bodyImages is null');
+    
+    // Add space at top for photo points if photos exist
+    if (finalImagesByDate.isNotEmpty) {
+      maxY = maxY + (maxY - minY) * 0.2; // Add 20% more space at top
     }
 
-    return LineChart(
+    // Use provided unified dates or create fallback
+    final List<String> finalSortedAllDates = sortedAllDates ?? [];
+    if (finalSortedAllDates.isEmpty) {
+      final Set<String> allDates = <String>{};
+      // Add weight dates
+      for (var comp in sortedData) {
+        allDates.add(comp.measurementDate.split('T')[0]);
+      }
+      // Add photo dates
+      finalImagesByDate.keys.forEach(allDates.add);
+      finalSortedAllDates.addAll(allDates.toList()..sort());
+    }
+    print('📅 Final sorted dates: $finalSortedAllDates');
+    print('📸 Images by date: ${finalImagesByDate.keys.toList()}');
+    
+    // Create spots for weight data only
+    final spots = <FlSpot>[];
+    final List<int> photoDates = []; // Store indices of dates with photos
+    
+    for (int i = 0; i < finalSortedAllDates.length; i++) {
+      final date = finalSortedAllDates[i];
+      
+      // Check if there's weight data for this date
+      final weightData = sortedData.where((comp) => 
+        comp.measurementDate.split('T')[0] == date).firstOrNull;
+      
+      if (weightData != null) {
+        // Has weight data - add normal spot
+        spots.add(FlSpot(i.toDouble(), weightData.weightKg));
+      }
+      
+      // Track dates with photos for indicator display
+      if (finalImagesByDate.containsKey(date)) {
+        photoDates.add(i);
+        print('📸 Photo found for date $date at index $i');
+      }
+    }
+
+    return Column(
+      children: [
+        // Photo indicators at the top
+        if (photoDates.isNotEmpty)
+          Container(
+            height: 40,
+            margin: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                const SizedBox(width: 60), // Match Y-axis reserved space
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final availableWidth = constraints.maxWidth;
+                      return Stack(
+                        children: photoDates.map((index) {
+                          final date = finalSortedAllDates[index];
+                          // Calculate position to match fl_chart's X-axis positioning exactly
+                          final position = finalSortedAllDates.length == 1 
+                              ? 0.5 
+                              : index / (finalSortedAllDates.length - 1);
+                          // Calculate exact pixel position, leaving space for icon width (24px)
+                          final leftPosition = (position * (availableWidth - 24)).clamp(0.0, availableWidth - 24);
+                          return Positioned(
+                            left: leftPosition,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (finalImagesByDate.containsKey(date)) {
+                              _showPhotoDialog(context, finalImagesByDate[date]!, date);
+                            }
+                          },
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        // Weight chart
+        Expanded(
+          child: LineChart(
       LineChartData(
         lineTouchData: LineTouchData(
           enabled: true,
-          handleBuiltInTouches: false,
-          touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
-            if (event is FlTapUpEvent && touchResponse != null) {
-              final spot = touchResponse.lineBarSpots?.firstOrNull;
-              if (spot != null) {
-                final index = spot.x.toInt();
-                if (index >= 0 && index < sortedData.length) {
-                  final date = sortedData[index].measurementDate.split('T')[0];
-                  final images = imagesByDate[date];
-                  if (images != null && images.isNotEmpty) {
-                    try {
-                      _showPhotoDialog(context, images, date);
-                    } catch (e) {
-                      // Handle dialog show error gracefully
-                    }
-                  }
-                }
-              }
-            }
-          },
+          handleBuiltInTouches: true,
+          touchCallback: null, // Photos are handled by camera icons above
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (touchedSpot) => const Color(0xFF1A1F36),
             tooltipRoundedRadius: 8,
@@ -100,16 +182,21 @@ class WeightChart extends StatelessWidget {
             getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
               return touchedBarSpots.map((barSpot) {
                 final flSpot = barSpot;
-                final date = DateTime.parse(sortedData[flSpot.x.toInt()].measurementDate);
-                return LineTooltipItem(
-                  '${DateFormat('MM/dd').format(date)}\n${flSpot.y.toStringAsFixed(1)}kg',
-                  const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                );
-              }).toList();
+                if (flSpot.x.toInt() >= 0 && flSpot.x.toInt() < finalSortedAllDates.length) {
+                  final dateString = finalSortedAllDates[flSpot.x.toInt()];
+                  final date = DateTime.parse(dateString);
+                  
+                  return LineTooltipItem(
+                    '${DateFormat('MM/dd').format(date)}\n${flSpot.y.toStringAsFixed(1)}kg',
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  );
+                }
+                return null;
+              }).whereType<LineTooltipItem>().toList();
             },
           ),
         ),
@@ -130,11 +217,10 @@ class WeightChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 30,
+              reservedSize: 35,
               getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 && value.toInt() < sortedData.length) {
-                  final date =
-                      DateTime.parse(sortedData[value.toInt()].measurementDate);
+                if (value.toInt() >= 0 && value.toInt() < finalSortedAllDates.length) {
+                  final date = DateTime.parse(finalSortedAllDates[value.toInt()]);
                   return Text(
                     DateFormat('MM/dd').format(date),
                     style: const TextStyle(fontSize: 10),
@@ -142,15 +228,15 @@ class WeightChart extends StatelessWidget {
                 }
                 return const Text('');
               },
-              interval: sortedData.length > 7
-                  ? (sortedData.length / 7).ceil().toDouble()
+              interval: finalSortedAllDates.length > 7
+                  ? (finalSortedAllDates.length / 7).ceil().toDouble()
                   : 1,
             ),
           ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 45,
+              reservedSize: 60,
               getTitlesWidget: (value, meta) {
                 return Text(
                   '${value.toStringAsFixed(1)}kg',
@@ -167,10 +253,11 @@ class WeightChart extends StatelessWidget {
         ),
         borderData: FlBorderData(show: false),
         minX: 0,
-        maxX: (sortedData.length - 1).toDouble(),
+        maxX: (finalSortedAllDates.length - 1).toDouble(),
         minY: minY,
         maxY: maxY,
         lineBarsData: [
+          // Weight data line
           LineChartBarData(
             spots: spots,
             isCurved: true,
@@ -184,13 +271,11 @@ class WeightChart extends StatelessWidget {
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, barData, index) {
-                final date = sortedData[spot.x.toInt()].measurementDate.split('T')[0];
-                final hasPhoto = imagesByDate.containsKey(date);
                 return FlDotCirclePainter(
-                  radius: hasPhoto ? 8 : 6,
-                  color: hasPhoto ? const Color(0xFF10B981) : Colors.white,
-                  strokeWidth: 3,
-                  strokeColor: hasPhoto ? Colors.white : const Color(0xFF10B981),
+                  radius: 4,
+                  color: Colors.white,
+                  strokeWidth: 2,
+                  strokeColor: const Color(0xFF10B981),
                 );
               },
             ),
@@ -209,6 +294,9 @@ class WeightChart extends StatelessWidget {
           ),
         ],
       ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -264,14 +352,16 @@ class WeightChart extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          images[index].fileUrl.startsWith('http') 
-                            ? images[index].fileUrl 
-                            : '${ApiConfig.imageBaseUrl}${images[index].fileUrl}',
+                          images[index].fileUrl.startsWith('http')
+                              ? images[index].fileUrl
+                              : '${ApiConfig.imageBaseUrl}${images[index].fileUrl}',
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => Container(
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
                             color: Colors.grey[200],
                             child: const Center(
-                              child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                              child: Icon(Icons.broken_image,
+                                  size: 48, color: Colors.grey),
                             ),
                           ),
                         ),
@@ -293,5 +383,86 @@ class WeightChart extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _CameraIconDotPainter extends FlDotPainter {
+  final Color color;
+  
+  _CameraIconDotPainter({required this.color});
+  
+  @override
+  Color get mainColor => color;
+  
+  @override
+  List<Object?> get props => [color];
+  
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) {
+    if (a is _CameraIconDotPainter && b is _CameraIconDotPainter) {
+      return _CameraIconDotPainter(
+        color: Color.lerp(a.color, b.color, t) ?? color,
+      );
+    }
+    return this;
+  }
+  
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
+    // Draw background circle
+    Paint backgroundPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    
+    Paint strokePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    
+    canvas.drawCircle(offsetInCanvas, 10, backgroundPaint);
+    canvas.drawCircle(offsetInCanvas, 10, strokePaint);
+    
+    // Draw camera icon
+    Paint iconPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    
+    // Simple camera rectangle
+    Rect cameraBody = Rect.fromCenter(
+      center: offsetInCanvas,
+      width: 12,
+      height: 8,
+    );
+    
+    // Camera lens circle
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(cameraBody, const Radius.circular(2)),
+      iconPaint,
+    );
+    
+    Paint lensPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(
+      Offset(offsetInCanvas.dx, offsetInCanvas.dy - 1),
+      3,
+      lensPaint,
+    );
+    
+    // Small viewfinder
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset(offsetInCanvas.dx, offsetInCanvas.dy - 5),
+        width: 4,
+        height: 2,
+      ),
+      iconPaint,
+    );
+  }
+  
+  @override
+  Size getSize(FlSpot spot) {
+    return const Size(20, 20);
   }
 }

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../model/pt_contract_models.dart';
 import '../viewmodel/pt_contract_viewmodel.dart';
 import '../../dashboard/widgets/notion_button.dart';
+import 'package:pt_service/core/providers/auth_provider.dart';
+import 'package:pt_service/features/auth/model/user_model.dart';
 
 class PtContractListView extends ConsumerStatefulWidget {
   const PtContractListView({super.key});
@@ -24,10 +26,38 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
   @override
   Widget build(BuildContext context) {
     final contractsState = ref.watch(ptContractViewModelProvider);
+    final user = ref.watch(currentUserProvider);
+    final isTrainer = user?.userType == UserType.trainer;
 
-    return Container(
-      color: const Color(0xFFF8F9FA),
-      child: contractsState.when(
+    // 트레이너인 경우 Scaffold와 AppBar 추가
+    if (isTrainer) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        appBar: AppBar(
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+              ),
+            ),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: const Text(
+            'PT 계약 관리',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: contractsState.when(
         data: (response) {
           if (response == null || response.data.isEmpty) {
             return Center(
@@ -119,6 +149,102 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
       ),
     );
   }
+
+  // 멤버인 경우 Container로 반환 (기존 코드)
+  return Container(
+    color: const Color(0xFFF8F9FA),
+    child: contractsState.when(
+      data: (response) {
+        if (response == null || response.data.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.assignment_outlined, 
+                    size: 48, 
+                    color: const Color(0xFF10B981).withValues(alpha: 0.7)
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'PT 계약이 없습니다',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF64748B),
+                    fontFamily: 'IBMPlexSansKR',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'PT를 시작하려면 트레이너를 찾아보세요!',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          color: const Color(0xFF10B981),
+          backgroundColor: Colors.white,
+          onRefresh: () async {
+            await ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
+          },
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: response.data.length,
+            itemBuilder: (context, index) {
+              final contract = response.data[index];
+              return _ContractCard(
+                contract: contract,
+                onTap: () => _showContractDetail(contract),
+              );
+            },
+          ),
+        );
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF10B981),
+          strokeWidth: 3,
+        ),
+      ),
+      error: (error, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              error.toString(),
+              style: const TextStyle(fontSize: 16, color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            NotionButton(
+              onPressed: () {
+                ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
+              },
+              text: '다시 시도',
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
   void _showContractDetail(PtContract contract) {
     showModalBottomSheet(

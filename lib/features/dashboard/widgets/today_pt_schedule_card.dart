@@ -22,31 +22,14 @@ class TodayPTScheduleCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.fitness_center,
-                  color: Color(0xFF10B981),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                '오늘의 PT 일정',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-              ),
-            ],
+          const Text(
+            '오늘의 PT 일정',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+              fontFamily: 'IBMPlexSansKR',
+            ),
           ),
           const SizedBox(height: 16),
           schedulesAsync.when(

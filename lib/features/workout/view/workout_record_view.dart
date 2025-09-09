@@ -8,6 +8,7 @@ import '../../../core/theme/notion_colors.dart';
 import '../widget/calendar_view.dart';
 import '../widget/workout_record_tab.dart';
 import '../widget/workout_routine_tab.dart';
+import '../widget/workout_stats_tab.dart';
 import 'routine_list_view.dart';
 
 class WorkoutRecordView extends ConsumerStatefulWidget {
@@ -54,7 +55,7 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Theme(
         data: Theme.of(context).copyWith(
           textTheme: Theme.of(context).textTheme.apply(
@@ -106,6 +107,7 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
                 Tab(text: '운동 기록'),
                 Tab(text: '기록 이력'),
                 Tab(text: '내 루틴'),
+                Tab(text: '통계'),
               ],
             ),
           ),
@@ -118,6 +120,7 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
                         WorkoutRecordTab(viewModel: _viewModel),
                         CalendarView(viewModel: _viewModel),
                         const RoutineListView(),
+                        const WorkoutStatsTab(),
                       ],
                     );
                   },

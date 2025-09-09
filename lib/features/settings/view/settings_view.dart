@@ -43,6 +43,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final profileImageAsync = ref.watch(profileImageProvider);
+    
+    // 트레이너인지 확인 (트레이너는 ShellRoute를 사용하지 않음)
+    final isTrainer = user?.userType == UserType.trainer;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -58,7 +61,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        // 트레이너인 경우에만 뒤로가기 버튼 표시
+        automaticallyImplyLeading: isTrainer,
+        leading: isTrainer
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
         title: const Text(
           '설정',
           style: TextStyle(
@@ -198,20 +208,23 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Text(
-              "개인 정보 공개",
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF10B981),
-                fontFamily: 'IBMPlexSansKR',
+          // 트레이너가 아닌 경우에만 개인정보 공개 섹션 표시
+          if (!isTrainer) ...[
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                "개인 정보 공개",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF10B981),
+                  fontFamily: 'IBMPlexSansKR',
+                ),
               ),
             ),
-          ),
-          _buildPrivacySettingsSection(),
+            _buildPrivacySettingsSection(),
+          ],
           const SizedBox(height: 20),
           _buildSection(
             context,
@@ -309,56 +322,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             ],
           ),
           const SizedBox(height: 32),
-          _buildSection(
-            context,
-            '개발자 도구',
-            [
-              _buildSettingItem(
-                context,
-                Icons.sync,
-                '마스터 데이터 동기화',
-                () {
-                  _performMasterDataSync(context, ref);
-                },
-              ),
-              _buildSettingItem(
-                context,
-                Icons.clear_all,
-                '캐시 초기화',
-                () {
-                  _clearMasterDataCache(context, ref);
-                },
-              ),
-              Consumer(
-                builder: (context, ref, _) {
-                  final syncState = ref.watch(syncNotifierProvider);
-                  return ListTile(
-                    leading: const Icon(Icons.info_outline),
-                    title: const Text('동기화 상태'),
-                    subtitle: Text(_getSyncStatusText(syncState)),
-                    trailing: syncState.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            syncState.isCompleted
-                                ? Icons.check_circle
-                                : syncState.error != null
-                                    ? Icons.error
-                                    : Icons.help_outline,
-                            color: syncState.isCompleted
-                                ? const Color(0xFF10B981)
-                                : syncState.error != null
-                                    ? Colors.red
-                                    : Colors.grey[600],
-                          ),
-                  );
-                },
-              ),
-            ],
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SizedBox(

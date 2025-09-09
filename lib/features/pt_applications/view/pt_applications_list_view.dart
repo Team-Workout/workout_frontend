@@ -38,12 +38,30 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isTrainer ? 'PT 신청 관리' : 'PT 신청 내역'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        backgroundColor: NotionColors.white,
-        foregroundColor: NotionColors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          _isTrainer ? 'PT 신청 관리' : 'PT 신청 내역',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        centerTitle: true,
       ),
-      backgroundColor: NotionColors.gray50,
+      backgroundColor: Colors.grey[50],
       body: RefreshIndicator(
         onRefresh: () async {
           ref.read(ptApplicationProvider.notifier).loadPtApplications();
@@ -103,9 +121,9 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                   }
 
                   return ListView.separated(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     itemCount: applications.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final application = applications[index];
                       return _buildApplicationCard(application);
@@ -163,95 +181,87 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
   Widget _buildApplicationCard(PtApplication application) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            NotionColors.white,
-            NotionColors.gray100,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: NotionColors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
           ),
         ],
-        border: Border.all(
-          color: NotionColors.border,
-          width: 1,
-        ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with status
+            // Header with gradient
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    NotionColors.black,
-                    NotionColors.black,
-                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
                 ),
               ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: NotionColors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
-                      Icons.pending_actions,
-                      color: NotionColors.white,
+                      Icons.fitness_center_rounded,
+                      color: Colors.white,
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          application.offeringTitle ?? 'PT 신청 #${application.applicationId}',
+                          application.offeringTitle ?? 'PT 신청',
                           style: const TextStyle(
-                            color: NotionColors.white,
+                            color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            fontFamily: 'IBMPlexSansKR',
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '승인 대기 중',
                           style: TextStyle(
-                            color: NotionColors.white.withOpacity(0.9),
+                            color: Colors.white.withOpacity(0.9),
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
+                            fontFamily: 'IBMPlexSansKR',
                           ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: NotionColors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Text(
-                      'PENDING',
+                      '대기중',
                       style: TextStyle(
-                        color: NotionColors.white,
+                        color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
                       ),
                     ),
                   ),
@@ -269,18 +279,18 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: NotionColors.gray100,
-                          borderRadius: BorderRadius.circular(8),
+                          color: const Color(0xFF10B981).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
-                          Icons.person,
-                          color: NotionColors.black,
-                          size: 16,
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: Color(0xFF10B981),
+                          size: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,18 +298,22 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                             Text(
                               _isTrainer ? '신청자' : '트레이너',
                               style: TextStyle(
-                                color: NotionColors.textSecondary,
-                                fontSize: 12,
+                                color: Colors.grey[600],
+                                fontSize: 14,
                                 fontWeight: FontWeight.w500,
+                                fontFamily: 'IBMPlexSansKR',
                               ),
                             ),
+                            const SizedBox(height: 4),
                             Text(
                               _isTrainer 
                                   ? application.memberName 
                                   : (application.trainerName ?? '미정'),
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                fontFamily: 'IBMPlexSansKR',
                               ),
                             ),
                           ],
@@ -314,22 +328,22 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                   Row(
                     children: [
                       Expanded(
-                        child: _buildInfoItem(
-                          icon: Icons.fitness_center,
+                        child: _buildModernInfoItem(
+                          icon: Icons.fitness_center_rounded,
                           label: '총 세션 수',
                           value: application.totalSessions != null 
                               ? '${application.totalSessions}회' 
                               : '미정',
-                          color: NotionColors.black,
+                          color: const Color(0xFF6366F1),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: _buildInfoItem(
-                          icon: Icons.calendar_today,
+                        child: _buildModernInfoItem(
+                          icon: Icons.calendar_today_rounded,
                           label: '신청일',
                           value: _formatDate(application.appliedAt),
-                          color: NotionColors.black,
+                          color: const Color(0xFFEF4444),
                         ),
                       ),
                     ],
@@ -342,19 +356,19 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                     Row(
                       children: [
                         Expanded(
-                          child: _buildActionButton(
+                          child: _buildModernActionButton(
                             label: '승인',
-                            icon: Icons.check,
-                            color: NotionColors.black,
+                            icon: Icons.check_rounded,
+                            color: const Color(0xFF10B981),
                             onPressed: () => _approveApplication(application),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Expanded(
-                          child: _buildActionButton(
+                          child: _buildModernActionButton(
                             label: '거절',
-                            icon: Icons.close,
-                            color: NotionColors.error,
+                            icon: Icons.close_rounded,
+                            color: const Color(0xFFEF4444),
                             onPressed: () => _rejectApplication(application),
                           ),
                         ),
@@ -363,10 +377,10 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
                   ] else ...[  // 회원용 버튼
                     SizedBox(
                       width: double.infinity,
-                      child: _buildActionButton(
+                      child: _buildModernActionButton(
                         label: '신청 취소',
                         icon: Icons.cancel_outlined,
-                        color: NotionColors.error,
+                        color: const Color(0xFFEF4444),
                         onPressed: () => _cancelApplication(application),
                       ),
                     ),
@@ -375,6 +389,107 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onPressed,
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -490,6 +605,227 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
   void _approveApplication(PtApplication application) async {
     showDialog(
       context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with gradient
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'PT 신청 승인',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  children: [
+                    Text(
+                      '${application.memberName}님의',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 16,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'PT 신청을 승인하시겠습니까?',
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                              ),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () => Navigator.pop(context),
+                                child: Center(
+                                  child: Text(
+                                    '취소',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF10B981).withOpacity(0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () async {
+                                  Navigator.pop(context);
+                                  try {
+                                    await ref.read(ptApplicationProvider.notifier)
+                                        .acceptPtApplication(application.applicationId);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: const Text('PT 신청을 승인했습니다.'),
+                                          backgroundColor: const Color(0xFF10B981),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(e.toString()),
+                                          backgroundColor: Colors.red,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: const Center(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.check_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        '승인하기',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'IBMPlexSansKR',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _oldApproveApplication(PtApplication application) async {
+    showDialog(
+      context: context,
       builder: (context) => AlertDialog(
         title: const Text('PT 신청 승인'),
         content: Text('${application.memberName}님의 PT 신청을 승인하시겠습니까?'),
@@ -527,36 +863,220 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
   void _rejectApplication(PtApplication application) async {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('PT 신청 거절'),
-        content: Text('${application.memberName}님의 PT 신청을 거절하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+                spreadRadius: 0,
+              ),
+            ],
           ),
-          NotionButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref.read(ptApplicationProvider.notifier)
-                    .rejectPtApplication(application.applicationId);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('PT 신청을 거절했습니다.')),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString())),
-                  );
-                }
-              }
-            },
-            text: '거절',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with gradient
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.cancel_rounded,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'PT 신청 거절',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  children: [
+                    Text(
+                      '${application.memberName}님의',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 16,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'PT 신청을 거절하시겠습니까?',
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                              ),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () => Navigator.pop(context),
+                                child: Center(
+                                  child: Text(
+                                    '취소',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFEF4444).withOpacity(0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () async {
+                                  Navigator.pop(context);
+                                  try {
+                                    await ref.read(ptApplicationProvider.notifier)
+                                        .rejectPtApplication(application.applicationId);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: const Text('PT 신청을 거절했습니다.'),
+                                          backgroundColor: const Color(0xFFEF4444),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(e.toString()),
+                                          backgroundColor: Colors.red,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: const Center(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.close_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        '거절하기',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'IBMPlexSansKR',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

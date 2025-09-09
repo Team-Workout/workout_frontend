@@ -21,15 +21,15 @@ part 'trainer_dashboard_view.g.dart';
 Future<int> monthlyPtCount(MonthlyPtCountRef ref) async {
   final repository = ref.read(ptScheduleRepositoryProvider);
   final now = DateTime.now();
-  
+
   print('📊 이번 달 PT 개수 조회 시작: ${now.year}-${now.month}');
-  
+
   try {
     final schedules = await repository.getMonthlySchedule(
       month: now,
       status: 'SCHEDULED',
     );
-    
+
     print('📊 이번 달 PT 개수: ${schedules.length}건');
     return schedules.length;
   } catch (e) {
@@ -43,28 +43,29 @@ Future<int> monthlyPtCount(MonthlyPtCountRef ref) async {
 Future<List<int>> weeklyPtStats(WeeklyPtStatsRef ref) async {
   final repository = ref.read(ptScheduleRepositoryProvider);
   final now = DateTime.now();
-  
+
   // 이번 주의 월요일을 구함
   final mondayOfWeek = now.subtract(Duration(days: now.weekday - 1));
   final weeklyStats = <int>[];
-  
+
   print('📊 주간 PT 통계 조회 시작');
-  
+
   try {
     for (int i = 0; i < 7; i++) {
       final targetDate = mondayOfWeek.add(Duration(days: i));
-      final dayStart = DateTime(targetDate.year, targetDate.month, targetDate.day);
-      
+      final dayStart =
+          DateTime(targetDate.year, targetDate.month, targetDate.day);
+
       final daySchedules = await repository.getScheduledAppointments(
         startDate: _formatDate(dayStart),
         endDate: _formatDate(dayStart),
         status: 'SCHEDULED',
       );
-      
+
       weeklyStats.add(daySchedules.length);
       print('📊 ${_getWeekdayName(i)}: ${daySchedules.length}건');
     }
-    
+
     return weeklyStats;
   } catch (e) {
     print('❌ 주간 PT 통계 조회 오류: $e');
@@ -85,17 +86,18 @@ class TrainerDashboardView extends ConsumerStatefulWidget {
   const TrainerDashboardView({super.key});
 
   @override
-  ConsumerState<TrainerDashboardView> createState() => _TrainerDashboardViewState();
+  ConsumerState<TrainerDashboardView> createState() =>
+      _TrainerDashboardViewState();
 }
 
-class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> 
+class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     // 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(currentUserProvider);
@@ -122,27 +124,31 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
     final todayScheduleAsync = ref.watch(todayScheduleViewModelProvider);
     final monthlyPtCountAsync = ref.watch(monthlyPtCountProvider);
     final weeklyStatsAsync = ref.watch(weeklyPtStatsProvider);
-    
+
     // PT 상품 개수 계산
     final ptOfferingsCount = ptOfferingsAsync.whenOrNull(
-      data: (offerings) => offerings.length,
-    ) ?? 0;
-    
+          data: (offerings) => offerings.length,
+        ) ??
+        0;
+
     // PT 신청 대기 건수 계산
     final pendingApplicationsCount = ptApplicationsAsync.whenOrNull(
-      data: (applications) => applications.length,
-    ) ?? 0;
-    
+          data: (applications) => applications.length,
+        ) ??
+        0;
+
     // 오늘의 PT 일정 개수 계산
     final todayPtCount = todayScheduleAsync.whenOrNull(
-      data: (schedules) => schedules.length,
-    ) ?? 0;
-    
+          data: (schedules) => schedules.length,
+        ) ??
+        0;
+
     // 이번 달 PT 개수 계산
     final monthlyPtCount = monthlyPtCountAsync.whenOrNull(
-      data: (count) => count,
-    ) ?? 0;
-    
+          data: (count) => count,
+        ) ??
+        0;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -207,7 +213,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                 ),
               ),
               onPressed: () {
-                context.push('/settings');
+                context.push('/trainer-settings');
               },
             ),
           ),
@@ -219,112 +225,8 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🎉 Welcome Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF10B981).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          Icons.waving_hand,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '안녕하세요!',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                fontFamily: 'IBMPlexSansKR',
-                              ),
-                            ),
-                            Text(
-                              '${user?.name ?? '트레이너'}님',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'IBMPlexSansKR',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '오늘도 회원들과 함께 건강한 하루를 만들어가세요! 💪',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 16,
-                      fontFamily: 'IBMPlexSansKR',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.calendar_today,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '오늘 일정: $todayPtCount건',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'IBMPlexSansKR',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 32),
-            
+
             // 📊 이번 주 PT 현황 차트 (맨 위로 이동)
             Container(
               decoration: BoxDecoration(
@@ -385,7 +287,8 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFF10B981), Color(0xFF34D399)],
@@ -420,8 +323,12 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                       height: 240,
                       child: weeklyStatsAsync.when(
                         data: (weeklyStats) {
-                          final maxY = weeklyStats.isEmpty ? 10.0 : (weeklyStats.reduce((a, b) => a > b ? a : b) + 2).toDouble();
-                          
+                          final maxY = weeklyStats.isEmpty
+                              ? 10.0
+                              : (weeklyStats.reduce((a, b) => a > b ? a : b) +
+                                      2)
+                                  .toDouble();
+
                           return BarChart(
                             BarChartData(
                               alignment: BarChartAlignment.spaceAround,
@@ -429,9 +336,19 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                               barTouchData: BarTouchData(
                                 enabled: true,
                                 touchTooltipData: BarTouchTooltipData(
-                                  getTooltipColor: (group) => const Color(0xFF10B981),
-                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                                    const days = ['월', '화', '수', '목', '금', '토', '일'];
+                                  getTooltipColor: (group) =>
+                                      const Color(0xFF10B981),
+                                  getTooltipItem:
+                                      (group, groupIndex, rod, rodIndex) {
+                                    const days = [
+                                      '월',
+                                      '화',
+                                      '수',
+                                      '목',
+                                      '금',
+                                      '토',
+                                      '일'
+                                    ];
                                     return BarTooltipItem(
                                       '${days[groupIndex]}\n${rod.toY.toInt()}건',
                                       const TextStyle(
@@ -452,14 +369,17 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                   sideTitles: SideTitles(
                                     showTitles: true,
                                     reservedSize: 40,
-                                    interval: maxY > 10 ? (maxY / 3).ceilToDouble() : (maxY > 5 ? 2 : 1),
+                                    interval: maxY > 10
+                                        ? (maxY / 3).ceilToDouble()
+                                        : (maxY > 5 ? 2 : 1),
                                     getTitlesWidget: (value, meta) {
                                       if (value == 0) return const SizedBox();
                                       // 실제 데이터 값만 표시
                                       final intValue = value.toInt();
                                       if (intValue <= maxY.toInt()) {
                                         return Padding(
-                                          padding: const EdgeInsets.only(right: 8),
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
                                           child: Text(
                                             intValue.toString(),
                                             style: const TextStyle(
@@ -478,10 +398,20 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                     showTitles: true,
                                     reservedSize: 32,
                                     getTitlesWidget: (value, meta) {
-                                      const days = ['월', '화', '수', '목', '금', '토', '일'];
-                                      if (value.toInt() >= 0 && value.toInt() < days.length) {
+                                      const days = [
+                                        '월',
+                                        '화',
+                                        '수',
+                                        '목',
+                                        '금',
+                                        '토',
+                                        '일'
+                                      ];
+                                      if (value.toInt() >= 0 &&
+                                          value.toInt() < days.length) {
                                         return Padding(
-                                          padding: const EdgeInsets.only(bottom: 12),
+                                          padding:
+                                              const EdgeInsets.only(bottom: 12),
                                           child: Text(
                                             days[value.toInt()],
                                             style: const TextStyle(
@@ -502,7 +432,9 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                               gridData: FlGridData(
                                 show: true,
                                 drawVerticalLine: false,
-                                horizontalInterval: maxY > 10 ? (maxY / 3).ceilToDouble() : (maxY > 5 ? 2 : 1),
+                                horizontalInterval: maxY > 10
+                                    ? (maxY / 3).ceilToDouble()
+                                    : (maxY > 5 ? 2 : 1),
                                 getDrawingHorizontalLine: (value) {
                                   return const FlLine(
                                     color: NotionColors.border,
@@ -511,7 +443,8 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                 },
                               ),
                               borderData: FlBorderData(show: false),
-                              barGroups: weeklyStats.asMap().entries.map((entry) {
+                              barGroups:
+                                  weeklyStats.asMap().entries.map((entry) {
                                 return BarChartGroupData(
                                   x: entry.key,
                                   barRods: [
@@ -520,7 +453,10 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                                       gradient: const LinearGradient(
                                         begin: Alignment.bottomCenter,
                                         end: Alignment.topCenter,
-                                        colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                        colors: [
+                                          Color(0xFF10B981),
+                                          Color(0xFF34D399)
+                                        ],
                                       ),
                                       width: 24,
                                       borderRadius: const BorderRadius.only(
@@ -534,16 +470,19 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             ),
                           );
                         },
-                        loading: () => const Center(child: CircularProgressIndicator()),
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
                         error: (error, stack) => Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.error_outline, color: NotionColors.error, size: 32),
+                              Icon(Icons.error_outline,
+                                  color: NotionColors.error, size: 32),
                               const SizedBox(height: 8),
                               Text(
                                 '차트를 불러올 수 없습니다',
-                                style: TextStyle(color: NotionColors.textSecondary),
+                                style: TextStyle(
+                                    color: NotionColors.textSecondary),
                               ),
                             ],
                           ),
@@ -554,7 +493,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                 ),
               ),
             ),
-            
+
             // 📅 오늘의 PT 일정
             const SizedBox(height: 32),
             Container(
@@ -626,7 +565,8 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             },
                             style: TextButton.styleFrom(
                               foregroundColor: const Color(0xFF10B981),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                             ),
                             child: const Text(
                               '전체보기',
@@ -657,19 +597,22 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                           ),
                         );
                       }
-                      
+
                       return ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: schedules.length > 3 ? 3 : schedules.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final schedule = schedules[index];
                           final startTime = DateTime.parse(schedule.startTime);
                           final endTime = DateTime.parse(schedule.endTime);
-                          final timeText = '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';
-                          final durationText = '${endTime.difference(startTime).inMinutes}분';
-                          
+                          final timeText =
+                              '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';
+                          final durationText =
+                              '${endTime.difference(startTime).inMinutes}분';
+
                           return ListTile(
                             leading: Container(
                               width: 40,
@@ -700,7 +643,8 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             ),
                             onTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('PT 상세 페이지는 준비 중입니다')),
+                                const SnackBar(
+                                    content: Text('PT 상세 페이지는 준비 중입니다')),
                               );
                             },
                           );
@@ -727,7 +671,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                 ],
               ),
             ),
-            
+
             // 📋 카테고리별 관리 메뉴
             const SizedBox(height: 32),
             Padding(
@@ -762,7 +706,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // 탭 바
             Container(
               decoration: BoxDecoration(
@@ -823,7 +767,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                     ),
                   ),
                   SizedBox(
-                    height: 400,
+                    height: 320,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
@@ -845,16 +789,17 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
   // 📅 일정 관리 탭
   Widget _buildScheduleManagementTab() {
     final todayPtCount = ref.watch(todayScheduleViewModelProvider).whenOrNull(
-      data: (schedules) => schedules.length,
-    ) ?? 0;
+              data: (schedules) => schedules.length,
+            ) ??
+        0;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: GridView.count(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.0,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.25,
         children: [
           NotionDashboardCard(
             title: '오늘의 PT',
@@ -896,17 +841,19 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
 
   // 👥 회원 관리 탭
   Widget _buildMemberManagementTab() {
-    final pendingApplicationsCount = ref.watch(ptApplicationProvider).whenOrNull(
-      data: (applications) => applications.length,
-    ) ?? 0;
+    final pendingApplicationsCount =
+        ref.watch(ptApplicationProvider).whenOrNull(
+                  data: (applications) => applications.length,
+                ) ??
+            0;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: GridView.count(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.0,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.25,
         children: [
           NotionDashboardCard(
             title: '내 회원 관리',
@@ -923,8 +870,8 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
           ),
           NotionDashboardCard(
             title: 'PT 신청',
-            value: pendingApplicationsCount > 0 
-                ? '$pendingApplicationsCount건 대기' 
+            value: pendingApplicationsCount > 0
+                ? '$pendingApplicationsCount건 대기'
                 : '대기 없음',
             icon: Icons.assignment,
             isHighlighted: pendingApplicationsCount > 0,
@@ -937,31 +884,30 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
     );
   }
 
-  // 📊 PT 운영 탭  
+  // 📊 PT 운영 탭
   Widget _buildPtOperationTab() {
     final monthlyPtCount = ref.watch(monthlyPtCountProvider).whenOrNull(
-      data: (count) => count,
-    ) ?? 0;
-    
+              data: (count) => count,
+            ) ??
+        0;
+
     final ptOfferingsCount = ref.watch(ptOfferingProvider).whenOrNull(
-      data: (offerings) => offerings.length,
-    ) ?? 0;
+              data: (offerings) => offerings.length,
+            ) ??
+        0;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: GridView.count(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.0,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.25,
         children: [
           NotionDashboardCard(
             title: 'PT 상품 관리',
-            value: ptOfferingsCount > 0 
-                ? '$ptOfferingsCount개 상품' 
-                : '상품 없음',
+            value: ptOfferingsCount > 0 ? '$ptOfferingsCount개 상품' : '상품 없음',
             icon: Icons.shopping_bag,
-            isHighlighted: ptOfferingsCount > 0,
             onTap: () {
               context.push('/pt-offerings');
             },
@@ -995,7 +941,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
       ),
     );
   }
-  
+
   Widget _buildDrawer(BuildContext context, WidgetRef ref) {
     return Drawer(
       child: ListView(
@@ -1006,7 +952,11 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+                colors: [
+                  Color(0xFF10B981),
+                  Color(0xFF34D399),
+                  Color(0xFF6EE7B7)
+                ],
               ),
             ),
             child: Column(
@@ -1080,7 +1030,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
             title: const Text('설정'),
             onTap: () {
               Navigator.pop(context);
-              context.push('/settings');
+              context.push('/trainer-settings');
             },
           ),
           ListTile(

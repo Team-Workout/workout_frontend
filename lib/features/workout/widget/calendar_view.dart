@@ -82,7 +82,9 @@ class _CalendarViewState extends State<CalendarView> {
           Container(
             color: Colors.white,
             padding: const EdgeInsets.all(16),
-            child: TableCalendar<WorkoutDayRecord>(
+            child: SizedBox(
+              height: 350,
+              child: TableCalendar<WorkoutDayRecord>(
                 firstDay: DateTime.utc(1900, 1, 1),
                 lastDay: DateTime.utc(2030, 12, 31),
                 focusedDay: widget.viewModel.focusedDate,
@@ -105,16 +107,20 @@ class _CalendarViewState extends State<CalendarView> {
                 daysOfWeekStyle: const DaysOfWeekStyle(
                   weekendStyle: TextStyle(
                     color: Colors.red,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     fontFamily: 'IBMPlexSansKR',
+                    fontSize: 13,
                   ),
                   weekdayStyle: TextStyle(
                     color: Colors.black54,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     fontFamily: 'IBMPlexSansKR',
+                    fontSize: 13,
                   ),
                 ),
                 calendarStyle: const CalendarStyle(
+                  cellMargin: EdgeInsets.all(4),
+                  cellPadding: EdgeInsets.all(0),
                   todayDecoration: BoxDecoration(
                     color: Colors.orange,
                     shape: BoxShape.circle,
@@ -164,6 +170,7 @@ class _CalendarViewState extends State<CalendarView> {
                 },
               ),
             ),
+          ),
             const SizedBox(height: 16),
             Expanded(
               child: Container(

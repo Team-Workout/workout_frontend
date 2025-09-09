@@ -85,7 +85,17 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
 
     // 탭 뷰에서 사용시 Container로 반환
     return Container(
-      color: const Color(0xFFF8F9FA),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF10B981).withValues(alpha: 0.02),
+            const Color(0xFF34D399).withValues(alpha: 0.03),
+            const Color(0xFF6EE7B7).withValues(alpha: 0.02),
+          ],
+        ),
+      ),
       child: _buildScheduleContent(schedulesAsync, user),
     );
   }
@@ -96,67 +106,37 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   ) {
     return Column(
       children: [
-        // 헤더 영역
+        // 주 선택 컨트롤 (간소화)
         Container(
-            margin: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // 새로고침 버튼
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'PT 일정표',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'IBMPlexSansKR',
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _loadWeeklySchedule,
-                        icon: const Icon(
-                          Icons.refresh,
-                          color: Color(0xFF10B981),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // 주 선택 컨트롤
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedWeek = _selectedWeek.subtract(const Duration(days: 7));
-                          });
-                          _loadWeeklySchedule();
-                        },
-                        icon: const Icon(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedWeek = _selectedWeek.subtract(const Duration(days: 7));
+                  });
+                  _loadWeeklySchedule();
+                },
+                icon: const Icon(
                           Icons.chevron_left,
                           color: Color(0xFF10B981),
-                        ),
-                      ),
-                      GestureDetector(
+                ),
+              ),
+              GestureDetector(
                         onTap: () async {
                           final picked = await showDatePicker(
                             context: context,
@@ -201,39 +181,64 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedWeek = _selectedWeek.add(const Duration(days: 7));
-                          });
-                          _loadWeeklySchedule();
-                        },
-                        icon: const Icon(
+                onPressed: () {
+                  setState(() {
+                    _selectedWeek = _selectedWeek.add(const Duration(days: 7));
+                  });
+                  _loadWeeklySchedule();
+                },
+                icon: const Icon(
                           Icons.chevron_right,
                           color: Color(0xFF10B981),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          // 오늘로 돌아가기 버튼
+        ),
+          // 오늘로 돌아가기 버튼 (더 작게)
           if (_selectedWeek.difference(DateTime.now()).inDays.abs() > 7)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: NotionButton(
-                onPressed: () {
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: GestureDetector(
+                onTap: () {
                   setState(() {
                     _selectedWeek = DateTime.now();
                   });
                   _loadWeeklySchedule();
                 },
-                text: '오늘로 돌아가기',
-                icon: Icons.today,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.today,
+                        size: 14,
+                        color: const Color(0xFF10B981),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '오늘로 돌아가기',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: const Color(0xFF10B981),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          const SizedBox(height: 8),
           // 시간표 위젯
           Expanded(
             child: schedulesAsync.when(

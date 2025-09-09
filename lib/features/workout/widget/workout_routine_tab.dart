@@ -22,6 +22,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   List<Map<String, dynamic>> _availableExercises = [];
   bool _isLoading = false;
   final Map<int, bool> _expandedCards = {};
+  bool _basicInfoExpanded = false;
 
   // 각 운동별 자동완성 컨트롤러와 선택된 운동 정보
   final Map<int, TextEditingController> _exerciseControllers = {};
@@ -31,6 +32,10 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   void initState() {
     super.initState();
     _loadAvailableExercises();
+    // 이름 변경시 UI 업데이트를 위한 리스너 추가
+    _nameController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -283,54 +288,70 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+      child: Column(
+        children: [
+          // Header with collapse/expand functionality
+          InkWell(
+            onTap: () {
+              setState(() {
+                _basicInfoExpanded = !_basicInfoExpanded;
+              });
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  Text(
+                    _nameController.text.trim().isEmpty ? '새 루틴' : _nameController.text.trim(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A1A),
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.fitness_center,
-                    color: Color(0xFF4CAF50),
-                    size: 24,
+                  const Spacer(),
+                  AnimatedRotation(
+                    turns: _basicInfoExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: const Color(0xFF4CAF50),
+                      size: 24,
+                    ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          // Collapsible content
+          if (_basicInfoExpanded)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Column(
+                  children: [
+                    _buildModernTextField(
+                      controller: _nameController,
+                      label: '이름',
+                      hint: '예: 가슴/삼두 루틴',
+                      icon: Icons.label_outline,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildModernTextField(
+                      controller: _descriptionController,
+                      label: '설명',
+                      hint: '루틴에 대한 간단한 설명을 입력하세요',
+                      icon: Icons.description_outlined,
+                      maxLines: 3,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                const Text(
-                  '루틴 기본 정보',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 24),
-            _buildModernTextField(
-              controller: _nameController,
-              label: '루틴 이름',
-              hint: '예: 가슴/삼두 루틴',
-              icon: Icons.label_outline,
-            ),
-            const SizedBox(height: 20),
-            _buildModernTextField(
-              controller: _descriptionController,
-              label: '루틴 설명',
-              hint: '루틴에 대한 간단한 설명을 입력하세요',
-              icon: Icons.description_outlined,
-              maxLines: 3,
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

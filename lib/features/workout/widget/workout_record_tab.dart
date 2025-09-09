@@ -601,9 +601,9 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // 세트별 메모 입력 필드
           Container(
             padding: const EdgeInsets.all(12),
@@ -754,9 +754,6 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
       ),
     );
   }
-
-
-
 
   Widget _buildSaveButton() {
     return SizedBox(
@@ -935,123 +932,215 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
 
   // 루틴 선택 다이얼로그 위젯
   Widget _buildRoutineSelectionDialog(List<RoutineResponse> routines) {
-    return AlertDialog(
+    return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(32),
       ),
-      title: const Row(
-        children: [
-          Icon(Icons.playlist_play, color: Color(0xFF4CAF50)),
-          SizedBox(width: 8),
-          Text(
-            '루틴 선택',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'IBMPlexSansKR',
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 30,
+              offset: const Offset(0, 15),
+              spreadRadius: 0,
             ),
-          ),
-        ],
-      ),
-      content: Container(
-        width: double.maxFinite,
-        constraints: const BoxConstraints(maxHeight: 400),
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: routines.length,
-          itemBuilder: (context, index) {
-            final routine = routines[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[200]!),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with gradient
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.playlist_play,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '루틴 선택',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
                   ),
                 ],
               ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.fitness_center,
-                      color: Color(0xFF4CAF50), size: 20),
-                ),
-                title: Text(
-                  routine.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (routine.description != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        routine.description!,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                          fontFamily: 'IBMPlexSansKR',
+            ),
+
+            // Content
+            Flexible(
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxHeight: 350),
+                padding: const EdgeInsets.all(24),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: routines.length,
+                  itemBuilder: (context, index) {
+                    final routine = routines[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                          width: 1,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                    const SizedBox(height: 6),
-                    if (routine.routineExercises != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          _selectRoutineAsTemplate(routine);
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      routine.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                        color: Colors.black87,
+                                        fontFamily: 'IBMPlexSansKR',
+                                      ),
+                                    ),
+                                    if (routine.description != null) ...[
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        routine.description!,
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                          fontFamily: 'IBMPlexSansKR',
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                    const SizedBox(height: 8),
+                                    if (routine.routineExercises != null)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF4CAF50)
+                                              .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          '${routine.routineExercises!.length}개 운동',
+                                          style: const TextStyle(
+                                            color: Color(0xFF4CAF50),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'IBMPlexSansKR',
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 18,
+                                color: Color(0xFF4CAF50),
+                              ),
+                            ],
+                          ),
                         ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // Bottom action
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.grey[300]!,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () =>
+                          Navigator.of(context, rootNavigator: true).pop(),
+                      child: Center(
                         child: Text(
-                          '${routine.routineExercises!.length}개 운동',
-                          style: const TextStyle(
-                            color: Color(0xFF4CAF50),
-                            fontSize: 12,
+                          '취소',
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                             fontFamily: 'IBMPlexSansKR',
                           ),
                         ),
                       ),
-                  ],
+                    ),
+                  ),
                 ),
-                trailing: const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Colors.grey,
-                ),
-                onTap: () {
-                  Navigator.of(context).pop(); // 선택 다이얼로그 먼저 닫기
-                  _selectRoutineAsTemplate(routine);
-                },
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          child: const Text('취소'),
-        ),
-      ],
     );
   }
 
@@ -1064,70 +1153,225 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
       // 확인 다이얼로그 표시
       final bool? confirmed = await showDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        barrierDismissible: false,
+        builder: (dialogContext) => Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(32),
           ),
-          title: const Text(
-            '루틴 적용',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontFamily: 'IBMPlexSansKR',
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with gradient
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.playlist_add_check,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '루틴 적용',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color:
+                                const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '선택한 루틴:',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              routine.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF4CAF50),
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '현재 작성 중인 운동 기록이 모두 지워지고\n루틴이 적용됩니다. 계속하시겠습니까?',
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 16,
+                          fontFamily: 'IBMPlexSansKR',
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Action buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.grey[300]!,
+                                ),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(24),
+                                  onTap: () =>
+                                      Navigator.of(dialogContext).pop(false),
+                                  child: Center(
+                                    child: Text(
+                                      '취소',
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'IBMPlexSansKR',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF4CAF50),
+                                    Color(0xFF66BB6A)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4CAF50)
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(24),
+                                  onTap: () =>
+                                      Navigator.of(dialogContext).pop(true),
+                                  child: const Center(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.check_rounded,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          '적용하기',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'IBMPlexSansKR',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '선택한 루틴: ${routine.name}',
-                style: const TextStyle(
-                  fontFamily: 'IBMPlexSansKR',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '현재 작성 중인 운동 기록이 모두 지워지고 루틴이 적용됩니다. 계속하시겠습니까?',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.grey,
-              ),
-              child: const Text(
-                '취소',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4CAF50),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                '적용',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-              ),
-            ),
-          ],
         ),
       );
 

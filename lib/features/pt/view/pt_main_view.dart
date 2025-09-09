@@ -103,7 +103,7 @@ class _PTMainViewState extends ConsumerState<PTMainView> with SingleTickerProvid
                 tabs: const [
                   Tab(
                     icon: Icon(Icons.person_search, size: 14),
-                    text: '트레이너 찾기',
+                    text: '트레이너',
                   ),
                   Tab(
                     icon: Icon(Icons.assignment, size: 14),
