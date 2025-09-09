@@ -64,72 +64,69 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
         ),
         child: Scaffold(
           backgroundColor: const Color(0xFFF8F9FA),
-          appBar: AppBar(
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+          body: SafeArea(
+            child: Column(
+              children: [
+                // 탭바만 유지
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const TabBar(
+                    labelColor: Color(0xFF10B981),
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: Color(0xFF10B981),
+                    indicatorWeight: 3,
+                    labelStyle: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                    unselectedLabelStyle: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                    tabs: [
+                      Tab(text: '운동 기록'),
+                      Tab(text: '캘린더'),
+                      Tab(text: '루틴'),
+                      Tab(text: '분석'),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            automaticallyImplyLeading: false,
-            title: const Text(
-              '운동',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                fontFamily: 'IBMPlexSansKR',
-              ),
-            ),
-            centerTitle: true,
-            iconTheme: const IconThemeData(color: Colors.white),
-            bottom: const TabBar(
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
-              indicatorColor: Colors.white,
-              indicatorWeight: 3,
-              labelStyle: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                fontFamily: 'IBMPlexSansKR',
-              ),
-              unselectedLabelStyle: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
-                fontFamily: 'IBMPlexSansKR',
-              ),
-              tabs: [
-                Tab(text: '운동 기록'),
-                Tab(text: '기록 이력'),
-                Tab(text: '내 루틴'),
-                Tab(text: '통계'),
+                // 탭바 뷰
+                Expanded(
+                  child: _isInitialized
+                      ? ListenableBuilder(
+                          listenable: _viewModel,
+                          builder: (context, child) {
+                            return TabBarView(
+                              children: [
+                                WorkoutRecordTab(viewModel: _viewModel),
+                                CalendarView(viewModel: _viewModel),
+                                const RoutineListView(),
+                                const WorkoutStatsTab(),
+                              ],
+                            );
+                          },
+                        )
+                      : const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                ),
               ],
             ),
           ),
-          body: _isInitialized
-              ? ListenableBuilder(
-                  listenable: _viewModel,
-                  builder: (context, child) {
-                    return TabBarView(
-                      children: [
-                        WorkoutRecordTab(viewModel: _viewModel),
-                        CalendarView(viewModel: _viewModel),
-                        const RoutineListView(),
-                        const WorkoutStatsTab(),
-                      ],
-                    );
-                  },
-                )
-              : const Center(
-                  child: CircularProgressIndicator(
-                    color: Color(0xFF4CAF50),
-                  ),
-                ),
         ),
       ),
     );

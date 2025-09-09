@@ -203,8 +203,7 @@ class WeightChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval:
-              (maxY - minY) / 5 > 0 ? (maxY - minY) / 5 : 1,
+          horizontalInterval: (maxY - minY) / 4, // 정확히 4개 간격 = 5개 라벨
           getDrawingHorizontalLine: (value) {
             return FlLine(
               color: Colors.grey[300]!,
@@ -240,12 +239,14 @@ class WeightChart extends StatelessWidget {
               getTitlesWidget: (value, meta) {
                 return Text(
                   '${value.toStringAsFixed(1)}kg',
-                  style: const TextStyle(fontSize: 10),
+                  style: const TextStyle(
+                    color: Color(0xFF6B7280),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
                 );
               },
-              interval: (maxY - minY) / 5 > 0
-                  ? (maxY - minY) / 5
-                  : 1,
+              interval: (maxY - minY) / 4, // 정확히 4개 간격 = 5개 라벨
             ),
           ),
           topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -465,4 +466,12 @@ class _CameraIconDotPainter extends FlDotPainter {
   Size getSize(FlSpot spot) {
     return const Size(20, 20);
   }
+}
+
+// Y축 간격을 정확히 5개로 고정하는 함수
+double _calculateOptimalInterval(double range) {
+  if (range <= 0) return 1.0;
+  
+  // 정확히 5개의 간격으로 나누기 (6개의 라벨)
+  return range / 5.0;
 }

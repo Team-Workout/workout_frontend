@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
 import '../model/routine_models.dart';
-import '../../../common/widgets/exercise_autocomplete_field.dart';
+import '../../../common/widgets/enhanced_exercise_selector.dart';
+import '../../../common/constants/muscle_translations.dart';
 import '../../../features/sync/model/sync_models.dart';
 import '../../../core/theme/notion_colors.dart';
 
@@ -664,32 +665,95 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 운동 선택 자동완성 필드
-                    ExerciseAutocompleteField(
-                      controller: _exerciseControllers[exerciseIndex],
-                      labelText: '운동 선택',
-                      hintText: '운동 이름을 입력하세요',
-                      initialValue: _selectedExercises[exerciseIndex]?.name,
-                      onExerciseSelected: (selectedExercise) {
-                        setState(() {
-                          _selectedExercises[exerciseIndex] = selectedExercise;
-                          _routineExercises[exerciseIndex] = exercise.copyWith(
-                            exerciseId: selectedExercise.exerciseId,
-                          );
-                        });
-                      },
-                      onTextChanged: (text) {
-                        // 텍스트가 변경되었지만 정확한 운동이 선택되지 않았을 때
-                        if (_selectedExercises[exerciseIndex]?.name != text) {
-                          setState(() {
-                            _selectedExercises[exerciseIndex] = null;
-                            _routineExercises[exerciseIndex] =
-                                exercise.copyWith(
-                              exerciseId: 0, // 선택되지 않은 상태
+                    // 운동 선택 버튼
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selectedExercise == null 
+                            ? Colors.grey[300]! 
+                            : const Color(0xFF10B981),
+                          width: selectedExercise == null ? 1 : 2,
+                        ),
+                        color: selectedExercise == null 
+                          ? Colors.grey[50] 
+                          : const Color(0xFF10B981).withValues(alpha: 0.05),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            showEnhancedExerciseSelector(
+                              context,
+                              onExerciseSelected: (selectedExercise) {
+                                setState(() {
+                                  _selectedExercises[exerciseIndex] = selectedExercise;
+                                  _exerciseControllers[exerciseIndex]!.text = selectedExercise.name;
+                                  _routineExercises[exerciseIndex] = exercise.copyWith(
+                                    exerciseId: selectedExercise.exerciseId,
+                                  );
+                                });
+                              },
                             );
-                          });
-                        }
-                      },
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  selectedExercise == null 
+                                    ? Icons.add_circle_outline 
+                                    : Icons.fitness_center,
+                                  color: selectedExercise == null 
+                                    ? Colors.grey[600] 
+                                    : const Color(0xFF10B981),
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        selectedExercise?.name ?? '운동을 선택해주세요',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: selectedExercise == null 
+                                            ? Colors.grey[600] 
+                                            : const Color(0xFF111827),
+                                          fontFamily: 'IBMPlexSansKR',
+                                        ),
+                                      ),
+                                      if (selectedExercise != null && selectedExercise.targetMuscles.isNotEmpty)
+                                        const SizedBox(height: 4),
+                                      if (selectedExercise != null && selectedExercise.targetMuscles.isNotEmpty)
+                                        Text(
+                                          selectedExercise.targetMuscles
+                                            .where((muscle) => muscle.role == MuscleRole.primary)
+                                            .map((muscle) => MuscleTranslations.translateMuscle(muscle.name))
+                                            .join(', '),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                            fontFamily: 'IBMPlexSansKR',
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                  color: Colors.grey[400],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     // 세트 섹션 - 미니멀 디자인

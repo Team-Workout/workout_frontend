@@ -18,41 +18,32 @@ class BodyStatsCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: _buildModernStatCard(
-              '현재 체중',
-              '${stats!.currentWeight.toStringAsFixed(1)}kg',
-              stats!.weightChange >= 0
-                  ? '+${stats!.weightChange.toStringAsFixed(1)}kg'
-                  : '${stats!.weightChange.toStringAsFixed(1)}kg',
-              const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
-              Icons.monitor_weight,
-              (stats!.currentWeight / 120).clamp(0.0, 1.0),
-            ),
+          _buildHorizontalStatCard(
+            '현재 체중',
+            '${stats!.currentWeight.toStringAsFixed(1)}kg',
+            stats!.weightChange >= 0
+                ? '+${stats!.weightChange.toStringAsFixed(1)}kg'
+                : '${stats!.weightChange.toStringAsFixed(1)}kg',
+            Icons.monitor_weight,
+            (stats!.currentWeight / 120).clamp(0.0, 1.0),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _buildModernStatCard(
-              'BMI',
-              stats!.bmi.toStringAsFixed(1),
-              _getBMICategory(stats!.bmi),
-              const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
-              Icons.health_and_safety,
-              _getBMIProgress(stats!.bmi),
-            ),
+          const SizedBox(height: 12),
+          _buildHorizontalStatCard(
+            '근육량',
+            '${stats!.muscleMass.toStringAsFixed(1)}kg',
+            _getMuscleMassCategory(stats!.muscleMass),
+            Icons.fitness_center,
+            (stats!.muscleMass / 80).clamp(0.0, 1.0),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _buildModernStatCard(
-              '체지방률',
-              '${stats!.bodyFatPercentage.toStringAsFixed(1)}%',
-              _getBodyFatCategory(stats!.bodyFatPercentage),
-              const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)]),
-              Icons.speed,
-              (stats!.bodyFatPercentage / 35).clamp(0.0, 1.0),
-            ),
+          const SizedBox(height: 12),
+          _buildHorizontalStatCard(
+            '체지방률',
+            '${stats!.bodyFatPercentage.toStringAsFixed(1)}%',
+            _getBodyFatCategory(stats!.bodyFatPercentage),
+            Icons.speed,
+            (stats!.bodyFatPercentage / 35).clamp(0.0, 1.0),
           ),
         ],
       ),
@@ -62,26 +53,26 @@ class BodyStatsCard extends StatelessWidget {
   Widget _buildEmptyStatsCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(child: _buildEmptyCard('체중')),
-          const SizedBox(width: 8),
-          Expanded(child: _buildEmptyCard('BMI')),
-          const SizedBox(width: 8),
-          Expanded(child: _buildEmptyCard('체지방률')),
+          _buildEmptyHorizontalCard('체중'),
+          const SizedBox(height: 12),
+          _buildEmptyHorizontalCard('근육량'),
+          const SizedBox(height: 12),
+          _buildEmptyHorizontalCard('체지방률'),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyCard(String title) {
+  Widget _buildEmptyHorizontalCard(String title) {
     return Container(
-      height: 250, // 고정 높이 설정 (데이터 있는 카드와 동일)
+      height: 100, // 높이를 좀 더 크게 설정 (80 → 100)
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: NotionColors.border),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.08),
@@ -91,78 +82,85 @@ class BodyStatsCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // 상단: 아이콘
+          // 왼쪽: 아이콘 - 가운데 정렬을 위해 Container 크기 고정
           Container(
-            padding: const EdgeInsets.all(12),
+            width: 48, // 고정 너비
+            height: 48, // 고정 높이
             decoration: BoxDecoration(
               color: Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.help_outline, 
-              size: 20, 
-              color: Colors.grey[400]
+            child: Center( // 아이콘을 정중앙에 배치
+              child: Icon(
+                Icons.help_outline, 
+                size: 24, 
+                color: Colors.grey[400]
+              ),
             ),
           ),
-          const SizedBox(height: 24), // 아이콘과 텍스트 사이 간격
-          // 중간: 제목과 값
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: NotionColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
+          const SizedBox(width: 20),
+          // 오른쪽: 텍스트 정보
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                '-- ',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: NotionColors.textSecondary,
-                  letterSpacing: -0.5,
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      '--',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.grey[400],
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '데이터 없음',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[400],
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              // 부제목
-              const Text(
-                '데이터 없음',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: NotionColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildModernStatCard(
+  Widget _buildHorizontalStatCard(
     String title,
     String value,
     String subtitle,
-    LinearGradient gradient,
     IconData icon,
     double progress,
   ) {
     return Container(
-      height: 250, // 고정 높이 설정
+      height: 100, // 높이를 좀 더 크게 설정 (80 → 100)
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _getIconColor(title).withValues(alpha: 0.1), width: 1.5),
         boxShadow: [
           BoxShadow(
@@ -173,72 +171,80 @@ class BodyStatsCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // 상단: 아이콘
+          // 왼쪽: 아이콘 - 가운데 정렬을 위해 Container 크기 고정
           Container(
-            padding: const EdgeInsets.all(12),
+            width: 48, // 고정 너비
+            height: 48, // 고정 높이
             decoration: BoxDecoration(
               color: _getIconColor(title).withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 20, color: _getIconColor(title)),
+            child: Center( // 아이콘을 정중앙에 배치
+              child: Icon(icon, size: 24, color: _getIconColor(title)),
+            ),
           ),
-          const SizedBox(height: 24), // 아이콘과 텍스트 사이 간격
-          // 중간: 제목과 값
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
+          const SizedBox(width: 20),
+          // 오른쪽: 텍스트 정보
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: _getIconColor(title),
-                  letterSpacing: -0.5,
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: _getIconColor(title),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _getIconColor(title).withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              // 하단: 부제목
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: _getIconColor(title).withValues(alpha: 0.8),
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  String _getBMICategory(double bmi) {
-    if (bmi < 18.5) return '저체중';
-    if (bmi < 23.0) return '정상';
-    if (bmi < 25.0) return '과체중';
-    return '비만';
+  String _getMuscleMassCategory(double muscleMass) {
+    if (muscleMass < 30) return '낮음';
+    if (muscleMass < 40) return '보통';
+    if (muscleMass < 50) return '좋음';
+    return '우수';
   }
 
-  Color _getBMIColor(double bmi) {
-    if (bmi < 18.5) return Colors.blue;
-    if (bmi < 23.0) return Colors.green;
-    if (bmi < 25.0) return Colors.orange;
-    return Colors.red;
+  Color _getMuscleMassColor(double muscleMass) {
+    if (muscleMass < 30) return Colors.orange;
+    if (muscleMass < 40) return Colors.blue;
+    if (muscleMass < 50) return Colors.green;
+    return Colors.purple;
   }
 
   String _getBodyFatCategory(double bodyFat) {
@@ -257,31 +263,12 @@ class BodyStatsCard extends StatelessWidget {
     return Colors.red;
   }
 
-  LinearGradient _getBMIGradient(double bmi) {
-    if (bmi < 18.5) return const LinearGradient(colors: [Color(0xFF2196F3), Color(0xFF03DAC6)]);
-    if (bmi < 23.0) return const LinearGradient(colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)]);
-    if (bmi < 25.0) return const LinearGradient(colors: [Color(0xFFFF9800), Color(0xFFFFC107)]);
-    return const LinearGradient(colors: [Color(0xFFFF5722), Color(0xFFE91E63)]);
-  }
-
-  LinearGradient _getBodyFatGradient(double bodyFat) {
-    if (bodyFat < 10) return const LinearGradient(colors: [Color(0xFF2196F3), Color(0xFF03DAC6)]);
-    if (bodyFat < 15) return const LinearGradient(colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)]);
-    if (bodyFat < 20) return const LinearGradient(colors: [Color(0xFF8BC34A), Color(0xFFCDDC39)]);
-    if (bodyFat < 25) return const LinearGradient(colors: [Color(0xFFFF9800), Color(0xFFFFC107)]);
-    return const LinearGradient(colors: [Color(0xFFFF5722), Color(0xFFE91E63)]);
-  }
-
-  double _getBMIProgress(double bmi) {
-    // BMI 35를 최대값으로 설정하고 정규화
-    return (bmi / 35).clamp(0.0, 1.0);
-  }
 
   Color _getIconColor(String title) {
     switch (title) {
       case '현재 체중':
         return const Color(0xFF10B981); // Green
-      case 'BMI':
+      case '근육량':
         return const Color(0xFF6366F1); // Purple
       case '체지방률':
         return const Color(0xFFEF4444); // Red

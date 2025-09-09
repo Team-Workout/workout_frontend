@@ -11,10 +11,12 @@ import 'package:pt_service/core/theme/app_theme.dart';
 import 'package:pt_service/core/services/session_service.dart';
 import 'package:pt_service/core/services/fcm_service.dart';
 import 'package:pt_service/core/services/notification_service.dart';
+import 'package:pt_service/core/services/storage_service.dart';
 import 'package:pt_service/features/auth/repository/api_auth_repository.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/sync/viewmodel/sync_viewmodel.dart';
 import 'package:pt_service/features/fcm/service/fcm_api_service.dart';
+import 'package:pt_service/features/auth/viewmodel/auth_viewmodel.dart';
 
 import 'firebase_options.dart';
 
@@ -76,11 +78,26 @@ class _WorkoutAppState extends ConsumerState<WorkoutApp> {
   @override
   void initState() {
     super.initState();
-    // 앱 시작 후 동기화 수행
+    // 앱 시작 후 자동로그인 체크, 동기화 수행
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tryAutoLogin();
       _performInitialSync();
       _sendFCMTokenToBackend();
     });
+  }
+
+  Future<void> _tryAutoLogin() async {
+    try {
+      final authViewModel = ref.read(authViewModelProvider.notifier);
+      final success = await authViewModel.tryAutoLogin();
+      if (success) {
+        print('Auto login successful');
+      } else {
+        print('Auto login not available');
+      }
+    } catch (e) {
+      print('Auto login failed: $e');
+    }
   }
 
   Future<void> _performInitialSync() async {

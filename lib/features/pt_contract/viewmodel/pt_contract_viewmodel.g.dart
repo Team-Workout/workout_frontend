@@ -7,7 +7,7 @@ part of 'pt_contract_viewmodel.dart';
 // **************************************************************************
 
 String _$ptContractViewModelHash() =>
-    r'72962ae6b28afe61c70af7912a70fa49009c2e24';
+    r'e9d0f5e10954d1992d5f1964e385f8034f9818c1';
 
 /// See also [PtContractViewModel].
 @ProviderFor(PtContractViewModel)

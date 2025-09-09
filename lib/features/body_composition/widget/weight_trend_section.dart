@@ -257,15 +257,21 @@ class MuscleChart extends StatelessWidget {
     double minY = (minMuscle - padding).floorToDouble();
     double maxY = (maxMuscle + padding).ceilToDouble();
 
+    // 근육량은 0 이하가 될 수 없으므로 최소값을 0으로 제한
+    minY = minY < 0 ? 0 : minY;
+
     if (maxY - minY < 2) {
       double center = (minY + maxY) / 2;
       minY = center - 1;
       maxY = center + 1;
+      // 다시 한번 최소값 체크
+      minY = minY < 0 ? 0 : minY;
     }
 
     return Container(
       width: MediaQuery.of(context).size.width - 48, // 24 padding * 2
       height: 150,
+      margin: const EdgeInsets.only(left: 8), // 왼쪽 패딩 추가
       child: LineChart(
         LineChartData(
           lineTouchData: LineTouchData(
@@ -289,7 +295,7 @@ class MuscleChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: (maxY - minY) / 4,
+          horizontalInterval: (maxY - minY) / 3, // 정확히 3개 간격 = 4개 라벨
           getDrawingHorizontalLine: (value) {
             return const FlLine(
               color: Color(0xFFE5E7EB),
@@ -301,11 +307,11 @@ class MuscleChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40,
-              interval: (maxY - minY) / 4,
+              reservedSize: 45,
+              interval: (maxY - minY) / 3, // 정확히 3개 간격 = 4개 라벨
               getTitlesWidget: (value, meta) {
                 return Text(
-                  '${value.toStringAsFixed(1)}',
+                  '${value.toStringAsFixed(1)}kg',
                   style: const TextStyle(
                     color: Color(0xFF6B7280),
                     fontSize: 10,
@@ -650,16 +656,22 @@ class FatChart extends StatelessWidget {
     double minY = (minFat - padding).floorToDouble();
     double maxY = (maxFat + padding).ceilToDouble();
 
+    // 체지방량은 0 이하가 될 수 없으므로 최소값을 0으로 제한
+    minY = minY < 0 ? 0 : minY;
+
     if (maxY - minY < 1) {
       double center = (minY + maxY) / 2;
       minY = center - 0.5;
       maxY = center + 0.5;
+      // 다시 한번 최소값 체크
+      minY = minY < 0 ? 0 : minY;
     }
     
 
     return Container(
       width: MediaQuery.of(context).size.width - 48, // 24 padding * 2
       height: 150,
+      margin: const EdgeInsets.only(left: 8), // 왼쪽 패딩 추가
       child: LineChart(
         LineChartData(
           lineTouchData: LineTouchData(
@@ -721,7 +733,7 @@ class FatChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: (maxY - minY) / 4,
+          horizontalInterval: (maxY - minY) / 4, // 정확히 4개 간격 = 5개 라벨
           getDrawingHorizontalLine: (value) {
             return const FlLine(
               color: Color(0xFFE5E7EB),
@@ -734,10 +746,10 @@ class FatChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 40,
-              interval: (maxY - minY) / 4,
+              interval: (maxY - minY) / 4, // 정확히 4개 간격 = 5개 라벨
               getTitlesWidget: (value, meta) {
                 return Text(
-                  '${value.toStringAsFixed(1)}',
+                  '${value.toStringAsFixed(1)}kg',
                   style: const TextStyle(
                     color: Color(0xFF6B7280),
                     fontSize: 10,
@@ -1294,4 +1306,12 @@ class _CameraIconDotPainter extends FlDotPainter {
   Size getSize(FlSpot spot) {
     return const Size(20, 20);
   }
+}
+
+// Y축 간격을 정확히 5개로 고정하는 함수
+double _calculateOptimalInterval(double range) {
+  if (range <= 0) return 1.0;
+  
+  // 정확히 5개의 간격으로 나누기 (6개의 라벨)
+  return range / 5.0;
 }

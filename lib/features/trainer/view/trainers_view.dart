@@ -245,9 +245,16 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
               left: 0,
               right: 0,
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.85), // 반투명 흰색
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
                 ),
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 child: Column(
@@ -260,7 +267,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Colors.black,
                         fontFamily: 'IBMPlexSansKR',
                       ),
                     ),
@@ -286,7 +293,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                       Text(
                         trainer.introduction!,
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: Colors.grey[800],
                           fontSize: 14,
                           fontFamily: 'IBMPlexSansKR',
                         ),

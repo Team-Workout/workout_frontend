@@ -17,6 +17,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _hasShownSuccessMessage = false;
+  bool _isAutoLoginEnabled = false;
 
   @override
   void initState() {
@@ -288,20 +289,45 @@ class _LoginViewState extends ConsumerState<LoginView> {
                               },
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {},
-                              child: const Text(
-                                '비밀번호를 잊으셨나요?',
-                                style: TextStyle(
-                                  color: Color(0xFF10B981),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                          const SizedBox(height: 16),
+                          // Auto Login Checkbox
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _isAutoLoginEnabled,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isAutoLoginEnabled = value ?? false;
+                                  });
+                                },
+                                activeColor: const Color(0xFF10B981),
+                                checkColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '자동 로그인',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const Spacer(),
+                              TextButton(
+                                onPressed: () {},
+                                child: const Text(
+                                  '비밀번호 찾기',
+                                  style: TextStyle(
+                                    color: Color(0xFF10B981),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 32),
                           // Login Button
@@ -328,8 +354,12 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                 borderRadius: BorderRadius.circular(20),
                                 onTap: authViewState.isLoading
                                     ? null
-                                    : () {
+                                    : () async {
                                         if (_formKey.currentState!.validate()) {
+                                          // 자동 로그인 설정 저장
+                                          await ref.read(authViewModelProvider.notifier).setAutoLogin(_isAutoLoginEnabled);
+                                          
+                                          // 로그인 실행
                                           ref.read(authViewModelProvider.notifier).login(
                                                 _emailController.text,
                                                 _passwordController.text,

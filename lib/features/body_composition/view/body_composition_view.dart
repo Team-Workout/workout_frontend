@@ -85,125 +85,88 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
 
     return Scaffold(
       backgroundColor: NotionColors.gray50,
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
-            ),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: const Text(
-          '체성분 분석',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'IBMPlexSansKR',
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          // IconButton(
-          //   icon: Container(
-          //     padding: const EdgeInsets.all(8),
-          //     decoration: BoxDecoration(
-          //       color: Colors.white.withOpacity(0.2),
-          //       borderRadius: BorderRadius.circular(10),
-          //       border: Border.all(color: Colors.white.withOpacity(0.3)),
-          //     ),
-          //     child: const Icon(Icons.calendar_today,
-          //         color: Colors.white, size: 20),
-          //   ),
-          //   onPressed: () => _showDateRangePickerDialog(),
-          // ),
-        ],
-      ),
-      body: bodyCompositions.when(
-        data: (compositions) {
-          if (compositions.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.event_available,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '체성분 데이터가 없습니다',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF64748B),
-                      fontFamily: 'IBMPlexSansKR',
+      body: SafeArea(
+        child: bodyCompositions.when(
+          data: (compositions) {
+            if (compositions.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.event_available,
+                      size: 64,
+                      color: Colors.grey[400],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '하단의 데이터 추가 버튼을 눌러\n체성분을 기록해보세요!',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontFamily: 'IBMPlexSansKR',
+                    const SizedBox(height: 16),
+                    const Text(
+                      '체성분 데이터가 없습니다',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      '하단의 데이터 추가 버튼을 눌러\n체성분을 기록해보세요!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // DateRangeDisplay(
+                    //   onShowDatePicker: _showDateRangePickerDialog,
+                    // ),
+                    const DateRangeSelector(),
+                    const SizedBox(height: 16),
+                    // BodyProfileSection(compositions: compositions),
+                    const SizedBox(height: 20),
+                    BodyStatsCard(stats: bodyStats),
+                    const SizedBox(height: 20),
+                    // 체중변화 추이를 BMI 카드 바로 밑으로 이동
+                    _buildWeightTrendWithImages(compositions),
+                    const SizedBox(height: 24),
+                    // CombinedProgressSection(compositions: compositions),
+                    // 나의 변화 기록 관련 섹션들 주석 처리
+                    // const SizedBox(height: 24),
+                    // CombinedProgressSection(compositions: compositions),
+                    // 체성분 구성 그래프 주석 처리
+                    // const SizedBox(height: 24),
+                    // _buildBodyCompositionChart(compositions),
+                    // 체성분 데이터 목록 주석 처리
+                    // const SizedBox(height: 24),
+                    // BodyDataListSection(compositions: compositions),
+                    const SizedBox(height: 24),
+                    _buildBodyImagesSection(),
+                    const SizedBox(height: 24),
+                    // 더미 UI 제거
+                    // const KeyMeasurementsSection(),
+                    // const SizedBox(height: 24),
+                    // const TrainerFeedbackSection(),
+                  ],
+                ),
               ),
             );
-          }
-
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // DateRangeDisplay(
-                  //   onShowDatePicker: _showDateRangePickerDialog,
-                  // ),
-                  const DateRangeSelector(),
-                  const SizedBox(height: 16),
-                  // BodyProfileSection(compositions: compositions),
-                  const SizedBox(height: 20),
-                  BodyStatsCard(stats: bodyStats),
-                  const SizedBox(height: 20),
-                  // 체중변화 추이를 BMI 카드 바로 밑으로 이동
-                  _buildWeightTrendWithImages(compositions),
-                  const SizedBox(height: 24),
-                  // CombinedProgressSection(compositions: compositions),
-                  // 나의 변화 기록 관련 섹션들 주석 처리
-                  // const SizedBox(height: 24),
-                  // CombinedProgressSection(compositions: compositions),
-                  // 체성분 구성 그래프 주석 처리
-                  // const SizedBox(height: 24),
-                  // _buildBodyCompositionChart(compositions),
-                  // 체성분 데이터 목록 주석 처리
-                  // const SizedBox(height: 24),
-                  // BodyDataListSection(compositions: compositions),
-                  const SizedBox(height: 24),
-                  _buildBodyImagesSection(),
-                  const SizedBox(height: 24),
-                  // 더미 UI 제거
-                  // const KeyMeasurementsSection(),
-                  // const SizedBox(height: 24),
-                  // const TrainerFeedbackSection(),
-                ],
-              ),
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Text('Error: $error'),
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(
+            child: Text('Error: $error'),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -213,7 +176,7 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
         elevation: 2,
         icon: const Icon(Icons.add, size: 24),
         label: const Text(
-          '데이터 추가',
+          '추가',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w600,
@@ -997,22 +960,6 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
             ),
           ),
           const SizedBox(width: 12),
-          IconButton(
-            onPressed: () => _showDeleteConfirmDialog(composition),
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-                size: 20,
-              ),
-            ),
-            tooltip: '삭제',
-          ),
         ],
       ),
     );
@@ -1810,34 +1757,6 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
               },
             ),
           ),
-          // 삭제 버튼
-          Positioned(
-            top: 4,
-            right: 4,
-            child: GestureDetector(
-              onTap: () => _showDeleteImageDialog(image),
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -2088,54 +2007,6 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.red, Color(0xFFDC2626)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.red.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: () async {
-                                Navigator.of(context).pop();
-                                await _deleteBodyImage(image);
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.delete,
-                                        color: Colors.white, size: 20),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      '삭제',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -2339,12 +2210,16 @@ class _BodyImageUploadDialogState
                                 Container(
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
-                                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                      colors: [
+                                        Color(0xFF10B981),
+                                        Color(0xFF34D399)
+                                      ],
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF10B981).withOpacity(0.3),
+                                        color: const Color(0xFF10B981)
+                                            .withOpacity(0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -2373,7 +2248,8 @@ class _BodyImageUploadDialogState
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.edit, color: Colors.white, size: 16),
+                                            Icon(Icons.edit,
+                                                color: Colors.white, size: 16),
                                             SizedBox(width: 4),
                                             Text(
                                               '변경',
@@ -2403,14 +2279,18 @@ class _BodyImageUploadDialogState
                             child: Container(
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                  colors: [
+                                    Color(0xFF10B981),
+                                    Color(0xFF34D399)
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF10B981).withOpacity(0.3),
+                                    color: const Color(0xFF10B981)
+                                        .withOpacity(0.3),
                                     blurRadius: 12,
                                     offset: const Offset(0, 6),
                                   ),
@@ -2422,7 +2302,8 @@ class _BodyImageUploadDialogState
                                   borderRadius: BorderRadius.circular(16),
                                   onTap: () => _pickImages(ImageSource.camera),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -2434,7 +2315,8 @@ class _BodyImageUploadDialogState
                                             shape: BoxShape.circle,
                                           ),
                                           child: const Icon(Icons.camera_alt,
-                                              color: Color(0xFF10B981), size: 20),
+                                              color: Color(0xFF10B981),
+                                              size: 20),
                                         ),
                                         const SizedBox(width: 12),
                                         const Text(
@@ -2457,14 +2339,18 @@ class _BodyImageUploadDialogState
                             child: Container(
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                                  colors: [
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6)
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF6366F1).withOpacity(0.3),
+                                    color: const Color(0xFF6366F1)
+                                        .withOpacity(0.3),
                                     blurRadius: 12,
                                     offset: const Offset(0, 6),
                                   ),
@@ -2476,7 +2362,8 @@ class _BodyImageUploadDialogState
                                   borderRadius: BorderRadius.circular(16),
                                   onTap: () => _pickImages(ImageSource.gallery),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -2488,7 +2375,8 @@ class _BodyImageUploadDialogState
                                             shape: BoxShape.circle,
                                           ),
                                           child: const Icon(Icons.photo_library,
-                                              color: Color(0xFF6366F1), size: 20),
+                                              color: Color(0xFF6366F1),
+                                              size: 20),
                                         ),
                                         const SizedBox(width: 12),
                                         const Text(

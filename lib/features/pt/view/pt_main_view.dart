@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../trainer/view/trainers_view.dart';
-import '../../pt_contract/view/pt_contract_list_view.dart';
 import '../../schedule/view/pt_schedule_view.dart';
-import '../../pt_applications/view/pt_applications_list_view.dart';
-import '../../pt_applications/viewmodel/pt_application_viewmodel.dart';
+import '../../pt_contract/repository/pt_contract_repository.dart';
+import '../../pt_contract/model/pt_contract_models.dart';
+import '../../pt_contract/viewmodel/pt_contract_viewmodel.dart';
+import '../../dashboard/widgets/notion_button.dart';
 
 class PTMainView extends ConsumerStatefulWidget {
   const PTMainView({super.key});
@@ -13,13 +17,14 @@ class PTMainView extends ConsumerStatefulWidget {
   ConsumerState<PTMainView> createState() => _PTMainViewState();
 }
 
-class _PTMainViewState extends ConsumerState<PTMainView> with SingleTickerProviderStateMixin {
+class _PTMainViewState extends ConsumerState<PTMainView>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -33,106 +38,79 @@ class _PTMainViewState extends ConsumerState<PTMainView> with SingleTickerProvid
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: Theme.of(context).textTheme.apply(
-          fontFamily: 'IBMPlexSansKR',
-        ),
+              fontFamily: 'IBMPlexSansKR',
+            ),
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 서브탭 바만 유지
+              Container(
+                margin: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey[600],
+                  indicator: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  tabs: const [
+                    Tab(
+                      icon: Icon(Icons.person_search, size: 14),
+                      text: '트레이너',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.schedule, size: 14),
+                      text: '시간표',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.pending_actions, size: 14),
+                      text: 'PT 예약',
+                    ),
+                  ],
+                ),
               ),
-            ),
+              // 탭 뷰 콘텐츠
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: const [
+                    _TrainersViewWrapper(),
+                    _ScheduleViewWrapper(),
+                    _LessonRequestViewWrapper(),
+                  ],
+                ),
+              ),
+            ],
           ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          title: const Text(
-            'PT 관리',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'IBMPlexSansKR',
-            ),
-          ),
-          centerTitle: true,
-        ),
-        body: Column(
-          children: [
-            // 서브탭 바
-            Container(
-              margin: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TabBar(
-                controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[600],
-                indicator: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-                tabs: const [
-                  Tab(
-                    icon: Icon(Icons.person_search, size: 14),
-                    text: '트레이너',
-                  ),
-                  Tab(
-                    icon: Icon(Icons.assignment, size: 14),
-                    text: '계약 목록',
-                  ),
-                  Tab(
-                    icon: Icon(Icons.schedule, size: 14),
-                    text: '시간표',
-                  ),
-                  Tab(
-                    icon: Icon(Icons.pending_actions, size: 14),
-                    text: 'PT 요청',
-                  ),
-                ],
-              ),
-            ),
-            // 탭 뷰 콘텐츠
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: const [
-                  _TrainersViewWrapper(),
-                  _ContractListViewWrapper(),
-                  _ScheduleViewWrapper(),
-                  _ApplicationsViewWrapper(),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -152,20 +130,8 @@ class _TrainersViewWrapper extends StatelessWidget {
   }
 }
 
-// 계약 목록을 AppBar 없이 표시하는 래퍼
-class _ContractListViewWrapper extends StatelessWidget {
-  const _ContractListViewWrapper();
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.grey[50],
-      child: const PtContractListView(),
-    );
-  }
-}
-
-// 시간표를 AppBar 없이 표시하는 래퍼  
+// 시간표를 AppBar 없이 표시하는 래퍼
 class _ScheduleViewWrapper extends StatelessWidget {
   const _ScheduleViewWrapper();
 
@@ -178,46 +144,46 @@ class _ScheduleViewWrapper extends StatelessWidget {
   }
 }
 
-// PT 신청을 AppBar 없이 표시하는 래퍼
-class _ApplicationsViewWrapper extends StatelessWidget {
-  const _ApplicationsViewWrapper();
+// PT 수업 예약 요청을 AppBar 없이 표시하는 래퍼
+class _LessonRequestViewWrapper extends StatelessWidget {
+  const _LessonRequestViewWrapper();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFFF8F9FA),
-      child: const _PtApplicationsContent(),
+      child: const _LessonRequestContent(),
     );
   }
 }
 
-// PT 신청 내용만 표시하는 위젯 (AppBar 제외)
-class _PtApplicationsContent extends ConsumerStatefulWidget {
-  const _PtApplicationsContent();
+// PT 수업 예약 요청 내용만 표시하는 위젯 (AppBar 제외)
+class _LessonRequestContent extends ConsumerStatefulWidget {
+  const _LessonRequestContent();
 
   @override
-  ConsumerState<_PtApplicationsContent> createState() => _PtApplicationsContentState();
+  ConsumerState<_LessonRequestContent> createState() =>
+      _LessonRequestContentState();
 }
 
-class _PtApplicationsContentState extends ConsumerState<_PtApplicationsContent> {
+class _LessonRequestContentState
+    extends ConsumerState<_LessonRequestContent> {
+  
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // PT applications provider 사용
+      // 내 PT 계약 목록 로드
       if (mounted) {
-        try {
-          ref.read(ptApplicationProvider.notifier).loadPtApplications();
-        } catch (e) {
-          // Provider가 없으면 에러 처리
-          debugPrint('PT applications provider not available');
-        }
+        ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final contractsState = ref.watch(ptContractViewModelProvider);
+    
     return Container(
       color: const Color(0xFFF8F9FA),
       child: Column(
@@ -240,7 +206,7 @@ class _PtApplicationsContentState extends ConsumerState<_PtApplicationsContent> 
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: const Text(
-                'PT 신청 내역',
+                'PT 수업 예약 요청',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -267,13 +233,156 @@ class _PtApplicationsContentState extends ConsumerState<_PtApplicationsContent> 
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: _buildEmptyState(),
+                child: contractsState.when(
+                  data: (contractResponse) => _buildContractsList(contractResponse),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => _buildErrorState(),
+                ),
               ),
             ),
           ),
           const SizedBox(height: 12),
         ],
       ),
+    );
+  }
+
+  Widget _buildContractsList(PtContractResponse? contractResponse) {
+    if (contractResponse == null || contractResponse.data.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    final contracts = contractResponse.data;
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: contracts.length,
+      itemBuilder: (context, index) {
+        final contract = contracts[index];
+        return _buildContractCard(contract);
+      },
+    );
+  }
+
+  Widget _buildContractCard(PtContract contract) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: InkWell(
+        onTap: () => _showLessonRequestDialog(contract),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // 트레이너 프로필 이미지 (기본)
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.1),
+                child: const Icon(
+                  Icons.person,
+                  color: Color(0xFF10B981),
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // 트레이너 및 계약 정보
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${contract.trainerName} 트레이너',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '잔여 수업: ${contract.remainingSessions}회 / ${contract.totalSessions}회',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: contract.remainingSessions > 0 
+                            ? const Color(0xFF10B981) 
+                            : Colors.grey[600],
+                        fontFamily: 'IBMPlexSansKR',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (contract.status == 'ACTIVE')
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          '활성 계약',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF10B981),
+                            fontFamily: 'IBMPlexSansKR',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // 화살표 아이콘
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLessonRequestDialog(PtContract contract) {
+    if (contract.remainingSessions <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '잔여 수업이 없습니다. 추가 계약이 필요합니다.',
+                  style: TextStyle(
+                    fontFamily: 'IBMPlexSansKR',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange[600],
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _LessonRequestBottomSheet(contract: contract),
     );
   }
 
@@ -289,14 +398,14 @@ class _PtApplicationsContentState extends ConsumerState<_PtApplicationsContent> 
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              Icons.pending_actions,
+              Icons.assignment_outlined,
               size: 48,
               color: const Color(0xFF10B981).withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 16),
           const Text(
-            'PT 신청 내역이 없습니다',
+            'PT 계약이 없습니다',
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF64748B),
@@ -306,7 +415,8 @@ class _PtApplicationsContentState extends ConsumerState<_PtApplicationsContent> 
           ),
           const SizedBox(height: 8),
           Text(
-            '트레이너에게 PT를 신청해보세요!',
+            'PT 계약을 먼저 체결한 후 수업을 예약해주세요',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],
@@ -316,5 +426,795 @@ class _PtApplicationsContentState extends ConsumerState<_PtApplicationsContent> 
         ],
       ),
     );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Colors.red.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'PT 계약 목록을 불러올 수 없습니다',
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF64748B),
+              fontFamily: 'IBMPlexSansKR',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '네트워크 연결을 확인해주세요',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 수업 예약 요청 바텀시트
+class _LessonRequestBottomSheet extends ConsumerStatefulWidget {
+  final PtContract contract;
+  
+  const _LessonRequestBottomSheet({required this.contract});
+
+  @override
+  ConsumerState<_LessonRequestBottomSheet> createState() =>
+      _LessonRequestBottomSheetState();
+}
+
+class _LessonRequestBottomSheetState
+    extends ConsumerState<_LessonRequestBottomSheet> {
+  bool _isRequesting = false;
+  DateTime? _selectedDate;
+  DateTime _focusedDate = DateTime.now().add(const Duration(days: 1));
+  TimeOfDay? _selectedStartTime;
+  TimeOfDay? _selectedEndTime;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('ko_KR', null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // 핸들
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // 헤더
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 25,
+                  backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  child: const Icon(
+                    Icons.person,
+                    color: Color(0xFF10B981),
+                    size: 25,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${widget.contract.trainerName} 트레이너',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '수업 시간을 선택해주세요 (잔여: ${widget.contract.remainingSessions}회)',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF64748B),
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          // 날짜/시간 선택 폼
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDateSelector(),
+                  const SizedBox(height: 24),
+                  _buildTimeSelectors(),
+                  const SizedBox(height: 32),
+                  _buildRequestButton(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '날짜 선택',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!),
+          ),
+          child: TableCalendar(
+            firstDay: DateTime.now(),
+            lastDay: DateTime.now().add(const Duration(days: 365)),
+            focusedDay: _focusedDate,
+            selectedDayPredicate: (day) => isSameDay(_selectedDate, day),
+            calendarFormat: CalendarFormat.month,
+            locale: 'ko_KR',
+            availableGestures: AvailableGestures.all,
+            headerStyle: const HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+              titleTextStyle: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+              leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF10B981)),
+              rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF10B981)),
+              headerPadding: EdgeInsets.symmetric(vertical: 8),
+            ),
+            daysOfWeekStyle: const DaysOfWeekStyle(
+              weekendStyle: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'IBMPlexSansKR',
+                fontSize: 12,
+              ),
+              weekdayStyle: TextStyle(
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'IBMPlexSansKR',
+                fontSize: 12,
+              ),
+            ),
+            calendarStyle: CalendarStyle(
+              cellMargin: const EdgeInsets.all(2),
+              cellPadding: const EdgeInsets.all(0),
+              todayDecoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.orange, width: 1),
+              ),
+              selectedDecoration: const BoxDecoration(
+                color: Color(0xFF10B981),
+                shape: BoxShape.circle,
+              ),
+              weekendTextStyle: const TextStyle(
+                color: Colors.red,
+                fontFamily: 'IBMPlexSansKR',
+                fontSize: 13,
+              ),
+              defaultTextStyle: const TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontSize: 13,
+              ),
+              selectedTextStyle: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'IBMPlexSansKR',
+                fontSize: 13,
+              ),
+              todayTextStyle: const TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'IBMPlexSansKR',
+                fontSize: 13,
+              ),
+              disabledTextStyle: TextStyle(
+                color: Colors.grey[300],
+                fontFamily: 'IBMPlexSansKR',
+                fontSize: 13,
+              ),
+              outsideDaysVisible: false,
+            ),
+            enabledDayPredicate: (day) {
+              // 오늘 이후의 날짜만 선택 가능
+              return day.isAfter(DateTime.now().subtract(const Duration(days: 1)));
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              if (selectedDay.isAfter(DateTime.now().subtract(const Duration(days: 1)))) {
+                setState(() {
+                  _selectedDate = selectedDay;
+                  _focusedDate = focusedDay;
+                });
+              }
+            },
+            onPageChanged: (focusedDay) {
+              setState(() {
+                _focusedDate = focusedDay;
+              });
+            },
+          ),
+        ),
+        if (_selectedDate != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: Color(0xFF10B981),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '선택된 날짜: ${DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(_selectedDate!)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF10B981),
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildTimeSelectors() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '시간 선택',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTimeButton(
+                label: '시작 시간',
+                time: _selectedStartTime,
+                onTap: () => _selectStartTime(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildTimeButton(
+                label: '종료 시간',
+                time: _selectedEndTime,
+                onTap: () => _selectEndTime(),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimeButton({
+    required String label,
+    TimeOfDay? time,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(12),
+          color: time != null 
+              ? const Color(0xFF10B981).withValues(alpha: 0.05)
+              : Colors.white,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              time != null 
+                  ? time.format(context)
+                  : '--:--',
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: 'IBMPlexSansKR',
+                color: time != null 
+                    ? const Color(0xFF10B981)
+                    : Colors.grey[600],
+                fontWeight: time != null 
+                    ? FontWeight.w600 
+                    : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRequestButton() {
+    final bool canRequest = _selectedDate != null && 
+                           _selectedStartTime != null && 
+                           _selectedEndTime != null &&
+                           !_isRequesting;
+
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: NotionButton(
+        text: _isRequesting ? '요청 중...' : 'PT 수업 요청하기',
+        onPressed: canRequest ? _requestLesson : null,
+        isLoading: _isRequesting,
+      ),
+    );
+  }
+
+
+  void _selectStartTime() {
+    _showTimeDropdown(
+      title: '시작 시간 선택',
+      selectedTime: _selectedStartTime,
+      onTimeSelected: (time) {
+        setState(() {
+          _selectedStartTime = time;
+          // 시작 시간이 변경되면 종료 시간 초기화 (종료 시간이 시작 시간보다 이르면)
+          if (_selectedEndTime != null) {
+            final startMinutes = time.hour * 60 + time.minute;
+            final endMinutes = _selectedEndTime!.hour * 60 + _selectedEndTime!.minute;
+            if (endMinutes <= startMinutes) {
+              _selectedEndTime = null;
+            }
+          }
+        });
+      },
+    );
+  }
+
+  void _selectEndTime() {
+    if (_selectedStartTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            '시작 시간을 먼저 선택해주세요',
+            style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+          ),
+          backgroundColor: Colors.orange[600],
+        ),
+      );
+      return;
+    }
+
+    _showTimeDropdown(
+      title: '종료 시간 선택',
+      selectedTime: _selectedEndTime,
+      startTime: _selectedStartTime,
+      onTimeSelected: (time) {
+        // 종료 시간이 시작 시간보다 이후인지 확인
+        final startMinutes = _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
+        final endMinutes = time.hour * 60 + time.minute;
+        
+        if (endMinutes <= startMinutes) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                '종료 시간은 시작 시간보다 늦어야 합니다',
+                style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+              ),
+              backgroundColor: Colors.red[600],
+            ),
+          );
+          return;
+        }
+        
+        setState(() {
+          _selectedEndTime = time;
+        });
+      },
+    );
+  }
+
+  void _showTimeDropdown({
+    required String title,
+    required TimeOfDay? selectedTime,
+    TimeOfDay? startTime,
+    required Function(TimeOfDay) onTimeSelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _TimeDropdownSheet(
+        title: title,
+        selectedTime: selectedTime,
+        startTime: startTime,
+        onTimeSelected: onTimeSelected,
+      ),
+    );
+  }
+
+  Future<void> _requestLesson() async {
+    if (_selectedDate == null || _selectedStartTime == null || _selectedEndTime == null) {
+      return;
+    }
+
+    setState(() {
+      _isRequesting = true;
+    });
+
+    try {
+      final startDateTime = DateTime(
+        _selectedDate!.year,
+        _selectedDate!.month,
+        _selectedDate!.day,
+        _selectedStartTime!.hour,
+        _selectedStartTime!.minute,
+      );
+
+      final endDateTime = DateTime(
+        _selectedDate!.year,
+        _selectedDate!.month,
+        _selectedDate!.day,
+        _selectedEndTime!.hour,
+        _selectedEndTime!.minute,
+      );
+
+      await ref.read(ptContractViewModelProvider.notifier).proposeAppointment(
+        contractId: widget.contract.contractId,
+        startTime: startDateTime.toIso8601String(),
+        endTime: endDateTime.toIso8601String(),
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'PT 수업 요청이 완료되었습니다!\n${widget.contract.trainerName} 트레이너가 확인 후 연락드릴 예정입니다.',
+                    style: const TextStyle(
+                      fontFamily: 'IBMPlexSansKR',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'PT 수업 요청에 실패했습니다: ${e.toString().replaceAll('Exception: ', '')}',
+                    style: const TextStyle(
+                      fontFamily: 'IBMPlexSansKR',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red[600],
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRequesting = false;
+        });
+      }
+    }
+  }
+}
+
+// 시간 드롭다운 선택 시트
+class _TimeDropdownSheet extends StatefulWidget {
+  final String title;
+  final TimeOfDay? selectedTime;
+  final TimeOfDay? startTime;
+  final Function(TimeOfDay) onTimeSelected;
+  
+  const _TimeDropdownSheet({
+    required this.title,
+    required this.selectedTime,
+    this.startTime,
+    required this.onTimeSelected,
+  });
+
+  @override
+  State<_TimeDropdownSheet> createState() => _TimeDropdownSheetState();
+}
+
+class _TimeDropdownSheetState extends State<_TimeDropdownSheet> {
+  late List<TimeOfDay> availableTimes;
+  TimeOfDay? tempSelectedTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateAvailableTimes();
+    tempSelectedTime = widget.selectedTime;
+  }
+
+  void _generateAvailableTimes() {
+    availableTimes = [];
+    
+    // 6:00 AM부터 11:00 PM까지 30분 간격으로 시간 생성
+    for (int hour = 6; hour <= 23; hour++) {
+      for (int minute = 0; minute < 60; minute += 30) {
+        final time = TimeOfDay(hour: hour, minute: minute);
+        
+        // 종료 시간 선택 시 시작 시간 이후의 시간만 표시
+        if (widget.startTime != null) {
+          final startMinutes = widget.startTime!.hour * 60 + widget.startTime!.minute;
+          final currentMinutes = time.hour * 60 + time.minute;
+          
+          if (currentMinutes <= startMinutes) {
+            continue;
+          }
+        }
+        
+        availableTimes.add(time);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // 핸들
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // 헤더
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          // 시간 목록
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: availableTimes.length,
+              itemBuilder: (context, index) {
+                final time = availableTimes[index];
+                final isSelected = tempSelectedTime?.hour == time.hour && 
+                                 tempSelectedTime?.minute == time.minute;
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        tempSelectedTime = time;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: isSelected 
+                            ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                            : Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected 
+                              ? const Color(0xFF10B981)
+                              : Colors.grey[200]!,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _formatTime(time),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'IBMPlexSansKR',
+                                fontWeight: isSelected 
+                                    ? FontWeight.w600 
+                                    : FontWeight.normal,
+                                color: isSelected 
+                                    ? const Color(0xFF10B981)
+                                    : Colors.black87,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            const Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF10B981),
+                              size: 20,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // 선택 버튼
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: tempSelectedTime != null 
+                    ? () {
+                        widget.onTimeSelected(tempSelectedTime!);
+                        Navigator.pop(context);
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.grey[300],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  tempSelectedTime != null ? '선택 완료' : '시간을 선택해주세요',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hour;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = hour < 12 ? '오전' : '오후';
+    final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    
+    return '$period ${displayHour}:${minute}';
   }
 }

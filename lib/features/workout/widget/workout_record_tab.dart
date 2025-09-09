@@ -4,12 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
 import '../model/workout_record_models.dart';
 import '../model/routine_models.dart';
-import '../../../common/widgets/exercise_autocomplete_field.dart';
-import '../../../features/sync/model/sync_models.dart';
+import '../../../common/widgets/enhanced_exercise_selector.dart';
 import '../../../core/theme/notion_colors.dart';
 import '../../dashboard/widgets/notion_button.dart';
 import 'workout_exercise_card.dart';
-import 'workout_set_input.dart';
 
 class WorkoutRecordTab extends ConsumerStatefulWidget {
   final WorkoutRecordViewmodel viewModel;
@@ -293,15 +291,79 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 운동 이름
-        ExerciseAutocompleteField(
-          controller: _exerciseNameController,
-          labelText: '운동 이름',
-          hintText: '운동 이름을 입력하세요',
-          onExerciseSelected: (selectedExercise) {
-            // 운동이 선택되었을 때 추가 처리가 필요하면 여기에
-            print('Selected exercise: ${selectedExercise.name}');
-          },
+        // 운동 이름 (새로운 선택 방식)
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '운동 이름',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  showEnhancedExerciseSelector(
+                    context,
+                    onExerciseSelected: (selectedExercise) {
+                      setState(() {
+                        _exerciseNameController.text = selectedExercise.name;
+                      });
+                      print('Selected exercise: ${selectedExercise.name}');
+                    },
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey[50],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.fitness_center,
+                        color: Color(0xFF10B981),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _exerciseNameController.text.isEmpty 
+                            ? '부위별로 운동을 선택해보세요'
+                            : _exerciseNameController.text,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _exerciseNameController.text.isEmpty 
+                              ? Colors.grey[600]
+                              : Colors.black87,
+                            fontFamily: 'IBMPlexSansKR',
+                            fontWeight: _exerciseNameController.text.isEmpty 
+                              ? FontWeight.w400 
+                              : FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey[400],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
 
@@ -1050,19 +1112,6 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                                         fontFamily: 'IBMPlexSansKR',
                                       ),
                                     ),
-                                    if (routine.description != null) ...[
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        routine.description!,
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
-                                          fontFamily: 'IBMPlexSansKR',
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
                                     const SizedBox(height: 8),
                                     if (routine.routineExercises != null)
                                       Container(
