@@ -7,6 +7,8 @@ import '../../pt_contract/viewmodel/pt_contract_viewmodel.dart';
 import '../../auth/model/user_model.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../dashboard/widgets/notion_button.dart';
+import '../../pt_schedule/model/pt_schedule_models.dart';
+import '../widget/weekly_timetable_widget.dart';
 
 class PTScheduleView extends ConsumerStatefulWidget {
   final bool isDirectAccess;
@@ -64,7 +66,6 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
           .read(ptContractViewModelProvider.notifier)
           .getMyScheduledAppointments(
             status: _selectedStatus,
-            size: 50,
           );
       
       setState(() {
@@ -74,40 +75,8 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        // 에러가 발생해도 빈 응답으로 처리하여 UI가 정상적으로 표시되도록 함
-        _appointmentsResponse = const PtAppointmentsResponse(
-          data: [],
-          totalElements: 0,
-          totalPages: 0,
-          currentPage: 0,
-          hasNext: false,
-          hasPrevious: false,
-        );
       });
-      
       print('PT 예약 목록 로드 실패: $e');
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.white),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'PT 예약 조회 API가 개발 중입니다.\n현재는 PT 계약 관리 기능을 사용해주세요.',
-                    style: TextStyle(fontFamily: 'IBMPlexSansKR'),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.blue[600],
-            duration: const Duration(seconds: 5),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
     }
   }
 
@@ -202,7 +171,58 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Row(
-          children: _statusOptions.map((option) {
+          children: [
+            // 시간표 보기 버튼
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: _showTimetablePopup,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_view_week,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        '시간표',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // 구분선
+            Container(
+              width: 1,
+              height: 24,
+              color: Colors.grey[300],
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+            // 상태 필터들
+            ..._statusOptions.map((option) {
             final isSelected = _selectedStatus == option['value'];
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -243,72 +263,31 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
               ),
             );
           }).toList(),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildAppointmentsList() {
-    final contractState = ref.watch(ptContractViewModelProvider);
-    
-    return contractState.when(
-      data: (contractResponse) {
-        if (contractResponse == null || contractResponse.data.isEmpty) {
-          return _buildEmptyState();
-        }
+    // 실제 예약 데이터 표시
+    if (_appointmentsResponse == null || _appointmentsResponse!.data.isEmpty) {
+      return _buildEmptyState();
+    }
 
-        final contracts = contractResponse.data;
-        
-        return RefreshIndicator(
-          onRefresh: _loadContracts,
-          color: const Color(0xFF10B981),
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: contracts.length,
-            itemBuilder: (context, index) {
-              final contract = contracts[index];
-              return _buildContractCard(contract);
-            },
-          ),
-        );
-      },
-      loading: () => const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF10B981),
-        ),
+    final appointments = _appointmentsResponse!.data;
+    
+    return RefreshIndicator(
+      onRefresh: _loadAppointments,
+      color: const Color(0xFF10B981),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: appointments.length,
+        itemBuilder: (context, index) {
+          final appointment = appointments[index];
+          return _buildAppointmentCard(appointment);
+        },
       ),
-      error: (error, stackTrace) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.grey,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'PT 계약 정보를 불러올 수 없습니다',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: _loadContracts,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('다시 시도'),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -371,7 +350,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                       ],
                     ),
                   ),
-                  _buildStatusBadge(appointment.status),
+                  _buildStatusBadge(appointment.status ?? _selectedStatus),
                 ],
               ),
               
@@ -494,6 +473,93 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
         ),
       ),
     );
+  }
+
+  void _showTimetablePopup() {
+    // PtAppointment를 PtSchedule로 변환
+    final schedules = _appointmentsResponse?.data.map((appointment) {
+      return PtSchedule(
+        appointmentId: appointment.appointmentId,
+        contractId: appointment.contractId,
+        trainerName: appointment.trainerName,
+        memberName: appointment.memberName,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        status: appointment.status ?? _selectedStatus,
+        hasChangeRequest: appointment.changeRequestStartTime != null,
+        changeRequestBy: appointment.changeRequestBy,
+        requestedStartTime: appointment.changeRequestStartTime,
+        requestedEndTime: appointment.changeRequestEndTime,
+      );
+    }).toList() ?? [];
+
+    showDialog(
+      context: context,
+      builder: (context) => _TimetablePopupDialog(
+        schedules: schedules,
+        onScheduleTap: (schedule) {
+          Navigator.pop(context);
+          // PtSchedule를 PtAppointment로 다시 변환
+          final appointment = _appointmentsResponse?.data.firstWhere(
+            (a) => a.appointmentId == schedule.appointmentId,
+          );
+          if (appointment != null) {
+            _showAppointmentDetail(appointment);
+          }
+        },
+        onScheduleAction: (schedule, action) {
+          Navigator.pop(context);
+          // 액션 처리
+          _handleScheduleAction(schedule, action);
+        },
+      ),
+    );
+  }
+
+  void _handleScheduleAction(PtSchedule schedule, String action) async {
+    // PtSchedule를 PtAppointment로 변환
+    final appointment = _appointmentsResponse?.data.firstWhere(
+      (a) => a.appointmentId == schedule.appointmentId,
+    );
+    
+    if (appointment == null) return;
+
+    switch (action) {
+      case 'approve_change':
+        // 변경 승인 처리
+        await ref.read(ptContractViewModelProvider.notifier).memberApproveTrainerChangeRequest(
+          appointmentId: appointment.appointmentId,
+        );
+        _loadAppointments();
+        break;
+      case 'reject_change':
+        // 변경 거절 처리
+        await ref.read(ptContractViewModelProvider.notifier).rejectAppointmentChange(
+          appointmentId: appointment.appointmentId,
+        );
+        _loadAppointments();
+        break;
+      case 'complete':
+        // 완료 처리
+        await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
+          appointmentId: appointment.appointmentId,
+          status: 'COMPLETED',
+        );
+        _loadAppointments();
+        break;
+      case 'cancel':
+        // 취소 처리
+        await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
+          appointmentId: appointment.appointmentId,
+          status: 'CANCELLED',
+        );
+        _loadAppointments();
+        break;
+      case 'trainer_request_change':
+        // 시간 변경 요청
+        _showAppointmentDetail(appointment);
+        break;
+    }
   }
 
   Widget _buildEmptyState() {
@@ -989,6 +1055,7 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
@@ -1058,7 +1125,7 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
         _buildDetailRow('회원', widget.appointment.memberName),
         _buildDetailRow('날짜', _formatDate(widget.appointment.startTime)),
         _buildDetailRow('시간', '${_formatTime(widget.appointment.startTime)} - ${_formatTime(widget.appointment.endTime)}'),
-        _buildDetailRow('상태', _getStatusText(widget.appointment.status)),
+        _buildDetailRow('상태', _getStatusText(widget.appointment.status ?? 'MEMBER_REQUESTED')),
         
         // 변경 요청 정보
         if (widget.appointment.changeRequestStartTime != null) ...[
@@ -1147,38 +1214,102 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
   }
 
   Widget _buildActionButtons() {
+    final user = ref.watch(currentUserProvider);
     final List<Widget> buttons = [];
 
     // 상태에 따른 버튼들
-    switch (widget.appointment.status) {
+    final appointmentStatus = widget.appointment.status ?? 'MEMBER_REQUESTED';
+    switch (appointmentStatus) {
       case 'MEMBER_REQUESTED':
-        // 회원이 요청한 경우, 취소만 가능
-        buttons.add(
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : () => _cancelAppointment(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[600],
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey[300],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+        // 트레이너인 경우: 승인/거절 버튼
+        if (user?.userType == UserType.trainer) {
+          buttons.add(
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () => _confirmAppointment(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        '예약 승인',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                elevation: 0,
-              ),
-              child: const Text(
-                '예약 취소',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'IBMPlexSansKR',
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () => _rejectAppointment(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[600],
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        '예약 거절',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } 
+        // 회원인 경우: 취소만 가능
+        else {
+          buttons.add(
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : () => _cancelAppointment(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[600],
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.grey[300],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  '예약 취소',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
                 ),
               ),
             ),
-          ),
-        );
+          );
+        }
         break;
         
       case 'SCHEDULED':
@@ -1284,6 +1415,69 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
   }
 
   // API 호출 메서드들
+  Future<void> _confirmAppointment() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      await ref.read(ptContractViewModelProvider.notifier).confirmAppointment(
+        appointmentId: widget.appointment.appointmentId,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('예약이 승인되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+        widget.onAction();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('승인 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _rejectAppointment() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
+        appointmentId: widget.appointment.appointmentId,
+        status: 'CANCELLED',
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('예약이 거절되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+        widget.onAction();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('거절 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _cancelAppointment() async {
     setState(() => _isLoading = true);
     
@@ -1317,12 +1511,208 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
   }
 
   Future<void> _requestScheduleChange() async {
-    // TODO: 일정 변경 요청 다이얼로그 표시
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('일정 변경 요청 기능은 곧 추가될 예정입니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+    // 날짜/시간 선택 다이얼로그 표시
+    DateTime? selectedDate;
+    TimeOfDay? startTime;
+    TimeOfDay? endTime;
+
+    // 현재 예약 시간을 기본값으로 설정
+    try {
+      final currentStart = DateTime.parse(widget.appointment.startTime);
+      selectedDate = currentStart;
+      startTime = TimeOfDay.fromDateTime(currentStart);
+      endTime = TimeOfDay.fromDateTime(DateTime.parse(widget.appointment.endTime));
+    } catch (e) {
+      selectedDate = DateTime.now();
+      startTime = const TimeOfDay(hour: 9, minute: 0);
+      endTime = const TimeOfDay(hour: 10, minute: 0);
+    }
+
+    // 날짜 선택
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF10B981),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate == null) return;
+
+    // 시작 시간 선택
+    final pickedStartTime = await showTimePicker(
+      context: context,
+      initialTime: startTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF10B981),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedStartTime == null) return;
+
+    // 종료 시간 선택
+    final pickedEndTime = await showTimePicker(
+      context: context,
+      initialTime: endTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF10B981),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedEndTime == null) return;
+
+    // 새로운 시간 생성
+    final newStartDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedStartTime.hour,
+      pickedStartTime.minute,
+    );
+
+    final newEndDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedEndTime.hour,
+      pickedEndTime.minute,
+    );
+
+    // 유효성 검사
+    if (newEndDateTime.isBefore(newStartDateTime)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('종료 시간은 시작 시간 이후여야 합니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // 확인 다이얼로그
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('일정 변경 요청', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('다음 일정으로 변경을 요청하시겠습니까?', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '날짜: ${DateFormat('yyyy년 M월 d일').format(pickedDate)}',
+                    style: const TextStyle(fontFamily: 'IBMPlexSansKR'),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '시간: ${pickedStartTime.format(context)} - ${pickedEndTime.format(context)}',
+                    style: const TextStyle(fontFamily: 'IBMPlexSansKR'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('요청', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+          ),
+        ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    // API 호출
+    setState(() => _isLoading = true);
+    
+    try {
+      final user = ref.read(currentUserProvider);
+      
+      // 트레이너인지 회원인지에 따라 다른 API 호출
+      if (user?.userType == UserType.trainer) {
+        await ref.read(ptContractViewModelProvider.notifier).trainerRequestScheduleChange(
+          appointmentId: widget.appointment.appointmentId,
+          newStartTime: newStartDateTime.toIso8601String(),
+          newEndTime: newEndDateTime.toIso8601String(),
+        );
+      } else {
+        await ref.read(ptContractViewModelProvider.notifier).memberRequestScheduleChange(
+          appointmentId: widget.appointment.appointmentId,
+          newStartTime: newStartDateTime.toIso8601String(),
+          newEndTime: newEndDateTime.toIso8601String(),
+        );
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('일정 변경이 요청되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+        widget.onAction();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('변경 요청 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _approveChange() async {
@@ -1435,5 +1825,198 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
       default:
         return status;
     }
+  }
+}
+
+class _TimetablePopupDialog extends StatefulWidget {
+  final List<PtSchedule> schedules;
+  final Function(PtSchedule) onScheduleTap;
+  final Function(PtSchedule, String) onScheduleAction;
+
+  const _TimetablePopupDialog({
+    required this.schedules,
+    required this.onScheduleTap,
+    required this.onScheduleAction,
+  });
+
+  @override
+  State<_TimetablePopupDialog> createState() => _TimetablePopupDialogState();
+}
+
+class _TimetablePopupDialogState extends State<_TimetablePopupDialog> {
+  DateTime _selectedWeek = DateTime.now();
+
+  void _goToPreviousWeek() {
+    setState(() {
+      _selectedWeek = _selectedWeek.subtract(const Duration(days: 7));
+    });
+  }
+
+  void _goToNextWeek() {
+    setState(() {
+      _selectedWeek = _selectedWeek.add(const Duration(days: 7));
+    });
+  }
+
+  void _goToCurrentWeek() {
+    setState(() {
+      _selectedWeek = DateTime.now();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mondayOfWeek = _selectedWeek.subtract(Duration(days: _selectedWeek.weekday - 1));
+    final isCurrentWeek = DateFormat('yyyy-MM-dd').format(mondayOfWeek) == 
+                         DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)));
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxWidth: MediaQuery.of(context).size.width,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            // 헤더
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_view_week,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'PT 주간 시간표',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            
+            // 주차 네비게이션
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey[200]!),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // 이전 주 버튼
+                  IconButton(
+                    onPressed: _goToPreviousWeek,
+                    icon: const Icon(Icons.chevron_left, size: 28),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF10B981),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                  ),
+                  
+                  // 현재 주차 정보
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          '${DateFormat('M월 d일').format(mondayOfWeek)} - ${DateFormat('M월 d일').format(mondayOfWeek.add(const Duration(days: 6)))}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                        if (!isCurrentWeek) ...[
+                          const SizedBox(height: 4),
+                          GestureDetector(
+                            onTap: _goToCurrentWeek,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFF10B981)),
+                              ),
+                              child: const Text(
+                                '이번 주로 이동',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Color(0xFF10B981),
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  // 다음 주 버튼
+                  IconButton(
+                    onPressed: _goToNextWeek,
+                    icon: const Icon(Icons.chevron_right, size: 28),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF10B981),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // 시간표 위젯
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: WeeklyTimetableWidget(
+                  schedules: widget.schedules,
+                  selectedWeek: _selectedWeek,
+                  onScheduleTap: widget.onScheduleTap,
+                  onScheduleAction: widget.onScheduleAction,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

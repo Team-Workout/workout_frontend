@@ -6,15 +6,15 @@ part 'pt_appointment_models.g.dart';
 @freezed
 class PtAppointment with _$PtAppointment {
   const factory PtAppointment({
-    required int appointmentId,
+    @JsonKey(name: 'id') required int appointmentId,  // API는 'id'로 전송
     required int contractId,
-    required int memberId,
-    required int trainerId,
+    int? memberId,  // API 응답에 없을 수 있음
+    int? trainerId,  // API 응답에 없을 수 있음
     required String memberName,
     required String trainerName,
     required String startTime,
     required String endTime,
-    required String status, // PROPOSED, CONFIRMED, COMPLETED, CANCELLED, etc.
+    String? status, // API 응답에 없을 수 있음
     String? changeRequestStartTime,
     String? changeRequestEndTime,
     String? changeRequestBy, // MEMBER, TRAINER

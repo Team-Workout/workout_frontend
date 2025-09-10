@@ -20,16 +20,16 @@ PtAppointment _$PtAppointmentFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$PtAppointment {
-  int get appointmentId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'id')
+  int get appointmentId => throw _privateConstructorUsedError; // API는 'id'로 전송
   int get contractId => throw _privateConstructorUsedError;
-  int get memberId => throw _privateConstructorUsedError;
-  int get trainerId => throw _privateConstructorUsedError;
+  int? get memberId => throw _privateConstructorUsedError; // API 응답에 없을 수 있음
+  int? get trainerId => throw _privateConstructorUsedError; // API 응답에 없을 수 있음
   String get memberName => throw _privateConstructorUsedError;
   String get trainerName => throw _privateConstructorUsedError;
   String get startTime => throw _privateConstructorUsedError;
   String get endTime => throw _privateConstructorUsedError;
-  String get status =>
-      throw _privateConstructorUsedError; // PROPOSED, CONFIRMED, COMPLETED, CANCELLED, etc.
+  String? get status => throw _privateConstructorUsedError; // API 응답에 없을 수 있음
   String? get changeRequestStartTime => throw _privateConstructorUsedError;
   String? get changeRequestEndTime => throw _privateConstructorUsedError;
   String? get changeRequestBy =>
@@ -57,15 +57,15 @@ abstract class $PtAppointmentCopyWith<$Res> {
       _$PtAppointmentCopyWithImpl<$Res, PtAppointment>;
   @useResult
   $Res call(
-      {int appointmentId,
+      {@JsonKey(name: 'id') int appointmentId,
       int contractId,
-      int memberId,
-      int trainerId,
+      int? memberId,
+      int? trainerId,
       String memberName,
       String trainerName,
       String startTime,
       String endTime,
-      String status,
+      String? status,
       String? changeRequestStartTime,
       String? changeRequestEndTime,
       String? changeRequestBy,
@@ -92,13 +92,13 @@ class _$PtAppointmentCopyWithImpl<$Res, $Val extends PtAppointment>
   $Res call({
     Object? appointmentId = null,
     Object? contractId = null,
-    Object? memberId = null,
-    Object? trainerId = null,
+    Object? memberId = freezed,
+    Object? trainerId = freezed,
     Object? memberName = null,
     Object? trainerName = null,
     Object? startTime = null,
     Object? endTime = null,
-    Object? status = null,
+    Object? status = freezed,
     Object? changeRequestStartTime = freezed,
     Object? changeRequestEndTime = freezed,
     Object? changeRequestBy = freezed,
@@ -116,14 +116,14 @@ class _$PtAppointmentCopyWithImpl<$Res, $Val extends PtAppointment>
           ? _value.contractId
           : contractId // ignore: cast_nullable_to_non_nullable
               as int,
-      memberId: null == memberId
+      memberId: freezed == memberId
           ? _value.memberId
           : memberId // ignore: cast_nullable_to_non_nullable
-              as int,
-      trainerId: null == trainerId
+              as int?,
+      trainerId: freezed == trainerId
           ? _value.trainerId
           : trainerId // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       memberName: null == memberName
           ? _value.memberName
           : memberName // ignore: cast_nullable_to_non_nullable
@@ -140,10 +140,10 @@ class _$PtAppointmentCopyWithImpl<$Res, $Val extends PtAppointment>
           ? _value.endTime
           : endTime // ignore: cast_nullable_to_non_nullable
               as String,
-      status: null == status
+      status: freezed == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       changeRequestStartTime: freezed == changeRequestStartTime
           ? _value.changeRequestStartTime
           : changeRequestStartTime // ignore: cast_nullable_to_non_nullable
@@ -185,15 +185,15 @@ abstract class _$$PtAppointmentImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int appointmentId,
+      {@JsonKey(name: 'id') int appointmentId,
       int contractId,
-      int memberId,
-      int trainerId,
+      int? memberId,
+      int? trainerId,
       String memberName,
       String trainerName,
       String startTime,
       String endTime,
-      String status,
+      String? status,
       String? changeRequestStartTime,
       String? changeRequestEndTime,
       String? changeRequestBy,
@@ -218,13 +218,13 @@ class __$$PtAppointmentImplCopyWithImpl<$Res>
   $Res call({
     Object? appointmentId = null,
     Object? contractId = null,
-    Object? memberId = null,
-    Object? trainerId = null,
+    Object? memberId = freezed,
+    Object? trainerId = freezed,
     Object? memberName = null,
     Object? trainerName = null,
     Object? startTime = null,
     Object? endTime = null,
-    Object? status = null,
+    Object? status = freezed,
     Object? changeRequestStartTime = freezed,
     Object? changeRequestEndTime = freezed,
     Object? changeRequestBy = freezed,
@@ -242,14 +242,14 @@ class __$$PtAppointmentImplCopyWithImpl<$Res>
           ? _value.contractId
           : contractId // ignore: cast_nullable_to_non_nullable
               as int,
-      memberId: null == memberId
+      memberId: freezed == memberId
           ? _value.memberId
           : memberId // ignore: cast_nullable_to_non_nullable
-              as int,
-      trainerId: null == trainerId
+              as int?,
+      trainerId: freezed == trainerId
           ? _value.trainerId
           : trainerId // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       memberName: null == memberName
           ? _value.memberName
           : memberName // ignore: cast_nullable_to_non_nullable
@@ -266,10 +266,10 @@ class __$$PtAppointmentImplCopyWithImpl<$Res>
           ? _value.endTime
           : endTime // ignore: cast_nullable_to_non_nullable
               as String,
-      status: null == status
+      status: freezed == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       changeRequestStartTime: freezed == changeRequestStartTime
           ? _value.changeRequestStartTime
           : changeRequestStartTime // ignore: cast_nullable_to_non_nullable
@@ -306,15 +306,15 @@ class __$$PtAppointmentImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PtAppointmentImpl implements _PtAppointment {
   const _$PtAppointmentImpl(
-      {required this.appointmentId,
+      {@JsonKey(name: 'id') required this.appointmentId,
       required this.contractId,
-      required this.memberId,
-      required this.trainerId,
+      this.memberId,
+      this.trainerId,
       required this.memberName,
       required this.trainerName,
       required this.startTime,
       required this.endTime,
-      required this.status,
+      this.status,
       this.changeRequestStartTime,
       this.changeRequestEndTime,
       this.changeRequestBy,
@@ -327,13 +327,17 @@ class _$PtAppointmentImpl implements _PtAppointment {
       _$$PtAppointmentImplFromJson(json);
 
   @override
+  @JsonKey(name: 'id')
   final int appointmentId;
+// API는 'id'로 전송
   @override
   final int contractId;
   @override
-  final int memberId;
+  final int? memberId;
+// API 응답에 없을 수 있음
   @override
-  final int trainerId;
+  final int? trainerId;
+// API 응답에 없을 수 있음
   @override
   final String memberName;
   @override
@@ -343,8 +347,8 @@ class _$PtAppointmentImpl implements _PtAppointment {
   @override
   final String endTime;
   @override
-  final String status;
-// PROPOSED, CONFIRMED, COMPLETED, CANCELLED, etc.
+  final String? status;
+// API 응답에 없을 수 있음
   @override
   final String? changeRequestStartTime;
   @override
@@ -442,15 +446,15 @@ class _$PtAppointmentImpl implements _PtAppointment {
 
 abstract class _PtAppointment implements PtAppointment {
   const factory _PtAppointment(
-      {required final int appointmentId,
+      {@JsonKey(name: 'id') required final int appointmentId,
       required final int contractId,
-      required final int memberId,
-      required final int trainerId,
+      final int? memberId,
+      final int? trainerId,
       required final String memberName,
       required final String trainerName,
       required final String startTime,
       required final String endTime,
-      required final String status,
+      final String? status,
       final String? changeRequestStartTime,
       final String? changeRequestEndTime,
       final String? changeRequestBy,
@@ -463,13 +467,14 @@ abstract class _PtAppointment implements PtAppointment {
       _$PtAppointmentImpl.fromJson;
 
   @override
-  int get appointmentId;
+  @JsonKey(name: 'id')
+  int get appointmentId; // API는 'id'로 전송
   @override
   int get contractId;
   @override
-  int get memberId;
+  int? get memberId; // API 응답에 없을 수 있음
   @override
-  int get trainerId;
+  int? get trainerId; // API 응답에 없을 수 있음
   @override
   String get memberName;
   @override
@@ -479,7 +484,7 @@ abstract class _PtAppointment implements PtAppointment {
   @override
   String get endTime;
   @override
-  String get status; // PROPOSED, CONFIRMED, COMPLETED, CANCELLED, etc.
+  String? get status; // API 응답에 없을 수 있음
   @override
   String? get changeRequestStartTime;
   @override

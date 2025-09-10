@@ -8,15 +8,15 @@ part of 'pt_appointment_models.dart';
 
 _$PtAppointmentImpl _$$PtAppointmentImplFromJson(Map<String, dynamic> json) =>
     _$PtAppointmentImpl(
-      appointmentId: (json['appointmentId'] as num).toInt(),
+      appointmentId: (json['id'] as num).toInt(),
       contractId: (json['contractId'] as num).toInt(),
-      memberId: (json['memberId'] as num).toInt(),
-      trainerId: (json['trainerId'] as num).toInt(),
+      memberId: (json['memberId'] as num?)?.toInt(),
+      trainerId: (json['trainerId'] as num?)?.toInt(),
       memberName: json['memberName'] as String,
       trainerName: json['trainerName'] as String,
       startTime: json['startTime'] as String,
       endTime: json['endTime'] as String,
-      status: json['status'] as String,
+      status: json['status'] as String?,
       changeRequestStartTime: json['changeRequestStartTime'] as String?,
       changeRequestEndTime: json['changeRequestEndTime'] as String?,
       changeRequestBy: json['changeRequestBy'] as String?,
@@ -32,7 +32,7 @@ _$PtAppointmentImpl _$$PtAppointmentImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$PtAppointmentImplToJson(_$PtAppointmentImpl instance) =>
     <String, dynamic>{
-      'appointmentId': instance.appointmentId,
+      'id': instance.appointmentId,
       'contractId': instance.contractId,
       'memberId': instance.memberId,
       'trainerId': instance.trainerId,

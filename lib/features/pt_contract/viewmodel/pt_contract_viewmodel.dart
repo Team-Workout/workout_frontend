@@ -195,8 +195,6 @@ class PtContractViewModel extends _$PtContractViewModel {
     String? startDate,
     String? endDate,
     String? status,
-    int page = 0,
-    int size = 10,
   }) async {
     try {
       final repository = ref.read(ptContractRepositoryProvider);
@@ -204,8 +202,6 @@ class PtContractViewModel extends _$PtContractViewModel {
         startDate: startDate,
         endDate: endDate,
         status: status,
-        page: page,
-        size: size,
       );
     } catch (error) {
       rethrow;
