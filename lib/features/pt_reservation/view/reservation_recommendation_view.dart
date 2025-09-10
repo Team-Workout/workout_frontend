@@ -32,18 +32,28 @@ class _ReservationRecommendationViewState extends ConsumerState<ReservationRecom
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.grey[50],
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
         title: const Text(
-          'PT 약속 생성',
+          'PT 예약 생성',
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
           ),
         ),
         centerTitle: true,
@@ -87,6 +97,7 @@ class _ReservationRecommendationViewState extends ConsumerState<ReservationRecom
           }
 
           return RefreshIndicator(
+            color: const Color(0xFF10B981),
             onRefresh: () async {
               await ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
             },
@@ -103,7 +114,12 @@ class _ReservationRecommendationViewState extends ConsumerState<ReservationRecom
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF10B981),
+            strokeWidth: 3,
+          ),
+        ),
         error: (error, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -150,111 +166,269 @@ class _ContractCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${contract.trainerName} 트레이너',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // 계약 아이콘
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF10B981), Color(0xFF34D399)],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${contract.memberName} 회원',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.handshake,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // 계약 정보
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${contract.memberName} 회원',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                              ),
+                              _buildStatusBadge(contract.status),
+                            ],
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${contract.trainerName} 트레이너',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 계약 상세 정보
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.fitness_center,
+                            size: 18,
+                            color: const Color(0xFF10B981),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '잔여 수업',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${contract.remainingSessions}/${contract.totalSessions} 회',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (contract.price != null) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.payments,
+                              size: 18,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '계약 금액',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '${NumberFormat('#,###').format(contract.price!)}원',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[800],
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(contract.status).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      contract.status,
-                      style: TextStyle(
-                        color: _getStatusColor(contract.status),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.fitness_center, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${contract.remainingSessions}/${contract.totalSessions} 회 남음',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (contract.price != null)
-                    Text(
-                      '${NumberFormat('#,###').format(contract.price!)}원',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (contract.startDate != null)
-                Text(
-                  '시작일: ${contract.startDate}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
+                      if (contract.startDate != null) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              size: 18,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '시작일',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              contract.startDate!,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[800],
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-            ],
+                const SizedBox(height: 16),
+                // 예약 생성 버튼 영역
+                Row(
+                  children: [
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.add_circle,
+                            size: 16,
+                            color: Color(0xFF10B981),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            '예약 생성하기',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Color _getStatusColor(String status) {
+  Widget _buildStatusBadge(String status) {
+    Color statusColor;
+    String statusText;
+    
     switch (status.toLowerCase()) {
       case 'active':
-        return Colors.green;
+        statusColor = const Color(0xFF10B981);
+        statusText = '활성';
+        break;
       case 'inactive':
-        return Colors.red;
+        statusColor = Colors.red;
+        statusText = '비활성';
+        break;
       case 'pending':
-        return Colors.orange;
+        statusColor = Colors.orange;
+        statusText = '대기중';
+        break;
       default:
-        return Colors.grey;
+        statusColor = Colors.grey;
+        statusText = status;
     }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: statusColor.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        statusText,
+        style: TextStyle(
+          color: statusColor,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansKR',
+        ),
+      ),
+    );
   }
 }
 
@@ -277,7 +451,7 @@ class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.8,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -287,141 +461,316 @@ class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet
       ),
       child: Column(
         children: [
+          // 드래그 핸들
           Container(
             width: 40,
             height: 4,
-            margin: const EdgeInsets.only(top: 12, bottom: 16),
+            margin: const EdgeInsets.only(top: 12),
             decoration: BoxDecoration(
               color: Colors.grey[300],
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          Padding(
+          // 헤더 섹션
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'PT 약속 생성',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${widget.contract.trainerName} 트레이너와 ${widget.contract.memberName} 회원',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  '시작 시간',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                InkWell(
-                  onTap: () => _selectStartTime(),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time, color: Colors.grey[600]),
-                        const SizedBox(width: 8),
-                        Text(
-                          startTime != null
-                              ? DateFormat('yyyy년 M월 d일 HH:mm').format(startTime!)
-                              : '시작 시간을 선택해주세요',
-                          style: TextStyle(
-                            color: startTime != null ? Colors.black : Colors.grey[500],
-                          ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.add_circle,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'PT 예약 생성',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontFamily: 'IBMPlexSansKR',
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '소요 시간',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _DurationButton(
-                      duration: 30,
-                      selectedDuration: selectedDurationMinutes,
-                      onSelected: (duration) {
-                        setState(() {
-                          selectedDurationMinutes = duration;
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _DurationButton(
-                      duration: 60,
-                      selectedDuration: selectedDurationMinutes,
-                      onSelected: (duration) {
-                        setState(() {
-                          selectedDurationMinutes = duration;
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _DurationButton(
-                      duration: 90,
-                      selectedDuration: selectedDurationMinutes,
-                      onSelected: (duration) {
-                        setState(() {
-                          selectedDurationMinutes = duration;
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _DurationButton(
-                      duration: 120,
-                      selectedDuration: selectedDurationMinutes,
-                      onSelected: (duration) {
-                        setState(() {
-                          selectedDurationMinutes = duration;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                if (startTime != null && endTime != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    '종료 시간: ${DateFormat('HH:mm').format(endTime!)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: NotionButton(
-                    onPressed: _canSubmit() && !isLoading ? _submitAppointment : null,
-                    text: '약속 생성하기',
-                    isLoading: isLoading,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${widget.contract.memberName} 회원과 새로운 PT 예약을 만들어보세요',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                 ),
               ],
+            ),
+          ),
+          // 폼 섹션
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.access_time,
+                          color: Color(0xFF10B981),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        '시작 시간 선택',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () => _selectStartTime(),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FA),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: const Color(0xFF10B981),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  startTime != null ? '선택된 시간' : '시작 시간을 선택해주세요',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  startTime != null
+                                      ? DateFormat('yyyy년 M월 d일 HH:mm').format(startTime!)
+                                      : '날짜와 시간을 선택해보세요',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: startTime != null ? Colors.black87 : Colors.grey[500],
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.grey[400],
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.timer,
+                          color: Color(0xFF10B981),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        '소요 시간 선택',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _DurationButton(
+                        duration: 30,
+                        selectedDuration: selectedDurationMinutes,
+                        onSelected: (duration) {
+                          setState(() {
+                            selectedDurationMinutes = duration;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _DurationButton(
+                        duration: 60,
+                        selectedDuration: selectedDurationMinutes,
+                        onSelected: (duration) {
+                          setState(() {
+                            selectedDurationMinutes = duration;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _DurationButton(
+                        duration: 90,
+                        selectedDuration: selectedDurationMinutes,
+                        onSelected: (duration) {
+                          setState(() {
+                            selectedDurationMinutes = duration;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _DurationButton(
+                        duration: 120,
+                        selectedDuration: selectedDurationMinutes,
+                        onSelected: (duration) {
+                          setState(() {
+                            selectedDurationMinutes = duration;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  if (startTime != null && endTime != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.schedule,
+                            color: Color(0xFF10B981),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '예약 시간 확인',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${DateFormat('HH:mm').format(startTime!)} - ${DateFormat('HH:mm').format(endTime!)} (${selectedDurationMinutes}분)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[700],
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _canSubmit() && !isLoading ? _submitAppointment : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text(
+                              'PT 예약 생성하기',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
         ],
@@ -474,9 +823,19 @@ class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('PT 약속이 생성되었습니다.'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text(
+              'PT 예약이 성공적으로 생성되었습니다!',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -484,8 +843,18 @@ class _CreateAppointmentSheetState extends ConsumerState<_CreateAppointmentSheet
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류가 발생했습니다: $error'),
+            content: Text(
+              'PT 예약 생성에 실패했습니다: $error',
+              style: const TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -518,13 +887,21 @@ class _DurationButton extends StatelessWidget {
       child: InkWell(
         onTap: () => onSelected(duration),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.orange : Colors.white,
+            color: isSelected ? const Color(0xFF10B981) : Colors.white,
             border: Border.all(
-              color: isSelected ? Colors.orange : Colors.grey[300]!,
+              color: isSelected ? const Color(0xFF10B981) : Colors.grey[300]!,
+              width: isSelected ? 2 : 1,
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isSelected ? [
+              BoxShadow(
+                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ] : null,
           ),
           child: Center(
             child: Text(
@@ -532,9 +909,10 @@ class _DurationButton extends StatelessWidget {
                 ? '${duration ~/ 60}시간${duration % 60 > 0 ? ' ${duration % 60}분' : ''}'
                 : '${duration}분',
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
+                color: isSelected ? Colors.white : Colors.black87,
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'IBMPlexSansKR',
               ),
             ),
           ),

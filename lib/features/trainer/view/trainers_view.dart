@@ -107,7 +107,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                   );
                 }
 
-                return _buildSwipeableTrainerView(displayTrainers);
+                return _buildGridTrainerView(displayTrainers);
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(
@@ -117,12 +117,204 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
     );
   }
 
+  Widget _buildGridTrainerView(List<TrainerProfile> trainers) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, // 2x2 그리드
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.7, // 세로가 긴 비율 (사람 몸사진용)
+        ),
+        itemCount: trainers.length,
+        itemBuilder: (context, index) {
+          return _buildGridTrainerCard(trainers[index]);
+        },
+      ),
+    );
+  }
+
   Widget _buildSwipeableTrainerView(List<TrainerProfile> trainers) {
     return PageView.builder(
       itemCount: trainers.length,
       itemBuilder: (context, index) {
         return _buildFullScreenTrainerCard(trainers[index], index, trainers.length);
       },
+    );
+  }
+
+  Widget _buildGridTrainerCard(TrainerProfile trainer) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TrainerDetailView(
+              trainerId: trainer.trainerId,
+              trainer: trainer,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              // 배경 이미지
+              Container(
+                width: double.infinity,
+                height: double.infinity,
+                child: trainer.profileImageUrl != null && trainer.profileImageUrl!.isNotEmpty
+                    ? Builder(
+                        builder: (context) {
+                          final imageUrl = trainer.profileImageUrl!.startsWith('http')
+                              ? trainer.profileImageUrl!
+                              : trainer.profileImageUrl!.startsWith('/')
+                                  ? '${ApiConfig.imageBaseUrl}${trainer.profileImageUrl!}'
+                                  : '${ApiConfig.imageBaseUrl}/images/${trainer.profileImageUrl!}';
+                          return Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Color(0xFF10B981),
+                                      Color(0xFF34D399),
+                                    ],
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      )
+                    : Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFF10B981),
+                              Color(0xFF34D399),
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.person,
+                            size: 40,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                      ),
+              ),
+              
+              // 그라디언트 오버레이
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.1),
+                      Colors.black.withOpacity(0.4),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // 하단 정보 (고정 높이 바텀시트)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 80, // 고정 높이 설정
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2), // 매우 투명하게 설정
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center, // 중앙 정렬
+                    children: [
+                      // 이름 (가독성 높임)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7), // 텍스트 배경 추가
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          trainer.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white, // 흰색으로 대비 높임
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      
+                      // 전문 분야 (가독성 높임)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.9), // 배경 추가
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          trainer.specialties.isNotEmpty 
+                              ? trainer.specialties.take(2).map((s) => '#$s').join(' ')
+                              : '#전문분야 미등록', // 기본값
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -239,18 +431,19 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
               ),
             ),
             
-            // 트레이너 정보 카드 (하단) - 높이 줄임
+            // 트레이너 정보 카드 (고정 높이)
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
+              height: 200, // 고정 높이 설정 (이름, 설명, 전공, 버튼 모두 보일 정도)
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.85), // 반투명 흰색
+                  color: Colors.white.withOpacity(0.3), // 더 투명하게 조정
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),
@@ -259,51 +452,78 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // 공간 균등 분배
                   children: [
-                    // 이름
-                    Text(
-                      trainer.name,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        fontFamily: 'IBMPlexSansKR',
+                    // 상단 정보 영역
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 이름 (가독성 높임)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              trainer.name,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          
+                          // 해시태그 스타일 전문 분야 (가독성 높임)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              trainer.specialties.isNotEmpty 
+                                  ? trainer.specialties.map((specialty) => '#$specialty').join(' ')
+                                  : '#전문분야 미등록', // 기본값
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          
+                          // 소개 (가독성 높임)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              trainer.introduction?.isNotEmpty == true 
+                                  ? trainer.introduction!
+                                  : '트레이너 소개가 등록되지 않았습니다.', // 기본값
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
                     
-                    // 해시태그 스타일 전문 분야
-                    if (trainer.specialties.isNotEmpty)
-                      Text(
-                        trainer.specialties.map((specialty) => '#$specialty').join(' '),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF10B981),
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'IBMPlexSansKR',
-                          height: 1.4,
-                        ),
-                      ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // 소개 (한 줄로 제한)
-                    if (trainer.introduction != null && trainer.introduction!.isNotEmpty)
-                      Text(
-                        trainer.introduction!,
-                        style: TextStyle(
-                          color: Colors.grey[800],
-                          fontSize: 14,
-                          fontFamily: 'IBMPlexSansKR',
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // 액션 버튼 (높이 줄임)
+                    // 액션 버튼
                     Container(
                       width: double.infinity,
                       height: 48,

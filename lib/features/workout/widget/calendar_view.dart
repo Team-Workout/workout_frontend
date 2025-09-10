@@ -101,8 +101,8 @@ class _CalendarViewState extends State<CalendarView> {
                     color: Colors.black,
                     fontFamily: 'IBMPlexSansKR',
                   ),
-                  leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF4CAF50)),
-                  rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF4CAF50)),
+                  leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF10B981)),
+                  rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF10B981)),
                 ),
                 daysOfWeekStyle: const DaysOfWeekStyle(
                   weekendStyle: TextStyle(
@@ -126,12 +126,28 @@ class _CalendarViewState extends State<CalendarView> {
                     shape: BoxShape.circle,
                   ),
                   selectedDecoration: BoxDecoration(
-                    color: Color(0xFF4CAF50),
+                    color: Color(0xFF10B981),
                     shape: BoxShape.circle,
                   ),
                   markerDecoration: BoxDecoration(
-                    color: Color(0xFF4CAF50),
-                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF10B981),
+                        Color(0xFF34D399),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(3)),
+                    border: Border.fromBorderSide(BorderSide(
+                      color: Colors.white,
+                      width: 1,
+                    )),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x6610B981), // withOpacity(0.4) 대신 16진수로
+                        blurRadius: 3,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
                   ),
                   weekendTextStyle: TextStyle(
                     color: Colors.red,
@@ -150,8 +166,9 @@ class _CalendarViewState extends State<CalendarView> {
                     fontWeight: FontWeight.w700,
                     fontFamily: 'IBMPlexSansKR',
                   ),
-                  markerSize: 6,
-                  markersMaxCount: 3,
+                  markerSize: 10,
+                  markersMaxCount: 1,
+                  markerMargin: EdgeInsets.symmetric(horizontal: 0.5),
                 ),
                 onDaySelected: (selectedDay, focusedDay) {
                   widget.viewModel.updateSelectedDate(selectedDay);

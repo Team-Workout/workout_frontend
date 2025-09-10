@@ -88,7 +88,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
         ElevatedButton.icon(
           onPressed: _showRoutineSelector,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4CAF50),
+            backgroundColor: const Color(0xFF10B981),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
@@ -138,7 +138,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                   child: const Icon(
                     Icons.fitness_center_outlined,
                     size: 48,
-                    color: Color(0xFF4CAF50),
+                    color: Color(0xFF10B981),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -192,7 +192,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isFormExpanded ? const Color(0xFF4CAF50) : Colors.grey[200]!,
+          color: _isFormExpanded ? const Color(0xFF10B981) : Colors.grey[200]!,
           width: _isFormExpanded ? 2 : 1,
         ),
         boxShadow: [
@@ -233,7 +233,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: _isFormExpanded
-                    ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
+                    ? const Color(0xFF10B981).withValues(alpha: 0.1)
                     : Colors.white,
                 borderRadius: _isFormExpanded
                     ? const BorderRadius.vertical(top: Radius.circular(16))
@@ -247,14 +247,14 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                     decoration: BoxDecoration(
                       color: _isFormExpanded
                           ? Colors.grey[300]
-                          : const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                          : const Color(0xFF10B981).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       _isFormExpanded ? Icons.close : Icons.add,
                       color: _isFormExpanded
                           ? Colors.grey
-                          : const Color(0xFF4CAF50),
+                          : const Color(0xFF10B981),
                       size: 20,
                     ),
                   ),
@@ -338,18 +338,18 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          _exerciseNameController.text.isEmpty 
-                            ? '부위별로 운동을 선택해보세요'
-                            : _exerciseNameController.text,
+                          _exerciseNameController.text.isEmpty
+                              ? '부위별로 운동을 선택해보세요'
+                              : _exerciseNameController.text,
                           style: TextStyle(
                             fontSize: 14,
-                            color: _exerciseNameController.text.isEmpty 
-                              ? Colors.grey[600]
-                              : Colors.black87,
+                            color: _exerciseNameController.text.isEmpty
+                                ? Colors.grey[600]
+                                : Colors.black87,
                             fontFamily: 'IBMPlexSansKR',
-                            fontWeight: _exerciseNameController.text.isEmpty 
-                              ? FontWeight.w400 
-                              : FontWeight.w600,
+                            fontWeight: _exerciseNameController.text.isEmpty
+                                ? FontWeight.w400
+                                : FontWeight.w600,
                           ),
                         ),
                       ),
@@ -391,7 +391,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                   ElevatedButton.icon(
                     onPressed: _addSet,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50),
+                      backgroundColor: const Color(0xFF10B981),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
@@ -501,7 +501,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -575,7 +575,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: const BorderSide(
-                                color: Color(0xFF4CAF50), width: 2),
+                                color: Color(0xFF10B981), width: 2),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 12),
@@ -635,7 +635,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: const BorderSide(
-                                color: Color(0xFF4CAF50), width: 2),
+                                color: Color(0xFF10B981), width: 2),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 12),
@@ -811,7 +811,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
             fontFamily: 'IBMPlexSansKR',
           ),
         ),
-        backgroundColor: Color(0xFF4CAF50),
+        backgroundColor: Color(0xFF10B981),
         duration: Duration(seconds: 1),
       ),
     );
@@ -839,7 +839,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                       ),
                     ],
                   ),
-                  backgroundColor: const Color(0xFF4CAF50),
+                  backgroundColor: const Color(0xFF10B981),
                   duration: const Duration(seconds: 2),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
@@ -878,7 +878,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
           }
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF4CAF50),
+          backgroundColor: const Color(0xFF10B981),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -953,7 +953,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                 ),
               ],
             ),
-            backgroundColor: const Color(0xFF4CAF50),
+            backgroundColor: const Color(0xFF10B981),
             duration: const Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -1023,7 +1023,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -1077,7 +1077,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                         color: Colors.grey[50],
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.2),
                           width: 1,
                         ),
                         boxShadow: [
@@ -1118,7 +1118,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF4CAF50)
+                                          color: const Color(0xFF10B981)
                                               .withValues(alpha: 0.1),
                                           borderRadius:
                                               BorderRadius.circular(12),
@@ -1126,7 +1126,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                                         child: Text(
                                           '${routine.routineExercises!.length}개 운동',
                                           style: const TextStyle(
-                                            color: Color(0xFF4CAF50),
+                                            color: Color(0xFF10B981),
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                             fontFamily: 'IBMPlexSansKR',
@@ -1139,7 +1139,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                               const Icon(
                                 Icons.arrow_forward_ios,
                                 size: 18,
-                                color: Color(0xFF4CAF50),
+                                color: Color(0xFF10B981),
                               ),
                             ],
                           ),
@@ -1166,7 +1166,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                     ),
                   ),
                   child: Material(
-                    color: Colors.transparent,
+                    color: Colors.red.shade600,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
                       onTap: () =>
@@ -1175,7 +1175,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                         child: Text(
                           '취소',
                           style: TextStyle(
-                            color: Colors.grey[700],
+                            color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             fontFamily: 'IBMPlexSansKR',
@@ -1232,7 +1232,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                   padding: const EdgeInsets.all(24),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -1278,11 +1278,11 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color:
-                                const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                                const Color(0xFF10B981).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Column(
@@ -1302,7 +1302,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF4CAF50),
+                                color: Color(0xFF10B981),
                                 fontFamily: 'IBMPlexSansKR',
                               ),
                             ),
@@ -1364,8 +1364,8 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [
-                                    Color(0xFF4CAF50),
-                                    Color(0xFF66BB6A)
+                                    Color(0xFF10B981),
+                                    Color(0xFF34D399)
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -1373,7 +1373,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                                 borderRadius: BorderRadius.circular(24),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF4CAF50)
+                                    color: const Color(0xFF10B981)
                                         .withValues(alpha: 0.3),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),

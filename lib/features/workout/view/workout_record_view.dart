@@ -84,18 +84,20 @@ class _WorkoutRecordViewState extends ConsumerState<WorkoutRecordView> {
                     unselectedLabelColor: Colors.grey,
                     indicatorColor: Color(0xFF10B981),
                     indicatorWeight: 3,
+                    isScrollable: false, // 고정 탭으로 균등 분할
+                    tabAlignment: TabAlignment.fill, // 탭이 균등하게 공간 차지
                     labelStyle: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 16,
+                      fontSize: 15, // 폰트 크기 약간 축소
                       fontFamily: 'IBMPlexSansKR',
                     ),
                     unselectedLabelStyle: TextStyle(
                       fontWeight: FontWeight.w500,
-                      fontSize: 16,
+                      fontSize: 15, // 폰트 크기 약간 축소
                       fontFamily: 'IBMPlexSansKR',
                     ),
                     tabs: [
-                      Tab(text: '운동 기록'),
+                      Tab(text: '기록'), // '운동 기록' → '기록'으로 축약
                       Tab(text: '캘린더'),
                       Tab(text: '루틴'),
                       Tab(text: '분석'),

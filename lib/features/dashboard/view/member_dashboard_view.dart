@@ -67,7 +67,6 @@ class _MemberDashboardViewState extends ConsumerState<MemberDashboardView> {
     );
   }
 
-
   Widget _buildRealBodyStatsCard() {
     return Consumer(
       builder: (context, ref, child) {
@@ -183,15 +182,13 @@ class _MemberDashboardViewState extends ConsumerState<MemberDashboardView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStatItem('현재 체중',
+                    _buildStatItem('체중',
                         bodyStats.currentWeight.toStringAsFixed(1), ' kg'),
                     _buildStatItem(
-                        '체중 변화',
-                        '${bodyStats.weightChange >= 0 ? '+' : ''}${bodyStats.weightChange.toStringAsFixed(1)}',
-                        'kg'),
-                    _buildStatItem('BMI', bodyStats.bmi.toStringAsFixed(1), ''),
-                    _buildStatItem(
                         '근육량', bodyStats.muscleMass.toStringAsFixed(1), ' kg'),
+                    _buildStatItem('체지방률',
+                        bodyStats.bodyFatPercentage.toStringAsFixed(1), ' %'),
+                    _buildStatItem('BMI', bodyStats.bmi.toStringAsFixed(1), ''),
                   ],
                 ),
               ),
@@ -266,6 +263,7 @@ class _MemberDashboardViewState extends ConsumerState<MemberDashboardView> {
         ),
         const SizedBox(height: 4),
         RichText(
+          textAlign: TextAlign.center,
           text: TextSpan(
             children: [
               TextSpan(
@@ -275,6 +273,7 @@ class _MemberDashboardViewState extends ConsumerState<MemberDashboardView> {
                   fontWeight: FontWeight.w800,
                   color: Colors.black,
                   fontFamily: 'IBMPlexSansKR',
+                  height: 1.0, // 라인 높이 통일
                 ),
               ),
               if (unit.isNotEmpty)
@@ -285,6 +284,7 @@ class _MemberDashboardViewState extends ConsumerState<MemberDashboardView> {
                     color: Colors.grey,
                     fontFamily: 'IBMPlexSansKR',
                     fontWeight: FontWeight.w600,
+                    height: 1.0, // 같은 높이로 정렬
                   ),
                 ),
             ],

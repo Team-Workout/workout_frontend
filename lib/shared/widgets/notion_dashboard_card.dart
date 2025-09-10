@@ -67,38 +67,36 @@ class NotionDashboardCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 // 콘텐츠
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.3,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.3,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        value,
-                        style: TextStyle(
-                          color: isHighlighted 
-                              ? const Color(0xFF10B981) 
-                              : const Color(0xFF10B981).withOpacity(0.9),
-                          fontSize: 13,
-                          fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        color: isHighlighted 
+                            ? const Color(0xFF10B981) 
+                            : const Color(0xFF10B981).withOpacity(0.9),
+                        fontSize: 13,
+                        fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w600,
                       ),
-                    ],
-                  ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 8),
                 // 화살표 아이콘 (우측 하단)
                 Align(
                   alignment: Alignment.bottomRight,

@@ -5,6 +5,11 @@ import 'package:fl_chart/fl_chart.dart';
 import '../model/trainer_client_model.dart';
 import '../viewmodel/trainer_client_viewmodel.dart';
 import '../../../services/image_cache_manager.dart';
+import '../../body_composition/widget/weight_chart.dart';
+import '../../body_composition/widget/mini_weight_chart.dart';
+import '../../body_composition/widget/combined_progress_section.dart';
+import '../../body_composition/model/body_composition_model.dart';
+import '../../body_composition/viewmodel/body_composition_viewmodel.dart';
 
 class TrainerClientDetailView extends ConsumerStatefulWidget {
   final TrainerClient client;
@@ -29,7 +34,7 @@ class _TrainerClientDetailViewState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
 
     // 기본적으로 최근 3개월 데이터를 조회
     final now = DateTime.now();
@@ -134,6 +139,7 @@ class _TrainerClientDetailViewState
               tabs: const [
                 Tab(text: '체성분 분석'),
                 Tab(text: '몸 사진'),
+                Tab(text: '운동 분석'),
               ],
             ),
           ),
@@ -145,6 +151,7 @@ class _TrainerClientDetailViewState
               children: [
                 _buildBodyCompositionTab(),
                 _buildBodyImagesTab(),
+                _buildWorkoutAnalysisTab(),
               ],
             ),
           ),
@@ -299,95 +306,177 @@ class _TrainerClientDetailViewState
           );
         }
 
+        // BodyComposition 타입으로 변환
+        final bodyCompositions = compositions.map((comp) => BodyComposition(
+          id: comp.id,
+          member: {
+            'id': widget.client.memberId,
+            'name': widget.client.name,
+            'email': widget.client.email,
+          },
+          measurementDate: comp.measurementDate,
+          weightKg: comp.weightKg ?? 0.0,
+          fatKg: comp.fatKg ?? 0.0,
+          muscleMassKg: comp.muscleMassKg ?? 0.0,
+        )).toList();
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 체중 변화 차트
-              _buildWeightChart(compositions),
+              // 체중 변화 그래프
+              _buildSingleChart(
+                title: '체중 변화 추이',
+                data: bodyCompositions.map((comp) => comp.weightKg).toList(),
+                unit: 'kg',
+                color: const Color(0xFF10B981),
+                dates: bodyCompositions.map((comp) => DateTime.parse(comp.measurementDate)).toList(),
+              ),
               const SizedBox(height: 24),
 
-              // 체성분 목록
-              _buildCompositionList(compositions),
+              // 근육량 변화 그래프  
+              _buildSingleChart(
+                title: '근육량 변화 추이',
+                data: bodyCompositions.map((comp) => comp.muscleMassKg).toList(),
+                unit: 'kg',
+                color: const Color(0xFF3B82F6),
+                dates: bodyCompositions.map((comp) => DateTime.parse(comp.measurementDate)).toList(),
+              ),
+              const SizedBox(height: 24),
+
+              // 체지방량 변화 그래프
+              _buildSingleChart(
+                title: '체지방량 변화 추이',
+                data: bodyCompositions.map((comp) => comp.fatKg).toList(),
+                unit: 'kg',
+                color: const Color(0xFFF59E0B),
+                dates: bodyCompositions.map((comp) => DateTime.parse(comp.measurementDate)).toList(),
+              ),
             ],
           ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-            const SizedBox(height: 16),
-            Text(
-              '체성분 데이터를 불러오는데 실패했습니다',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+      error: (error, stack) => _buildPrivacyErrorView(
+        icon: Icons.analytics_outlined,
+        title: '체성분 데이터를 확인할 수 없습니다',
+        message: '${widget.client.name}님이 체성분 데이터 공개를 허용하지 않았습니다',
+        error: error,
       ),
     );
   }
 
-  Widget _buildWeightChart(List<MemberBodyComposition> compositions) {
-    // null이 아닌 체중 데이터만 필터링
-    final validCompositions =
-        compositions.where((comp) => comp.weightKg != null).toList();
-
-    if (validCompositions.length < 2) {
-      return const SizedBox.shrink();
-    }
-
-    final sortedCompositions = [...validCompositions]..sort((a, b) =>
-        DateTime.parse(a.measurementDate)
-            .compareTo(DateTime.parse(b.measurementDate)));
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
+  Widget _buildSingleChart({
+    required String title,
+    required List<double> data,
+    required String unit,
+    required Color color,
+    required List<DateTime> dates,
+  }) {
+    if (data.length < 2) {
+      return Container(
+        height: 250,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '변화 추이',
-              style: TextStyle(
+            Text(
+              title,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                fontFamily: 'IBMPlexSansKR',
               ),
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: Colors.grey[200]!,
-                        strokeWidth: 1,
-                      );
-                    },
+            const SizedBox(height: 16),
+            const Expanded(
+              child: Center(
+                child: Text(
+                  '데이터가 부족합니다',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontFamily: 'IBMPlexSansKR',
                   ),
-                  titlesData: FlTitlesData(
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final spots = data.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value);
+    }).toList();
+
+    final minValue = data.reduce((a, b) => a < b ? a : b);
+    final maxValue = data.reduce((a, b) => a > b ? a : b);
+    final range = maxValue - minValue;
+    final padding = range * 0.1;
+
+    return Container(
+      height: 250,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey[200]!,
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 50,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            '${value.toInt()}kg',
+                            '${value.toInt()}$unit',
                             style: TextStyle(
-                                fontSize: 12, color: Colors.grey[600]),
+                                fontSize: 12, 
+                                color: Colors.grey[600],
+                                fontFamily: 'IBMPlexSansKR'),
                           );
                         },
                       ),
@@ -397,15 +486,14 @@ class _TrainerClientDetailViewState
                         showTitles: true,
                         reservedSize: 30,
                         getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= 0 &&
-                              value.toInt() < sortedCompositions.length) {
-                            final date = DateTime.parse(
-                                sortedCompositions[value.toInt()]
-                                    .measurementDate);
+                          if (value.toInt() >= 0 && value.toInt() < dates.length) {
+                            final date = dates[value.toInt()];
                             return Text(
                               '${date.month}/${date.day}',
                               style: TextStyle(
-                                  fontSize: 10, color: Colors.grey[600]),
+                                  fontSize: 10, 
+                                  color: Colors.grey[600],
+                                  fontFamily: 'IBMPlexSansKR'),
                             );
                           }
                           return const Text('');
@@ -414,101 +502,37 @@ class _TrainerClientDetailViewState
                     ),
                     topTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: sortedCompositions.asMap().entries.map((entry) {
-                        return FlSpot(
-                            entry.key.toDouble(), entry.value.weightKg!);
-                      }).toList(),
-                      isCurved: true,
-                      gradient: LinearGradient(
-                        colors: [Colors.blue[300]!, Colors.blue[600]!],
-                      ),
-                      barWidth: 3,
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, barData, index) {
-                          return FlDotCirclePainter(
-                            radius: 4,
-                            color: Colors.blue[600]!,
-                            strokeColor: Colors.white,
-                            strokeWidth: 2,
-                          );
-                        },
-                      ),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.blue[200]!.withOpacity(0.3),
-                            Colors.blue[100]!.withOpacity(0.1),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                ),
+                borderData: FlBorderData(show: false),
+                minY: minValue - padding,
+                maxY: maxValue + padding,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    color: color,
+                    barWidth: 3,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: color,
+                          strokeColor: Colors.white,
+                          strokeWidth: 2,
+                        );
+                      },
                     ),
-                  ],
-                ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: color.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompositionList(List<MemberBodyComposition> compositions) {
-    final sortedCompositions = [...compositions]..sort((a, b) =>
-        DateTime.parse(b.measurementDate)
-            .compareTo(DateTime.parse(a.measurementDate)));
-
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(20),
-            child: Text(
-              '체성분 기록',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: sortedCompositions.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final composition = sortedCompositions[index];
-              final date = DateTime.parse(composition.measurementDate);
-
-              return ListTile(
-                title: Text(
-                  '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Row(
-                  children: [
-                    Text(
-                        '체중: ${composition.weightKg?.toStringAsFixed(1) ?? '-'}kg'),
-                    const SizedBox(width: 16),
-                    Text(
-                        '체지방: ${composition.fatKg?.toStringAsFixed(1) ?? '-'}kg'),
-                    const SizedBox(width: 16),
-                    Text(
-                        '근육량: ${composition.muscleMassKg?.toStringAsFixed(1) ?? '-'}kg'),
-                  ],
-                ),
-              );
-            },
           ),
         ],
       ),
@@ -559,79 +583,108 @@ class _TrainerClientDetailViewState
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-            const SizedBox(height: 16),
-            Text(
-              '몸 사진을 불러오는데 실패했습니다',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+      error: (error, stack) => _buildPrivacyErrorView(
+        icon: Icons.photo_outlined,
+        title: '몸 사진을 확인할 수 없습니다',
+        message: '${widget.client.name}님이 몸 사진 공개를 허용하지 않았습니다',
+        error: error,
       ),
     );
   }
 
   Widget _buildImageCard(MemberBodyImage image) {
     final date = DateTime.parse(image.recordDate);
+    
+    // 상대 경로를 절대 경로로 변환
+    final fullImageUrl = image.fileUrl.startsWith('http') 
+        ? image.fileUrl 
+        : 'http://211.220.34.173${image.fileUrl}';
 
     return FutureBuilder<String?>(
       future: ImageCacheManager().getCachedImage(
-        imageUrl: image.fileUrl,
+        imageUrl: fullImageUrl,
         cacheKey: 'body_${image.fileId}',
         type: ImageType.body,
       ),
       builder: (context, snapshot) {
-        return Card(
-          clipBehavior: Clip.antiAlias,
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
                   ),
-                  child: snapshot.hasData && snapshot.data != null
-                      ? Image.file(
-                          File(snapshot.data!),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return _buildImagePlaceholder();
-                          },
-                        )
-                      : snapshot.connectionState == ConnectionState.waiting
-                          ? const Center(child: CircularProgressIndicator())
-                          : _buildImagePlaceholder(),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                    child: snapshot.hasData && snapshot.data != null
+                        ? Image.file(
+                            File(snapshot.data!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return _buildImagePlaceholder();
+                            },
+                          )
+                        : snapshot.connectionState == ConnectionState.waiting
+                            ? Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    const Color(0xFF10B981),
+                                  ),
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : _buildImagePlaceholder(),
+                  ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          color: Color(0xFF10B981),
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
-                      image.originalFileName ?? '이미지',
+                      image.originalFileName ?? '몸 사진',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: Colors.grey[600],
+                        fontFamily: 'IBMPlexSansKR',
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -648,12 +701,517 @@ class _TrainerClientDetailViewState
 
   Widget _buildImagePlaceholder() {
     return Container(
-      color: Colors.grey[200],
-      child: Icon(
-        Icons.image_outlined,
-        size: 48,
-        color: Colors.grey[400],
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.photo_camera_outlined,
+                size: 32,
+                color: const Color(0xFF10B981).withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '사진 없음',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[500],
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrivacyErrorView({
+    required IconData icon,
+    required String title,
+    required String message,
+    required Object error,
+  }) {
+    // 403 에러인지 확인
+    final isPrivacyError = error.toString().contains('접근히 허용되지 않습니다') ||
+        error.toString().contains('NOT_ALLOWED') ||
+        error.toString().contains('403');
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: isPrivacyError 
+                    ? const Color(0xFFF59E0B).withValues(alpha: 0.1)
+                    : Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                isPrivacyError ? Icons.lock_outline : Icons.error_outline,
+                size: 64,
+                color: isPrivacyError 
+                    ? const Color(0xFFF59E0B)
+                    : Colors.red[400],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              isPrivacyError ? title : '데이터를 불러오는데 실패했습니다',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isPrivacyError 
+                  ? message
+                  : '네트워크 연결을 확인하고 다시 시도해주세요',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontFamily: 'IBMPlexSansKR',
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (isPrivacyError) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: const Color(0xFF10B981),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '개인정보 보호 설정에 의해 제한됩니다',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: const Color(0xFF10B981),
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorkoutAnalysisTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 운동 통계 카드
+          _buildWorkoutStatsCard(),
+          const SizedBox(height: 24),
+          
+          // 주간 운동 빈도 차트
+          _buildWorkoutFrequencyChart(),
+          const SizedBox(height: 24),
+          
+          // 운동 부위별 분석
+          _buildMuscleGroupAnalysis(),
+          const SizedBox(height: 24),
+          
+          // 최근 운동 기록
+          _buildRecentWorkouts(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkoutStatsCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '운동 통계',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  '이번 주 운동',
+                  '4회',
+                  Icons.fitness_center,
+                  const Color(0xFF10B981),
+                ),
+              ),
+              Expanded(
+                child: _buildStatItem(
+                  '평균 운동시간',
+                  '75분',
+                  Icons.timer,
+                  const Color(0xFF3B82F6),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  '총 운동일수',
+                  '42일',
+                  Icons.calendar_today,
+                  const Color(0xFFF59E0B),
+                ),
+              ),
+              Expanded(
+                child: _buildStatItem(
+                  '달성률',
+                  '85%',
+                  Icons.trending_up,
+                  const Color(0xFFEC4899),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkoutFrequencyChart() {
+    return Container(
+      height: 250,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '주간 운동 빈도',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildBarChart('월', 3, const Color(0xFF10B981)),
+                _buildBarChart('화', 2, const Color(0xFF3B82F6)),
+                _buildBarChart('수', 4, const Color(0xFFF59E0B)),
+                _buildBarChart('목', 1, const Color(0xFFEC4899)),
+                _buildBarChart('금', 3, const Color(0xFF8B5CF6)),
+                _buildBarChart('토', 2, const Color(0xFF06B6D4)),
+                _buildBarChart('일', 1, const Color(0xFFEF4444)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarChart(String day, int count, Color color) {
+    const maxHeight = 120.0;
+    final height = (count / 5) * maxHeight;
+    
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          '$count',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[600],
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 24,
+          height: height,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          day,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMuscleGroupAnalysis() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '운동 부위별 분석',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildMuscleProgressItem('가슴', 0.8, const Color(0xFF10B981)),
+          const SizedBox(height: 12),
+          _buildMuscleProgressItem('등', 0.6, const Color(0xFF3B82F6)),
+          const SizedBox(height: 12),
+          _buildMuscleProgressItem('어깨', 0.7, const Color(0xFFF59E0B)),
+          const SizedBox(height: 12),
+          _buildMuscleProgressItem('팔', 0.5, const Color(0xFFEC4899)),
+          const SizedBox(height: 12),
+          _buildMuscleProgressItem('하체', 0.9, const Color(0xFF8B5CF6)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMuscleProgressItem(String muscleName, double progress, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              muscleName,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+            Text(
+              '${(progress * 100).toInt()}%',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor: Colors.grey[200],
+          valueColor: AlwaysStoppedAnimation<Color>(color),
+          minHeight: 8,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentWorkouts() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '최근 운동 기록',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildWorkoutItem('벤치프레스', '80kg × 10회 × 3세트', '2024.09.10'),
+          const Divider(height: 20),
+          _buildWorkoutItem('스쿼트', '100kg × 8회 × 4세트', '2024.09.09'),
+          const Divider(height: 20),
+          _buildWorkoutItem('데드리프트', '120kg × 6회 × 3세트', '2024.09.08'),
+          const Divider(height: 20),
+          _buildWorkoutItem('풀업', '자중 × 12회 × 3세트', '2024.09.07'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkoutItem(String exercise, String details, String date) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xFF10B981).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(
+            Icons.fitness_center,
+            color: Color(0xFF10B981),
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                exercise,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                details,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          date,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[500],
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
+import '../viewmodel/routine_viewmodel.dart';
 import '../model/routine_models.dart';
 import '../../../common/widgets/enhanced_exercise_selector.dart';
 import '../../../common/constants/muscle_translations.dart';
@@ -227,11 +228,36 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
       final response =
           await widget.viewModel.workoutApiService.createRoutine(request);
 
+      // 루틴 리스트 새로고침
+      await ref.read(routineProvider.notifier).loadRoutines();
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('루틴이 성공적으로 저장되었습니다')),
+        const SnackBar(
+          content: Text('루틴이 성공적으로 저장되었습니다'),
+          backgroundColor: Color(0xFF10B981),
+        ),
       );
 
       _resetForm();
+
+      // 이전 화면으로 돌아가기 (보통 루틴 리스트 화면)
+      // Navigator.canPop() 확인 후 pop 실행
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context, true); // true를 전달하여 새로고침 필요함을 알림
+      } else {
+        // 독립 실행된 경우 탭 전환 시도
+        try {
+          final TabController? tabController = DefaultTabController.maybeOf(context);
+          if (tabController != null) {
+            tabController.animateTo(0); // 루틴 리스트 탭으로 이동
+          }
+        } catch (e) {
+          // TabController를 찾을 수 없는 경우 무시
+          debugPrint('TabController를 찾을 수 없습니다: $e');
+        }
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('루틴 저장 실패: $e')),
@@ -318,7 +344,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
                       Icons.keyboard_arrow_down,
-                      color: const Color(0xFF4CAF50),
+                      color: const Color(0xFF10B981),
                       size: 24,
                     ),
                   ),
@@ -404,7 +430,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                 margin: const EdgeInsets.all(12),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -444,7 +470,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border:
-            Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
+            Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -467,7 +493,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
+                        color: const Color(0xFF10B981).withValues(alpha: 0.3)),
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -480,12 +506,12 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.add, color: Color(0xFF4CAF50)),
+                            Icon(Icons.add, color: Color(0xFF10B981)),
                             SizedBox(width: 8),
                             Text(
                               '운동 추가',
                               style: TextStyle(
-                                color: Color(0xFF4CAF50),
+                                color: Color(0xFF10B981),
                                 fontWeight: FontWeight.w600,
                                 fontFamily: 'IBMPlexSansKR',
                               ),
@@ -537,7 +563,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+          color: const Color(0xFF10B981).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -600,7 +626,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4CAF50)
+                              color: const Color(0xFF10B981)
                                   .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -647,7 +673,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                       padding: const EdgeInsets.all(4),
                       child: Icon(
                         Icons.keyboard_arrow_down,
-                        color: const Color(0xFF4CAF50),
+                        color: const Color(0xFF10B981),
                         size: 24,
                       ),
                     ),
@@ -778,7 +804,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                               ),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF4CAF50)
+                                  color: const Color(0xFF10B981)
                                       .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -793,7 +819,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                                     ),
                                   ),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF4CAF50),
+                                    foregroundColor: const Color(0xFF10B981),
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 12, vertical: 8),
                                   ),
@@ -833,7 +859,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -906,7 +932,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+                            borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                           suffixText: 'kg',
@@ -969,7 +995,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+                            borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                           suffixText: '회',
@@ -1014,7 +1040,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
       child: ElevatedButton(
         onPressed: _isLoading ? null : _saveRoutine,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF4CAF50),
+          backgroundColor: const Color(0xFF10B981),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(

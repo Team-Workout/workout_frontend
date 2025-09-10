@@ -141,23 +141,8 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                     // 체중변화 추이를 BMI 카드 바로 밑으로 이동
                     _buildWeightTrendWithImages(compositions),
                     const SizedBox(height: 24),
-                    // CombinedProgressSection(compositions: compositions),
-                    // 나의 변화 기록 관련 섹션들 주석 처리
-                    // const SizedBox(height: 24),
-                    // CombinedProgressSection(compositions: compositions),
-                    // 체성분 구성 그래프 주석 처리
-                    // const SizedBox(height: 24),
-                    // _buildBodyCompositionChart(compositions),
-                    // 체성분 데이터 목록 주석 처리
-                    // const SizedBox(height: 24),
-                    // BodyDataListSection(compositions: compositions),
-                    const SizedBox(height: 24),
                     _buildBodyImagesSection(),
                     const SizedBox(height: 24),
-                    // 더미 UI 제거
-                    // const KeyMeasurementsSection(),
-                    // const SizedBox(height: 24),
-                    // const TrainerFeedbackSection(),
                   ],
                 ),
               ),
@@ -655,110 +640,143 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     // Ensure minY is not negative (weights can't be negative)
     minY = minY < 0 ? 0 : minY;
 
-    return LineChart(
-      LineChartData(
-        lineTouchData: LineTouchData(
-          enabled: true,
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (touchedSpot) => const Color(0xFF1A1F36),
-            tooltipRoundedRadius: 8,
-            tooltipPadding: const EdgeInsets.all(8),
-            getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
-              return touchedBarSpots.map((barSpot) {
-                final flSpot = barSpot;
-                final date = DateTime.parse(
-                    sortedData[flSpot.x.toInt()].measurementDate);
-                return LineTooltipItem(
-                  '${DateFormat('MM/dd').format(date)}\n${flSpot.y.toStringAsFixed(1)}kg',
-                  const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                );
-              }).toList();
-            },
-          ),
-        ),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: (maxY - minY) / 5 > 0 ? (maxY - minY) / 5 : 1,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.grey[300]!,
-              strokeWidth: 1,
-            );
-          },
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 30,
-              getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 && value.toInt() < sortedData.length) {
-                  final date =
-                      DateTime.parse(sortedData[value.toInt()].measurementDate);
-                  return Text(
-                    DateFormat('MM/dd').format(date),
-                    style: const TextStyle(fontSize: 10),
-                  );
-                }
-                return const Text('');
-              },
-              interval: sortedData.length > 7
-                  ? (sortedData.length / 7).ceil().toDouble()
-                  : 1,
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 45,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  '${value.toStringAsFixed(1)}kg',
-                  style: const TextStyle(fontSize: 10),
-                );
-              },
-              interval: (maxY - minY) / 5 > 0 ? (maxY - minY) / 5 : 1,
-            ),
-          ),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        borderData: FlBorderData(show: false),
-        minX: 0,
-        maxX: (sortedData.length - 1).toDouble(),
-        minY: minY,
-        maxY: maxY,
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            color: const Color(0xFF6366F1),
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: FlDotData(
+    return Stack(
+      children: [
+        LineChart(
+          LineChartData(
+            lineTouchData: LineTouchData(enabled: false), // 터치 비활성화
+            gridData: FlGridData(
               show: true,
-              getDotPainter: (spot, percent, barData, index) {
-                return FlDotCirclePainter(
-                  radius: 4,
+              drawVerticalLine: false,
+              horizontalInterval: (maxY - minY) / 5 > 0 ? (maxY - minY) / 5 : 1,
+              getDrawingHorizontalLine: (value) {
+                return FlLine(
+                  color: Colors.grey[300]!,
+                  strokeWidth: 1,
+                );
+              },
+            ),
+            titlesData: FlTitlesData(
+              show: true,
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 30,
+                  getTitlesWidget: (value, meta) {
+                    // 인바디 스타일: 시작과 끝 날짜만 표시
+                    if (value.toInt() == 0 ||
+                        value.toInt() == sortedData.length - 1) {
+                      if (value.toInt() >= 0 &&
+                          value.toInt() < sortedData.length) {
+                        final date = DateTime.parse(
+                            sortedData[value.toInt()].measurementDate);
+                        return Text(
+                          DateFormat('MM/dd').format(date),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        );
+                      }
+                    }
+                    return const Text('');
+                  },
+                  interval: 1,
+                ),
+              ),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 35,
+                  getTitlesWidget: (value, meta) {
+                    // kg 단위 제거
+                    return Text(
+                      value.toStringAsFixed(0),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    );
+                  },
+                  interval: (maxY - minY) / 4 > 0 ? (maxY - minY) / 4 : 1,
+                ),
+              ),
+              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles:
+                  AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            ),
+            borderData: FlBorderData(show: false),
+            minX: 0,
+            maxX: (sortedData.length - 1).toDouble(),
+            minY: minY,
+            maxY: maxY,
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                color: const Color(0xFF10B981),
+                barWidth: 3,
+                isStrokeCapRound: true,
+                dotData: FlDotData(
+                  show: true,
+                  getDotPainter: (spot, percent, barData, index) {
+                    return FlDotCirclePainter(
+                      radius: 5,
+                      color: Colors.white,
+                      strokeWidth: 2,
+                      strokeColor: const Color(0xFF10B981),
+                    );
+                  },
+                ),
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: const Color(0xFF10B981).withOpacity(0.1),
+                ),
+              ),
+            ],
+            // 인바디 스타일: 점 위에 값 표시는 별도 위젯으로 구현
+            extraLinesData: ExtraLinesData(
+              horizontalLines: [],
+              verticalLines: [],
+            ),
+          ),
+        ),
+        // 차트 위에 값들을 직접 배치
+        ...spots.asMap().entries.map((entry) {
+          final spot = entry.value;
+
+          // 차트 영역 내에서의 위치 계산
+          final chartWidth = MediaQuery.of(context).size.width - 32; // 패딩 제외
+          final chartHeight = 250.0; // 차트 높이
+
+          final x = (spot.x / (spots.length - 1)) * chartWidth;
+          final normalizedY = (spot.y - minY) / (maxY - minY);
+          final y = chartHeight - (normalizedY * chartHeight) - 30; // 점 위쪽에 배치
+
+          return Positioned(
+            left: x - 15, // 텍스트 중앙 정렬
+            top: y,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                spot.y.toStringAsFixed(1),
+                style: const TextStyle(
                   color: Colors.white,
-                  strokeWidth: 2,
-                  strokeColor: const Color(0xFF6366F1),
-                );
-              },
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
             ),
-            belowBarData: BarAreaData(
-              show: true,
-              color: const Color(0xFF6366F1).withOpacity(0.1),
-            ),
-          ),
-        ],
-      ),
+          );
+        }).toList(),
+      ],
     );
   }
 
@@ -1132,12 +1150,13 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
           return Dialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.all(20),
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              constraints: const BoxConstraints(maxWidth: 400),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+            child: SingleChildScrollView( // 스크롤 가능하게 만들어서 키보드 문제 해결
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                constraints: const BoxConstraints(maxWidth: 400),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.1),
@@ -1224,15 +1243,16 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                           child: TextField(
                             controller: weightController,
                             keyboardType: TextInputType.number,
+                            cursorColor: const Color(0xFF10B981),
                             decoration: const InputDecoration(
                               labelText: '체중 (kg)',
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.all(20),
                               labelStyle: TextStyle(
-                                  color: Color(0xFF10B981),
+                                  color: Colors.black87,
                                   fontWeight: FontWeight.w600),
                               prefixIcon: Icon(Icons.monitor_weight,
-                                  color: Color(0xFF10B981)),
+                                  color: Colors.black54),
                               hintText: '예: 70.5',
                               hintStyle: TextStyle(color: Colors.grey),
                             ),
@@ -1251,15 +1271,16 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                           child: TextField(
                             controller: fatController,
                             keyboardType: TextInputType.number,
+                            cursorColor: const Color(0xFF10B981),
                             decoration: const InputDecoration(
                               labelText: '체지방 (kg)',
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.all(20),
                               labelStyle: TextStyle(
-                                  color: Color(0xFF10B981),
+                                  color: Colors.black87,
                                   fontWeight: FontWeight.w600),
                               prefixIcon: Icon(Icons.fitness_center,
-                                  color: Color(0xFF10B981)),
+                                  color: Colors.black54),
                               hintText: '예: 15.2',
                               hintStyle: TextStyle(color: Colors.grey),
                             ),
@@ -1278,15 +1299,16 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                           child: TextField(
                             controller: muscleController,
                             keyboardType: TextInputType.number,
+                            cursorColor: const Color(0xFF10B981),
                             decoration: const InputDecoration(
                               labelText: '근육량 (kg)',
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.all(20),
                               labelStyle: TextStyle(
-                                  color: Color(0xFF10B981),
+                                  color: Colors.black87,
                                   fontWeight: FontWeight.w600),
                               prefixIcon: Icon(Icons.health_and_safety,
-                                  color: Color(0xFF10B981)),
+                                  color: Colors.black54),
                               hintText: '예: 50.3',
                               hintStyle: TextStyle(color: Colors.grey),
                             ),
@@ -1330,7 +1352,7 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                                       const Text(
                                         '측정 날짜',
                                         style: TextStyle(
-                                          color: Color(0xFF10B981),
+                                          color: Colors.black,
                                           fontWeight: FontWeight.w600,
                                           fontSize: 14,
                                         ),
@@ -1490,11 +1512,12 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                   ),
                 ],
               ),
-            ),
-          );
-        },
-      ),
-    );
+            ), // Container 닫기
+          ), // SingleChildScrollView 닫기
+        );
+      },
+    ),
+  );
   }
 
   Widget _buildBodyImagesSection() {

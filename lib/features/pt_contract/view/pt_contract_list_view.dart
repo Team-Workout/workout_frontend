@@ -268,77 +268,199 @@ class _ContractCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = contract.status == 'ACTIVE';
-    final statusColor = isActive ? Colors.green : Colors.grey;
+    final statusColor = isActive ? const Color(0xFF10B981) : Colors.grey[600]!;
     final statusText = isActive ? '진행중' : '완료됨';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${contract.trainerName} 트레이너',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 헤더 섹션 - 트레이너 이름과 상태
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isActive 
+                            ? [const Color(0xFF10B981), const Color(0xFF34D399)]
+                            : [Colors.grey[400]!, Colors.grey[500]!],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 20,
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      statusText,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${contract.trainerName} 트레이너',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '회원: ${contract.memberName}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _InfoChip(
-                    icon: Icons.fitness_center,
-                    label: '${contract.remainingSessions}/${contract.totalSessions}회',
-                    color: Colors.blue,
-                  ),
-                  const SizedBox(width: 8),
-                  if (contract.price != null)
-                    _InfoChip(
-                      icon: Icons.payment,
-                      label: '${_formatPrice(contract.price!)}원',
-                      color: Colors.orange,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: statusColor.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (contract.startDate != null)
-                Text(
-                  '시작일: ${contract.startDate}',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
+                  ],
                 ),
-              ),
-            ],
+                
+                const SizedBox(height: 20),
+                
+                // 정보 섹션
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatItem(
+                          icon: Icons.fitness_center,
+                          label: '잔여 세션',
+                          value: '${contract.remainingSessions}',
+                          subtitle: '/ ${contract.totalSessions}회',
+                          color: const Color(0xFF10B981),
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.grey[300],
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      if (contract.price != null)
+                        Expanded(
+                          child: _StatItem(
+                            icon: Icons.payments_outlined,
+                            label: '계약 금액',
+                            value: _formatPrice(contract.price!),
+                            subtitle: '원',
+                            color: const Color(0xFF059669),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                
+                if (contract.startDate != null) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '시작일: ${contract.startDate}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                
+                const SizedBox(height: 16),
+                
+                // 액션 섹션
+                Row(
+                  children: [
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '자세히 보기',
+                            style: TextStyle(
+                              color: const Color(0xFF10B981),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 10,
+                            color: Color(0xFF10B981),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -353,40 +475,69 @@ class _ContractCard extends StatelessWidget {
   }
 }
 
-class _InfoChip extends StatelessWidget {
+class _StatItem extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String value;
+  final String? subtitle;
   final Color color;
 
-  const _InfoChip({
+  const _StatItem({
     required this.icon,
     required this.label,
+    required this.value,
+    this.subtitle,
     required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(
+          icon,
+          color: color,
+          size: 20,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontFamily: 'IBMPlexSansKR',
+            fontWeight: FontWeight.w500,
           ),
-        ],
-      ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: value,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+              if (subtitle != null)
+                TextSpan(
+                  text: subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -398,72 +549,187 @@ class _ContractDetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isActive = contract.status == 'ACTIVE';
+    final statusColor = isActive ? const Color(0xFF10B981) : Colors.grey[600]!;
+    
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.75,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
         ),
       ),
       child: Column(
         children: [
+          // 핸들바
           Container(
             width: 40,
             height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
+            margin: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
               color: Colors.grey[300],
               borderRadius: BorderRadius.circular(2),
             ),
           ),
+          
           Expanded(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${contract.trainerName} 트레이너',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  // 헤더 섹션
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isActive 
+                          ? [const Color(0xFF10B981), const Color(0xFF34D399)]
+                          : [Colors.grey[400]!, Colors.grey[500]!],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${contract.trainerName} 트레이너',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '회원: ${contract.memberName}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            isActive ? '진행중' : '완료됨',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'IBMPlexSansKR',
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '회원: ${contract.memberName}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                  ),
+                  
                   const SizedBox(height: 24),
-                  _DetailItem(
-                    title: '계약 상태',
-                    value: contract.status == 'ACTIVE' ? '진행중' : '완료됨',
-                    valueColor: contract.status == 'ACTIVE' ? Colors.green : Colors.grey,
+                  
+                  // 통계 카드들
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatsCard(
+                          title: '전체 세션',
+                          value: '${contract.totalSessions}',
+                          subtitle: '회',
+                          icon: Icons.fitness_center,
+                          color: const Color(0xFF6366F1),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _StatsCard(
+                          title: '남은 세션',
+                          value: '${contract.remainingSessions}',
+                          subtitle: '회',
+                          icon: Icons.schedule,
+                          color: const Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
                   ),
-                  _DetailItem(
-                    title: '전체 세션',
-                    value: '${contract.totalSessions}회',
-                  ),
-                  _DetailItem(
-                    title: '남은 세션',
-                    value: '${contract.remainingSessions}회',
-                  ),
-                  if (contract.price != null)
-                    _DetailItem(
+                  
+                  if (contract.price != null) ...[
+                    const SizedBox(height: 16),
+                    _StatsCard(
                       title: '계약 금액',
-                      value: '${_formatPrice(contract.price!)}원',
+                      value: _formatPrice(contract.price!),
+                      subtitle: '원',
+                      icon: Icons.payments_outlined,
+                      color: const Color(0xFFF59E0B),
+                      isWide: true,
                     ),
-                  if (contract.startDate != null)
-                    _DetailItem(
-                      title: '시작일',
-                      value: contract.startDate!,
+                  ],
+                  
+                  const SizedBox(height: 24),
+                  
+                  // 상세 정보 섹션
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F9FA),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  const Spacer(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '계약 정보',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        if (contract.startDate != null)
+                          _InfoRow(
+                            icon: Icons.calendar_today_outlined,
+                            title: '시작일',
+                            value: contract.startDate!,
+                          ),
+                        _InfoRow(
+                          icon: Icons.assignment_outlined,
+                          title: '계약 ID',
+                          value: '#${contract.contractId}',
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -482,15 +748,108 @@ class _ContractDetailSheet extends ConsumerWidget {
   }
 }
 
-class _DetailItem extends StatelessWidget {
+class _StatsCard extends StatelessWidget {
   final String title;
   final String value;
-  final Color? valueColor;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final bool isWide;
 
-  const _DetailItem({
+  const _StatsCard({
     required this.title,
     required this.value,
-    this.valueColor,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    this.isWide = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: isWide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontFamily: 'IBMPlexSansKR',
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: isWide ? TextAlign.left : TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          RichText(
+            textAlign: isWide ? TextAlign.left : TextAlign.center,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: value,
+                  style: TextStyle(
+                    fontSize: isWide ? 20 : 18,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+                TextSpan(
+                  text: subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+
+  const _InfoRow({
+    required this.icon,
+    required this.title,
+    required this.value,
   });
 
   @override
@@ -498,21 +857,29 @@ class _DetailItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Icon(
+            icon,
+            size: 18,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(width: 12),
           Text(
             title,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               color: Colors.grey[600],
+              fontFamily: 'IBMPlexSansKR',
             ),
           ),
+          const Spacer(),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: valueColor ?? Colors.black,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+              fontFamily: 'IBMPlexSansKR',
             ),
           ),
         ],

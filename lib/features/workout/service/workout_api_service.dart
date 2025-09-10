@@ -114,24 +114,84 @@ class WorkoutApiService {
         data: request.toJson(),
       );
 
+      print('🔍 루틴 생성 응답 - statusCode: ${response.statusCode}, data: ${response.data}');
+
       if (response.statusCode == 201 || response.statusCode == 200) {
+        // 201 Created with empty body and Location header
+        if (response.statusCode == 201 && (response.data == null || response.data == '')) {
+          // Location 헤더에서 ID 추출
+          final location = response.headers.value('location');
+          print('📍 Location 헤더: $location');
+          
+          if (location != null) {
+            // "/api/workout/routine/16" 형식에서 ID 추출
+            final routineId = int.tryParse(location.split('/').last);
+            if (routineId != null) {
+              print('✅ 루틴 생성 성공 - ID: $routineId (Location 헤더에서 추출)');
+              
+              // 생성된 루틴의 상세 정보를 가져오기
+              try {
+                return await getRoutineDetail(routineId);
+              } catch (detailError) {
+                print('⚠️ 루틴 상세 조회 실패, 기본 응답 반환: $detailError');
+                // 상세 조회가 실패해도 루틴은 생성되었으므로 기본 응답 반환
+                return RoutineResponse(
+                  id: routineId,
+                  name: request.name ?? '새 루틴',
+                  description: request.description,
+                  routineExercises: request.routineExercises,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                );
+              }
+            }
+          }
+          
+          // Location 헤더가 없거나 파싱 실패시 기본 응답
+          print('⚠️ Location 헤더에서 ID 추출 실패, 기본 응답 반환');
+          return RoutineResponse(
+            id: 0, // 임시 ID
+            name: request.name ?? '새 루틴',
+            description: request.description,
+            routineExercises: request.routineExercises,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+        }
         // 서버에서 ID만 반환하는 경우 처리
-        if (response.data is Map<String, dynamic> && response.data['data'] is int) {
+        else if (response.data is Map<String, dynamic> && response.data['data'] is int) {
           final routineId = response.data['data'] as int;
           print('✅ 루틴 생성 성공 - ID: $routineId');
           
           // 생성된 루틴의 상세 정보를 가져오기
-          return await getRoutineDetail(routineId);
+          try {
+            return await getRoutineDetail(routineId);
+          } catch (detailError) {
+            print('⚠️ 루틴 상세 조회 실패, 기본 응답 반환: $detailError');
+            // 상세 조회가 실패해도 루틴은 생성되었으므로 기본 응답 반환
+            return RoutineResponse(
+              id: routineId,
+              name: request.name ?? '새 루틴',
+              description: request.description,
+              routineExercises: request.routineExercises,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+          }
+        } else if (response.data is Map<String, dynamic> && response.data['data'] is Map<String, dynamic>) {
+          // data 필드 안에 전체 객체가 있는 경우
+          return RoutineResponse.fromJson(response.data['data']);
         } else if (response.data is Map<String, dynamic>) {
-          // 전체 객체가 반환되는 경우
+          // 전체 객체가 바로 반환되는 경우
           return RoutineResponse.fromJson(response.data);
         } else {
-          throw Exception('예상치 못한 응답 형식입니다.');
+          throw Exception('예상치 못한 응답 형식입니다: ${response.data}');
         }
       } else {
-        throw Exception('루틴 생성에 실패했습니다.');
+        throw Exception('루틴 생성에 실패했습니다. 상태 코드: ${response.statusCode}');
       }
     } on DioException catch (e) {
+      print('🚨 DioException 발생: ${e.response?.statusCode}, ${e.response?.data}');
       if (e.response != null) {
         final statusCode = e.response!.statusCode;
         switch (statusCode) {
@@ -142,13 +202,19 @@ class WorkoutApiService {
           case 400:
             throw Exception('잘못된 요청입니다. 입력 데이터를 확인해주세요.');
           default:
-            throw Exception('루틴 생성 실패: 서버 오류가 발생했습니다.');
+            throw Exception('루틴 생성 실패: 서버 오류가 발생했습니다. (${statusCode})');
         }
       } else {
         throw Exception('네트워크 연결을 확인해주세요.');
       }
     } catch (e) {
-      throw Exception('루틴 생성 실패: 알 수 없는 오류가 발생했습니다.');
+      print('🚨 예상치 못한 에러: $e');
+      // 이미 Exception인 경우 그대로 전달
+      if (e is Exception) {
+        rethrow;
+      }
+      // 그 외의 경우에만 새로운 Exception 생성
+      throw Exception('루틴 생성 실패: $e');
     }
   }
 

@@ -4,34 +4,43 @@ import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/shared/widgets/notion_dashboard_card.dart';
-import '../../../shared/widgets/dashboard_card.dart';
-import 'package:pt_service/features/trainer_profile/view/trainer_profile_edit_view.dart';
 import 'package:pt_service/features/pt_offerings/viewmodel/pt_offering_viewmodel.dart';
 import 'package:pt_service/features/pt_applications/viewmodel/pt_application_viewmodel.dart';
-import 'package:pt_service/features/pt_schedule/viewmodel/pt_schedule_viewmodel.dart';
-import 'package:pt_service/features/pt_schedule/repository/pt_schedule_repository.dart';
+import 'package:pt_service/features/pt_contract/viewmodel/pt_contract_viewmodel.dart';
 import '../../../features/trainer_clients/view/trainer_clients_list_view.dart';
+import '../../../features/pt_reservation/view/reservation_recommendation_view.dart';
 import '../../../core/theme/notion_colors.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../widgets/today_pt_schedule_card.dart';
+import 'package:intl/intl.dart';
+import '../../../features/schedule/widget/everytime_timetable_widget.dart';
+import '../../../features/pt_schedule/model/pt_schedule_models.dart';
+import '../../../features/pt_contract/model/pt_appointment_models.dart';
+import '../../../features/pt_contract/repository/pt_contract_repository.dart';
 
 part 'trainer_dashboard_view.g.dart';
 
 // 이번 달 PT 개수 조회
 @riverpod
-Future<int> monthlyPtCount(MonthlyPtCountRef ref) async {
-  final repository = ref.read(ptScheduleRepositoryProvider);
+Future<int> monthlyPtCount(Ref ref) async {
   final now = DateTime.now();
+  final monthStart = DateTime(now.year, now.month, 1);
+  final monthEnd = DateTime(now.year, now.month + 1, 0);
 
   print('📊 이번 달 PT 개수 조회 시작: ${now.year}-${now.month}');
 
   try {
-    final schedules = await repository.getMonthlySchedule(
-      month: now,
-      status: 'SCHEDULED',
-    );
+    final response = await ref
+        .read(ptContractViewModelProvider.notifier)
+        .getMyScheduledAppointments(
+          startDate: DateFormat('yyyy-MM-dd').format(monthStart),
+          endDate: DateFormat('yyyy-MM-dd').format(monthEnd),
+          status: 'SCHEDULED',
+        );
 
-    print('📊 이번 달 PT 개수: ${schedules.length}건');
-    return schedules.length;
+    final count = response.data.length;
+    print('📊 이번 달 PT 개수: $count건');
+    return count;
   } catch (e) {
     print('❌ 이번 달 PT 개수 조회 오류: $e');
     return 0;
@@ -40,8 +49,7 @@ Future<int> monthlyPtCount(MonthlyPtCountRef ref) async {
 
 // 이번 주 일별 PT 통계 조회
 @riverpod
-Future<List<int>> weeklyPtStats(WeeklyPtStatsRef ref) async {
-  final repository = ref.read(ptScheduleRepositoryProvider);
+Future<List<int>> weeklyPtStats(Ref ref) async {
   final now = DateTime.now();
 
   // 이번 주의 월요일을 구함
@@ -55,15 +63,19 @@ Future<List<int>> weeklyPtStats(WeeklyPtStatsRef ref) async {
       final targetDate = mondayOfWeek.add(Duration(days: i));
       final dayStart =
           DateTime(targetDate.year, targetDate.month, targetDate.day);
+      final dayDateString = DateFormat('yyyy-MM-dd').format(dayStart);
 
-      final daySchedules = await repository.getScheduledAppointments(
-        startDate: _formatDate(dayStart),
-        endDate: _formatDate(dayStart),
-        status: 'SCHEDULED',
-      );
+      final response = await ref
+          .read(ptContractViewModelProvider.notifier)
+          .getMyScheduledAppointments(
+            startDate: dayDateString,
+            endDate: dayDateString,
+            status: 'SCHEDULED',
+          );
 
-      weeklyStats.add(daySchedules.length);
-      print('📊 ${_getWeekdayName(i)}: ${daySchedules.length}건');
+      final dayCount = response.data.length;
+      weeklyStats.add(dayCount);
+      print('📊 ${_getWeekdayName(i)}: $dayCount건');
     }
 
     return weeklyStats;
@@ -73,13 +85,64 @@ Future<List<int>> weeklyPtStats(WeeklyPtStatsRef ref) async {
   }
 }
 
-String _formatDate(DateTime date) {
-  return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-}
-
 String _getWeekdayName(int index) {
   const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
   return weekdays[index];
+}
+
+// 이번 주 시간표용 PT 스케줄 조회
+@riverpod
+Future<List<PtSchedule>> weeklyTimetableSchedules(Ref ref) async {
+  try {
+    final repository = ref.read(ptContractRepositoryProvider);
+
+    // 시간표에는 예정됨과 변경요청 스케줄만 로드
+    final timetableStatuses = [
+      'SCHEDULED',
+      'CHANGE_REQUESTED',
+      'TRAINER_CHANGE_REQUESTED'
+    ];
+    final futures = timetableStatuses.map((status) {
+      return repository.getMyScheduledAppointments(status: status);
+    }).toList();
+
+    final responses = await Future.wait(futures);
+
+    // 모든 응답을 하나로 합치기
+    final allAppointments = <PtAppointment>[];
+    for (final response in responses) {
+      allAppointments.addAll(response.data);
+    }
+
+    // 중복 제거 (appointmentId 기준)
+    final uniqueAppointments = <int, PtAppointment>{};
+    for (final appointment in allAppointments) {
+      uniqueAppointments[appointment.appointmentId] = appointment;
+    }
+
+    // PtAppointment를 PtSchedule로 변환
+    final schedules = uniqueAppointments.values.map((appointment) {
+      return PtSchedule(
+        appointmentId: appointment.appointmentId,
+        contractId: appointment.contractId,
+        trainerName: appointment.trainerName,
+        memberName: appointment.memberName,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        status: appointment.status ?? 'SCHEDULED',
+        hasChangeRequest: appointment.changeRequestStartTime != null,
+        changeRequestBy: appointment.changeRequestBy,
+        requestedStartTime: appointment.changeRequestStartTime,
+        requestedEndTime: appointment.changeRequestEndTime,
+      );
+    }).toList();
+
+    print('📅 시간표용 스케줄 로드 완료: ${schedules.length}개');
+    return schedules;
+  } catch (e) {
+    print('❌ 시간표용 스케줄 로드 오류: $e');
+    return [];
+  }
 }
 
 class TrainerDashboardView extends ConsumerStatefulWidget {
@@ -90,13 +153,10 @@ class TrainerDashboardView extends ConsumerStatefulWidget {
       _TrainerDashboardViewState();
 }
 
-class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
 
     // 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -105,43 +165,14 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
         final trainerId = int.parse(user!.id);
         ref.read(ptOfferingProvider.notifier).loadPtOfferings(trainerId);
         ref.read(ptApplicationProvider.notifier).loadPtApplications();
-        ref.read(todayScheduleViewModelProvider.notifier).loadTodaySchedule();
       }
     });
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
-    final ptOfferingsAsync = ref.watch(ptOfferingProvider);
-    final ptApplicationsAsync = ref.watch(ptApplicationProvider);
-    final todayScheduleAsync = ref.watch(todayScheduleViewModelProvider);
     final monthlyPtCountAsync = ref.watch(monthlyPtCountProvider);
     final weeklyStatsAsync = ref.watch(weeklyPtStatsProvider);
-
-    // PT 상품 개수 계산
-    final ptOfferingsCount = ptOfferingsAsync.whenOrNull(
-          data: (offerings) => offerings.length,
-        ) ??
-        0;
-
-    // PT 신청 대기 건수 계산
-    final pendingApplicationsCount = ptApplicationsAsync.whenOrNull(
-          data: (applications) => applications.length,
-        ) ??
-        0;
-
-    // 오늘의 PT 일정 개수 계산
-    final todayPtCount = todayScheduleAsync.whenOrNull(
-          data: (schedules) => schedules.length,
-        ) ??
-        0;
 
     // 이번 달 PT 개수 계산
     final monthlyPtCount = monthlyPtCountAsync.whenOrNull(
@@ -151,74 +182,6 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
-            ),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          '트레이너 대시보드',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'IBMPlexSansKR',
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('알림 기능은 준비 중입니다')),
-                );
-              },
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            child: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.settings_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              onPressed: () {
-                context.push('/trainer-settings');
-              },
-            ),
-          ),
-        ],
-      ),
       drawer: _buildDrawer(context, ref),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -286,41 +249,11 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.calendar_month,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '이번 달: ${monthlyPtCount}건',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                  fontFamily: 'IBMPlexSansKR',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
-                      height: 240,
+                      height: 280,
                       child: weeklyStatsAsync.when(
                         data: (weeklyStats) {
                           final maxY = weeklyStats.isEmpty
@@ -494,7 +427,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
               ),
             ),
 
-            // 📅 오늘의 PT 일정
+            // 📅 이번 주 PT 시간표
             const SizedBox(height: 32),
             Container(
               decoration: BoxDecoration(
@@ -508,12 +441,12 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Row(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(12),
@@ -524,9 +457,9 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
-                            Icons.schedule,
+                            Icons.calendar_view_week,
                             color: Colors.white,
-                            size: 20,
+                            size: 24,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -535,16 +468,16 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                '오늘의 PT 일정',
+                                '이번 주 PT 시간표',
                                 style: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black87,
                                   fontFamily: 'IBMPlexSansKR',
                                 ),
                               ),
                               Text(
-                                '예정된 PT 수업 $todayPtCount건',
+                                '예정된 수업과 변경요청 현황',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey[600],
@@ -554,23 +487,25 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                             ],
                           ),
                         ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: TextButton(
-                            onPressed: () {
-                              context.push('/pt-schedule');
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF10B981),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
+                        GestureDetector(
+                          onTap: () => context.push('/pt-schedule'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFF10B981).withOpacity(0.3),
+                              ),
                             ),
                             child: const Text(
                               '전체보기',
                               style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black87,
                                 fontWeight: FontWeight.w600,
                                 fontFamily: 'IBMPlexSansKR',
                               ),
@@ -579,98 +514,99 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                         ),
                       ],
                     ),
-                  ),
-                  const Divider(height: 1),
-                  todayScheduleAsync.when(
-                    data: (schedules) {
-                      if (schedules.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Center(
-                            child: Text(
-                              '오늘 예정된 PT가 없습니다',
-                              style: TextStyle(
-                                color: NotionColors.textTertiary,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: 480,
+                      child: Consumer(
+                        builder: (context, ref, child) {
+                          final timetableAsync =
+                              ref.watch(weeklyTimetableSchedulesProvider);
 
-                      return ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: schedules.length > 3 ? 3 : schedules.length,
-                        separatorBuilder: (context, index) =>
-                            const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final schedule = schedules[index];
-                          final startTime = DateTime.parse(schedule.startTime);
-                          final endTime = DateTime.parse(schedule.endTime);
-                          final timeText =
-                              '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';
-                          final durationText =
-                              '${endTime.difference(startTime).inMinutes}분';
-
-                          return ListTile(
-                            leading: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: NotionColors.gray100,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  timeText.substring(0, 2),
-                                  style: const TextStyle(
-                                    color: NotionColors.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            title: Text(schedule.memberName),
-                            subtitle: Text('$timeText - $durationText'),
-                            trailing: IconButton(
-                              icon: const Icon(
-                                Icons.message_outlined,
-                                color: NotionColors.textSecondary,
-                              ),
-                              onPressed: () {},
-                            ),
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('PT 상세 페이지는 준비 중입니다')),
+                          return timetableAsync.when(
+                            data: (schedules) {
+                              return EverytimeTimetableWidget(
+                                schedules: schedules,
+                                selectedWeek: DateTime.now(),
+                                onScheduleTap: (schedule) {
+                                  // 스케줄 클릭 시 PT 일정 관리 페이지로 이동
+                                  context.push('/pt-schedule');
+                                },
+                                onScheduleAction: (schedule, action) {
+                                  // 액션 처리는 여기서 간단하게 처리하거나 PT 일정 페이지로 이동
+                                  context.push('/pt-schedule');
+                                },
                               );
                             },
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF10B981),
+                                strokeWidth: 3,
+                              ),
+                            ),
+                            error: (error, stack) => Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.grey[400],
+                                    size: 48,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    '시간표를 불러올 수 없습니다',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  GestureDetector(
+                                    onTap: () {
+                                      ref.invalidate(
+                                          weeklyTimetableSchedulesProvider);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF10B981)
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: const Color(0xFF10B981)
+                                              .withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        '다시 시도',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'IBMPlexSansKR',
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           );
                         },
-                      );
-                    },
-                    loading: () => const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                    error: (error, stack) => Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Center(
-                        child: Text(
-                          '일정을 불러올 수 없습니다',
-                          style: TextStyle(
-                            color: NotionColors.error,
-                            fontSize: 14,
-                          ),
-                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
+
+            // 📅 오늘의 PT 일정
+            const SizedBox(height: 32),
+            const TodayPTScheduleCard(),
 
             // 📋 카테고리별 관리 메뉴
             const SizedBox(height: 32),
@@ -705,10 +641,11 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
-            // 탭 바
+            // 관리 메뉴 버튼들
             Container(
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -722,222 +659,103 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView>
               ),
               child: Column(
                 children: [
-                  Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: Colors.white,
-                      unselectedLabelColor: Colors.grey[600],
-                      indicator: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: NotionDashboardCard(
+                          title: 'PT 일정 관리',
+                          value: '예약 일정',
+                          icon: Icons.schedule,
+                          onTap: () {
+                            context.push('/pt-schedule');
+                          },
                         ),
-                        borderRadius: BorderRadius.circular(14),
                       ),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      dividerColor: Colors.transparent,
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        fontFamily: 'IBMPlexSansKR',
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: NotionDashboardCard(
+                          title: '회원 관리',
+                          value: '내 회원 보기',
+                          icon: Icons.people,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const TrainerClientsListView(),
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                        fontFamily: 'IBMPlexSansKR',
-                      ),
-                      tabs: const [
-                        Tab(
-                          icon: Icon(Icons.calendar_today, size: 18),
-                          text: '일정 관리',
-                        ),
-                        Tab(
-                          icon: Icon(Icons.people, size: 18),
-                          text: '회원 관리',
-                        ),
-                        Tab(
-                          icon: Icon(Icons.fitness_center, size: 18),
-                          text: 'PT 운영',
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
-                  SizedBox(
-                    height: 320,
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildScheduleManagementTab(),
-                        _buildMemberManagementTab(),
-                        _buildPtOperationTab(),
-                      ],
-                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: NotionDashboardCard(
+                          title: 'PT 상품 관리',
+                          value: '상품 보기',
+                          icon: Icons.shopping_bag,
+                          onTap: () {
+                            context.push('/pt-offerings');
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: NotionDashboardCard(
+                          title: 'PT',
+                          value: 'PT 관리',
+                          icon: Icons.assignment_turned_in,
+                          onTap: () {
+                            context.push('/pt-contracts');
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: NotionDashboardCard(
+                          title: 'PT 예약 생성',
+                          value: '새 예약 만들기',
+                          icon: Icons.add_circle,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ReservationRecommendationView(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: NotionDashboardCard(
+                          title: '설정',
+                          value: '앱 설정 관리',
+                          icon: Icons.settings,
+                          onTap: () {
+                            context.push('/trainer-settings');
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+            SizedBox(
+              height: 30,
+            )
           ],
         ),
-      ),
-    );
-  }
-
-  // 📅 일정 관리 탭
-  Widget _buildScheduleManagementTab() {
-    final todayPtCount = ref.watch(todayScheduleViewModelProvider).whenOrNull(
-              data: (schedules) => schedules.length,
-            ) ??
-        0;
-
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: GridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.25,
-        children: [
-          NotionDashboardCard(
-            title: '오늘의 PT',
-            value: todayPtCount > 0 ? '$todayPtCount건' : '일정 없음',
-            icon: Icons.calendar_today,
-            isHighlighted: todayPtCount > 0,
-            onTap: () {
-              context.push('/pt-schedule');
-            },
-          ),
-          NotionDashboardCard(
-            title: 'PT 약속 생성',
-            value: '새 약속 생성',
-            icon: Icons.add_circle,
-            onTap: () {
-              context.push('/reservation-recommendations');
-            },
-          ),
-          NotionDashboardCard(
-            title: 'PT 약속 관리',
-            value: '예약된 일정',
-            icon: Icons.schedule,
-            onTap: () {
-              context.push('/pt-schedule');
-            },
-          ),
-          NotionDashboardCard(
-            title: '약속 승인',
-            value: '회원 요청 승인',
-            icon: Icons.check_circle,
-            onTap: () {
-              context.push('/appointment-confirmation');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 👥 회원 관리 탭
-  Widget _buildMemberManagementTab() {
-    final pendingApplicationsCount =
-        ref.watch(ptApplicationProvider).whenOrNull(
-                  data: (applications) => applications.length,
-                ) ??
-            0;
-
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: GridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.25,
-        children: [
-          NotionDashboardCard(
-            title: '내 회원 관리',
-            value: '회원 현황 확인',
-            icon: Icons.people,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TrainerClientsListView(),
-                ),
-              );
-            },
-          ),
-          NotionDashboardCard(
-            title: 'PT 신청',
-            value: pendingApplicationsCount > 0
-                ? '$pendingApplicationsCount건 대기'
-                : '대기 없음',
-            icon: Icons.assignment,
-            isHighlighted: pendingApplicationsCount > 0,
-            onTap: () {
-              context.push('/pt-applications');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 📊 PT 운영 탭
-  Widget _buildPtOperationTab() {
-    final monthlyPtCount = ref.watch(monthlyPtCountProvider).whenOrNull(
-              data: (count) => count,
-            ) ??
-        0;
-
-    final ptOfferingsCount = ref.watch(ptOfferingProvider).whenOrNull(
-              data: (offerings) => offerings.length,
-            ) ??
-        0;
-
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: GridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.25,
-        children: [
-          NotionDashboardCard(
-            title: 'PT 상품 관리',
-            value: ptOfferingsCount > 0 ? '$ptOfferingsCount개 상품' : '상품 없음',
-            icon: Icons.shopping_bag,
-            onTap: () {
-              context.push('/pt-offerings');
-            },
-          ),
-          NotionDashboardCard(
-            title: 'PT 계약',
-            value: '계약 관리',
-            icon: Icons.assignment_turned_in,
-            onTap: () {
-              context.push('/pt-contracts');
-            },
-          ),
-          NotionDashboardCard(
-            title: '이번 달 수업',
-            value: monthlyPtCount > 0 ? '${monthlyPtCount}건' : '수업 없음',
-            icon: Icons.fitness_center,
-            isHighlighted: monthlyPtCount > 0,
-            onTap: () {
-              context.push('/my-appointment-requests');
-            },
-          ),
-          NotionDashboardCard(
-            title: 'PT 신청 내역',
-            value: '전체 신청 관리',
-            icon: Icons.history,
-            onTap: () {
-              context.push('/my-appointment-requests');
-            },
-          ),
-        ],
       ),
     );
   }

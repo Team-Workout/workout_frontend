@@ -19,7 +19,8 @@ class PtOfferingsListView extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PtOfferingsListView> createState() => _PtOfferingsListViewState();
+  ConsumerState<PtOfferingsListView> createState() =>
+      _PtOfferingsListViewState();
 }
 
 class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
@@ -33,7 +34,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
 
   void _loadPtOfferings() {
     int targetTrainerId;
-    
+
     if (widget.trainerId != null) {
       targetTrainerId = widget.trainerId!;
     } else {
@@ -49,61 +50,68 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
   Widget build(BuildContext context) {
     final ptOfferingsAsync = ref.watch(ptOfferingProvider);
     final user = ref.watch(currentUserProvider);
-    final isOwnOfferings = widget.trainerId == null || 
-                          (user?.id != null && widget.trainerId == int.parse(user!.id));
-    
+    final isOwnOfferings = widget.trainerId == null ||
+        (user?.id != null && widget.trainerId == int.parse(user!.id));
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       // 트레이너가 직접 접근했을 때만 AppBar 표시 (자신의 상품 관리)
-      appBar: isOwnOfferings && widget.isTrainerView ? AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
-            ),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'PT 상품 관리',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'IBMPlexSansKR',
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            child: TextButton(
-              onPressed: () {
-                context.push('/pt-offerings/create');
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.2),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+      appBar: isOwnOfferings && widget.isTrainerView
+          ? AppBar(
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF10B981),
+                      Color(0xFF34D399),
+                      Color(0xFF6EE7B7)
+                    ],
+                  ),
                 ),
               ),
-              child: const Text(
-                '추가',
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
+              title: const Text(
+                'PT 상품 관리',
                 style: TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                   fontFamily: 'IBMPlexSansKR',
                 ),
               ),
-            ),
-          ),
-        ],
-      ) : null,
+              centerTitle: true,
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  child: TextButton(
+                    onPressed: () {
+                      context.push('/pt-offerings/create');
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      '추가',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: () async {
           _loadPtOfferings();
@@ -125,16 +133,16 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 Text(
                   'PT 상품을 불러오는 중 오류가 발생했습니다',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   error.toString(),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: NotionColors.textSecondary,
-                  ),
+                        color: NotionColors.textSecondary,
+                      ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -193,21 +201,19 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
           Text(
             widget.isTrainerView ? '등록된 PT 상품이 없습니다' : '해당 트레이너의 PT 상품이 없습니다',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: const Color(0xFF10B981),
-              fontWeight: FontWeight.bold,
-              fontFamily: 'IBMPlexSansKR',
-            ),
+                  color: const Color(0xFF10B981),
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            widget.isTrainerView
-                ? '새로운 PT 상품을 추가해보세요'
-                : '다른 트레이너의 상품을 확인해보세요',
+            widget.isTrainerView ? '새로운 PT 상품을 추가해보세요' : '다른 트레이너의 상품을 확인해보세요',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[600],
-              fontFamily: 'IBMPlexSansKR',
-            ),
+                  color: Colors.grey[600],
+                  fontFamily: 'IBMPlexSansKR',
+                ),
             textAlign: TextAlign.center,
           ),
           if (widget.isTrainerView) ...[
@@ -327,24 +333,12 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Description
-            Text(
-              offering.description,
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 16,
-                height: 1.5,
-                fontFamily: 'IBMPlexSansKR',
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            
             const SizedBox(height: 20),
-            
+
             // Price and Sessions Info
             Row(
               children: [
@@ -367,7 +361,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                 ),
               ],
             ),
-            
+
             if (!widget.isTrainerView) ...[
               const SizedBox(height: 24),
               _buildModernBookingButton(offering),
@@ -595,9 +589,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
 
   String _formatPrice(int price) {
     return price.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 
   void _deleteOffering(PtOffering offering) {
@@ -605,7 +599,8 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('PT 상품 삭제'),
-        content: Text('${offering.title}을(를) 정말 삭제하시겠습니까?\n\n삭제된 상품은 복구할 수 없습니다.'),
+        content:
+            Text('${offering.title}을(를) 정말 삭제하시겠습니까?\n\n삭제된 상품은 복구할 수 없습니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -738,7 +733,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                   ],
                 ),
               ),
-              
+
               // Content
               Padding(
                 padding: const EdgeInsets.all(28),
@@ -764,7 +759,8 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withOpacity(0.1),
+                                  color:
+                                      const Color(0xFF10B981).withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Icon(
@@ -813,9 +809,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Info Message
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -862,7 +858,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
                   ],
                 ),
               ),
-              
+
               // Actions
               Container(
                 padding: const EdgeInsets.fromLTRB(28, 20, 28, 28),
@@ -965,7 +961,8 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     );
   }
 
-  Widget _buildModernDialogInfoRow(IconData icon, String label, String value, Color color) {
+  Widget _buildModernDialogInfoRow(
+      IconData icon, String label, String value, Color color) {
     return Row(
       children: [
         Container(
@@ -1004,7 +1001,8 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     );
   }
 
-  Widget _buildDialogInfoRow(IconData icon, String label, String value, Color color) {
+  Widget _buildDialogInfoRow(
+      IconData icon, String label, String value, Color color) {
     return Row(
       children: [
         Container(
@@ -1075,7 +1073,7 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
       if (mounted) {
         // 로딩 다이얼로그 닫기 - rootNavigator 사용
         Navigator.of(context, rootNavigator: true).pop();
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),

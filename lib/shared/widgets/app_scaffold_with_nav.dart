@@ -16,7 +16,19 @@ class AppScaffoldWithNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: NotionColors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (index) {
           switch (index) {
@@ -38,7 +50,8 @@ class AppScaffoldWithNav extends StatelessWidget {
           }
         },
         type: BottomNavigationBarType.fixed,
-        backgroundColor: NotionColors.white,
+        backgroundColor: Colors.transparent, // Container에서 배경색 설정
+        elevation: 0, // 기본 그림자 제거
         selectedItemColor: NotionColors.black,
         unselectedItemColor: NotionColors.gray500,
         items: const [
@@ -68,6 +81,8 @@ class AppScaffoldWithNav extends StatelessWidget {
             label: '설정',
           ),
         ],
+          ),
+        ),
       ),
     );
   }

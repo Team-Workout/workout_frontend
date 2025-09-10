@@ -29,8 +29,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: Theme.of(context).textTheme.apply(
-          fontFamily: 'IBMPlexSansKR',
-        ),
+              fontFamily: 'IBMPlexSansKR',
+            ),
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
@@ -101,7 +101,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4CAF50),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -126,7 +127,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
               return ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: routines.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 16),
                 itemBuilder: (context, index) {
                   final routine = routines[index];
                   return _buildRoutineCard(routine);
@@ -186,7 +188,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4CAF50),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -239,12 +242,12 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.fitness_center,
-                        color: Color(0xFF4CAF50),
+                        color: Color(0xFF10B981),
                         size: 24,
                       ),
                     ),
@@ -306,7 +309,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                         PopupMenuItem(
                           value: 'delete',
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                             child: Row(
                               children: [
                                 Container(
@@ -343,7 +347,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -351,13 +355,13 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
                           Icons.list_alt,
                           size: 16,
-                          color: Color(0xFF4CAF50),
+                          color: Color(0xFF10B981),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -367,7 +371,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                           const Text(
                             '운동 수',
                             style: TextStyle(
-                              color: Color(0xFF4CAF50),
+                              color: Colors.black,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: 'IBMPlexSansKR',
@@ -520,7 +524,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                   ],
                 ),
               ),
-              
+
               // Content
               Padding(
                 padding: const EdgeInsets.all(28),
@@ -572,7 +576,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Action buttons
                     Row(
                       children: [
@@ -620,7 +624,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                  color: const Color(0xFFEF4444)
+                                      .withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -637,7 +642,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                                         .read(routineProvider.notifier)
                                         .deleteRoutine(routine.id);
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
                                           content: const Text(
                                             '루틴이 삭제되었습니다.',
@@ -645,16 +651,19 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                                               fontFamily: 'IBMPlexSansKR',
                                             ),
                                           ),
-                                          backgroundColor: const Color(0xFF4CAF50),
+                                          backgroundColor:
+                                              const Color(0xFF10B981),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                           ),
                                         ),
                                       );
                                     }
                                   } catch (e) {
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
                                           content: Text(
                                             e.toString(),
@@ -664,7 +673,8 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                                           ),
                                           backgroundColor: Colors.red,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                           ),
                                         ),
                                       );

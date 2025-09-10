@@ -6,6 +6,7 @@ import '../model/pt_schedule_models.dart';
 import '../viewmodel/pt_schedule_viewmodel.dart';
 import '../../pt_contract/viewmodel/pt_contract_viewmodel.dart';
 import '../../../common/widgets/simple_time_picker.dart';
+import '../../body_composition/widget/custom_date_picker.dart';
 
 class ScheduleChangeRequestDialog extends ConsumerStatefulWidget {
   final PtSchedule schedule;
@@ -44,9 +45,72 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('시간 변경 요청'),
-      content: SingleChildScrollView(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF10B981), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF10B981).withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 헤더
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.schedule, color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      '시간 변경 요청',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // 컨텐츠
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,21 +268,92 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: const Color(0xFF10B981).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withOpacity(0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                  const Icon(Icons.info_outline, size: 16, color: Color(0xFF10B981)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       widget.isTrainerRequest
                         ? '회원이 요청을 승인하면 시간이 변경됩니다.'
                         : '트레이너가 요청을 승인하면 시간이 변경됩니다.',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.blue[700],
+                        color: Color(0xFF10B981),
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+                ),
+              ),
+            ),
+            
+            // 액션 버튼들
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey[600],
+                        textStyle: const TextStyle(
+                          fontFamily: 'IBMPlexSansKR',
+                          fontWeight: FontWeight.w600,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text('취소'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: _isLoading ? null : _submitRequest,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Center(
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : const Text(
+                                      '요청하기',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'IBMPlexSansKR',
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -228,22 +363,6 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        FilledButton(
-          onPressed: _isLoading ? null : _submitRequest,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('요청하기'),
-        ),
-      ],
     );
   }
 
@@ -252,7 +371,7 @@ class _ScheduleChangeRequestDialogState extends ConsumerState<ScheduleChangeRequ
     final today = DateTime(now.year, now.month, now.day);
     final initialDate = _newStartDateTime.isBefore(today) ? today : _newStartDateTime;
     
-    final date = await showDatePicker(
+    final date = await showCustomDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: today,
@@ -381,7 +500,7 @@ class _DurationButton extends StatelessWidget {
                 : '${duration}분',
               style: TextStyle(
                 color: isSelected ? Colors.white : Colors.black,
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
             ),

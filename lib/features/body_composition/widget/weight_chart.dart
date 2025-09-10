@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../model/body_composition_model.dart';
@@ -170,36 +171,36 @@ class WeightChart extends StatelessWidget {
         // Weight chart
         Expanded(
           child: LineChart(
-      LineChartData(
-        lineTouchData: LineTouchData(
-          enabled: true,
-          handleBuiltInTouches: true,
-          touchCallback: null, // Photos are handled by camera icons above
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (touchedSpot) => const Color(0xFF1A1F36),
-            tooltipRoundedRadius: 8,
-            tooltipPadding: const EdgeInsets.all(8),
-            getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
-              return touchedBarSpots.map((barSpot) {
-                final flSpot = barSpot;
-                if (flSpot.x.toInt() >= 0 && flSpot.x.toInt() < finalSortedAllDates.length) {
-                  final dateString = finalSortedAllDates[flSpot.x.toInt()];
-                  final date = DateTime.parse(dateString);
-                  
-                  return LineTooltipItem(
-                    '${DateFormat('MM/dd').format(date)}\n${flSpot.y.toStringAsFixed(1)}kg',
-                    const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
+                LineChartData(
+                  lineTouchData: LineTouchData(
+                    enabled: true,
+                    handleBuiltInTouches: true,
+                    touchCallback: null, // Photos are handled by camera icons above
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (touchedSpot) => const Color(0xFF1A1F36),
+                      tooltipRoundedRadius: 8,
+                      tooltipPadding: const EdgeInsets.all(8),
+                      getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                        return touchedBarSpots.map((barSpot) {
+                          final flSpot = barSpot;
+                          if (flSpot.x.toInt() >= 0 && flSpot.x.toInt() < finalSortedAllDates.length) {
+                            final dateString = finalSortedAllDates[flSpot.x.toInt()];
+                            final date = DateTime.parse(dateString);
+                            
+                            return LineTooltipItem(
+                              '${DateFormat('MM/dd').format(date)}\n${flSpot.y.toStringAsFixed(1)}kg',
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            );
+                          }
+                          return null;
+                        }).whereType<LineTooltipItem>().toList();
+                      },
                     ),
-                  );
-                }
-                return null;
-              }).whereType<LineTooltipItem>().toList();
-            },
-          ),
-        ),
+                  ),
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
@@ -218,36 +219,22 @@ class WeightChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 35,
               getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 && value.toInt() < finalSortedAllDates.length) {
-                  final date = DateTime.parse(finalSortedAllDates[value.toInt()]);
-                  return Text(
-                    DateFormat('MM/dd').format(date),
-                    style: const TextStyle(fontSize: 10),
-                  );
+                // 인바디 스타일: 시작과 끝 날짜만 표시
+                if (value.toInt() == 0 || value.toInt() == finalSortedAllDates.length - 1) {
+                  if (value.toInt() >= 0 && value.toInt() < finalSortedAllDates.length) {
+                    final date = DateTime.parse(finalSortedAllDates[value.toInt()]);
+                    return Text(
+                      DateFormat('MM/dd').format(date),
+                      style: const TextStyle(fontSize: 10),
+                    );
+                  }
                 }
                 return const Text('');
               },
-              interval: finalSortedAllDates.length > 7
-                  ? (finalSortedAllDates.length / 7).ceil().toDouble()
-                  : 1,
             ),
           ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 60,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  '${value.toStringAsFixed(1)}kg',
-                  style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                );
-              },
-              interval: (maxY - minY) / 4, // 정확히 4개 간격 = 5개 라벨
-            ),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false), // Y축 범례 완전 제거
           ),
           topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -272,11 +259,13 @@ class WeightChart extends StatelessWidget {
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, barData, index) {
-                return FlDotCirclePainter(
+                return _ValueDotPainter(
                   radius: 4,
                   color: Colors.white,
                   strokeWidth: 2,
                   strokeColor: const Color(0xFF10B981),
+                  value: spot.y,
+                  textColor: const Color(0xFF10B981),
                 );
               },
             ),
@@ -295,7 +284,7 @@ class WeightChart extends StatelessWidget {
           ),
         ],
       ),
-          ),
+    ),
         ),
       ],
     );
@@ -474,4 +463,91 @@ double _calculateOptimalInterval(double range) {
   
   // 정확히 5개의 간격으로 나누기 (6개의 라벨)
   return range / 5.0;
+}
+
+// 값을 표시하는 커스텀 Dot Painter
+class _ValueDotPainter extends FlDotPainter {
+  final double radius;
+  final Color color;
+  final double strokeWidth;
+  final Color strokeColor;
+  final double value;
+  final Color textColor;
+
+  _ValueDotPainter({
+    required this.radius,
+    required this.color,
+    required this.strokeWidth,
+    required this.strokeColor,
+    required this.value,
+    required this.textColor,
+  });
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
+    // Draw dot
+    final dotPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+      
+    final strokePaint = Paint()
+      ..color = strokeColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    canvas.drawCircle(offsetInCanvas, radius, dotPaint);
+    canvas.drawCircle(offsetInCanvas, radius, strokePaint);
+
+    // Draw value text above dot
+    final textSpan = TextSpan(
+      text: value.toStringAsFixed(1),
+      style: TextStyle(
+        color: textColor,
+        fontSize: 9,
+        fontWeight: FontWeight.w600,
+        fontFamily: 'IBMPlexSansKR',
+      ),
+    );
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+
+    textPainter.layout();
+    
+    // Position text above the dot
+    final textOffset = Offset(
+      offsetInCanvas.dx - textPainter.width / 2,
+      offsetInCanvas.dy - radius - strokeWidth - textPainter.height - 4,
+    );
+    
+    textPainter.paint(canvas, textOffset);
+  }
+
+  @override
+  Size getSize(FlSpot spot) {
+    return Size(radius * 2, radius * 2);
+  }
+
+  @override
+  Color get mainColor => color;
+
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) {
+    if (a is _ValueDotPainter && b is _ValueDotPainter) {
+      return _ValueDotPainter(
+        radius: ui.lerpDouble(a.radius, b.radius, t) ?? radius,
+        color: Color.lerp(a.color, b.color, t) ?? color,
+        strokeWidth: ui.lerpDouble(a.strokeWidth, b.strokeWidth, t) ?? strokeWidth,
+        strokeColor: Color.lerp(a.strokeColor, b.strokeColor, t) ?? strokeColor,
+        value: ui.lerpDouble(a.value, b.value, t) ?? value,
+        textColor: Color.lerp(a.textColor, b.textColor, t) ?? textColor,
+      );
+    }
+    return this;
+  }
+
+  @override
+  List<Object?> get props => [radius, color, strokeWidth, strokeColor, value, textColor];
 }

@@ -9,10 +9,14 @@ import '../../../core/providers/auth_provider.dart';
 import '../../dashboard/widgets/notion_button.dart';
 import '../../pt_schedule/model/pt_schedule_models.dart';
 import '../widget/weekly_timetable_widget.dart';
+import '../widget/everytime_timetable_widget.dart';
+import '../../pt_schedule/widget/schedule_change_request_dialog.dart';
+import '../widgets/session_create_dialog.dart';
+import '../../pt_contract/repository/pt_contract_repository.dart';
 
 class PTScheduleView extends ConsumerStatefulWidget {
   final bool isDirectAccess;
-  
+
   const PTScheduleView({
     super.key,
     this.isDirectAccess = false,
@@ -26,14 +30,13 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   PtAppointmentsResponse? _appointmentsResponse;
   bool _isLoading = true;
   String _selectedStatus = 'SCHEDULED';
-  
+  bool _isListView = false; // 기본값을 false로 설정 (시간표가 기본)
+
   final List<Map<String, String>> _statusOptions = [
-    {'value': 'MEMBER_REQUESTED', 'label': '요청됨'},
-    {'value': 'SCHEDULED', 'label': '예정됨'},
-    {'value': 'COMPLETED', 'label': '완료됨'},
-    {'value': 'CANCELLED', 'label': '취소됨'},
-    {'value': 'CHANGE_REQUESTED', 'label': '변경요청'},
-    {'value': 'TRAINER_CHANGE_REQUESTED', 'label': '트레이너변경요청'},
+    {'value': 'MEMBER_REQUESTED', 'label': '요청'},
+    {'value': 'SCHEDULED', 'label': '예정'},
+    {'value': 'CANCELLED', 'label': '취소'},
+    {'value': 'CHANGE_REQUESTED', 'label': '변경요청'}, // 트레이너변경요청도 함께 포함
   ];
 
   @override
@@ -41,42 +44,144 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadContracts();
-      _loadAppointments();
+      if (_isListView) {
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          _loadAppointments();
+        }
+      } else {
+        _loadTimetableAppointments();
+      }
     });
   }
-  
+
   Future<void> _loadContracts() async {
     try {
       await ref.read(ptContractViewModelProvider.notifier).loadMyContracts(
-        page: 0,
-        size: 20,
-      );
+            page: 0,
+            size: 20,
+          );
     } catch (e) {
       print('PT 계약 정보 로드 실패: $e');
     }
   }
-  
+
   Future<void> _loadAppointments() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final response = await ref
-          .read(ptContractViewModelProvider.notifier)
-          .getMyScheduledAppointments(
-            status: _selectedStatus,
+      // 변경요청 탭일 때는 TRAINER_CHANGE_REQUESTED도 함께 로드
+      if (_selectedStatus == 'CHANGE_REQUESTED') {
+        final futures = [
+          ref
+              .read(ptContractViewModelProvider.notifier)
+              .getMyScheduledAppointments(status: 'CHANGE_REQUESTED'),
+          ref
+              .read(ptContractViewModelProvider.notifier)
+              .getMyScheduledAppointments(status: 'TRAINER_CHANGE_REQUESTED'),
+        ];
+
+        final responses = await Future.wait(futures);
+
+        final allAppointments = <PtAppointment>[];
+        for (final response in responses) {
+          if (response != null) {
+            allAppointments.addAll(response.data);
+          }
+        }
+
+        // 중복 제거
+        final uniqueAppointments = <int, PtAppointment>{};
+        for (final appointment in allAppointments) {
+          uniqueAppointments[appointment.appointmentId] = appointment;
+        }
+
+        setState(() {
+          _appointmentsResponse = PtAppointmentsResponse(
+            data: uniqueAppointments.values.toList(),
+            totalElements: uniqueAppointments.length,
+            totalPages: 1,
+            currentPage: 0,
+            hasNext: false,
+            hasPrevious: false,
           );
-      
+          _isLoading = false;
+        });
+      } else {
+        final response = await ref
+            .read(ptContractViewModelProvider.notifier)
+            .getMyScheduledAppointments(
+              status: _selectedStatus,
+            );
+
+        setState(() {
+          _appointmentsResponse = response;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _appointmentsResponse = response;
+        _isLoading = false;
+      });
+      print('PT 예약 목록 로드 실패: $e');
+    }
+  }
+
+  Future<void> _loadTimetableAppointments() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 시간표에는 예정됨과 변경요청만 로드
+      final timetableStatuses = [
+        'SCHEDULED',
+        'CHANGE_REQUESTED',
+        'TRAINER_CHANGE_REQUESTED'
+      ];
+      final futures = timetableStatuses.map((status) {
+        return ref
+            .read(ptContractViewModelProvider.notifier)
+            .getMyScheduledAppointments(status: status);
+      }).toList();
+
+      final responses = await Future.wait(futures);
+
+      // 모든 응답을 하나로 합치기
+      final allAppointments = <PtAppointment>[];
+      for (final response in responses) {
+        if (response != null) {
+          allAppointments.addAll(response.data);
+        }
+      }
+
+      // 중복 제거 (appointmentId 기준)
+      final uniqueAppointments = <int, PtAppointment>{};
+      for (final appointment in allAppointments) {
+        uniqueAppointments[appointment.appointmentId] = appointment;
+      }
+
+      setState(() {
+        _appointmentsResponse = PtAppointmentsResponse(
+          data: uniqueAppointments.values.toList(),
+          totalElements: uniqueAppointments.length,
+          totalPages: 1,
+          currentPage: 0,
+          hasNext: false,
+          hasPrevious: false,
+        );
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      print('PT 예약 목록 로드 실패: $e');
+      print('모든 PT 예약 목록 로드 실패: $e');
+      // 실패 시 현재 상태로 다시 로드 시도
+      _loadAppointments();
     }
   }
 
@@ -86,32 +191,38 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
 
     // 직접 접근시 또는 트레이너일 때 Scaffold로 감싸고 AppBar 추가
     if (widget.isDirectAccess || user?.userType == UserType.trainer) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+      return SafeArea(
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF8F9FA),
+          appBar: AppBar(
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF10B981),
+                    Color(0xFF34D399),
+                    Color(0xFF6EE7B7)
+                  ],
+                ),
               ),
             ),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text(
-            'PT 예약 목록',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'IBMPlexSansKR',
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text(
+              'PT 예약 목록',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'IBMPlexSansKR',
+              ),
             ),
+            centerTitle: true,
           ),
-          centerTitle: true,
+          body: _buildScheduleContent(),
         ),
-        body: _buildScheduleContent(),
       );
     }
 
@@ -135,19 +246,21 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   Widget _buildScheduleContent() {
     return Column(
       children: [
-        // 상태 필터 탭
-        _buildStatusFilter(),
-        
-        // 예약 목록
+        // 상태 필터 탭 (리스트 뷰일 때만 표시)
+        if (_isListView) _buildStatusFilter(),
+
+        // 예약 목록 또는 시간표
         Expanded(
-          child: _isLoading 
+          child: _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
                     color: Color(0xFF10B981),
                     strokeWidth: 3,
                   ),
                 )
-              : _buildAppointmentsList(),
+              : _isListView
+                  ? _buildAppointmentsList()
+                  : _buildTimetableView(),
         ),
       ],
     );
@@ -172,97 +285,69 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Row(
           children: [
-            // 시간표 보기 버튼
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
-                onTap: _showTimetablePopup,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+            // 뷰 토글 버튼 (리스트 뷰일 때만 상단에 표시)
+            if (_isListView)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _buildSwitchButton(),
+              ),
+            // 구분선
+            if (!_isListView)
+              Container(
+                width: 1,
+                height: 24,
+                color: Colors.grey[300],
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+            // 상태 필터들 (리스트 뷰일 때만 표시)
+            if (_isListView)
+              ..._statusOptions.map((option) {
+                final isSelected = _selectedStatus == option['value'];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedStatus = option['value']!;
+                      });
+                      if (!_isListView) {
+                        _loadTimetableAppointments();
+                      } else {
+                        _loadAppointments();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                              )
+                            : null,
+                        color: isSelected ? null : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.transparent
+                              : Colors.grey[300]!,
+                          width: 1,
+                        ),
                       ),
-                    ],
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_view_week,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                      SizedBox(width: 6),
-                      Text(
-                        '시간표',
+                      child: Text(
+                        option['label']!,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          color: isSelected ? Colors.white : Colors.grey[600],
                           fontFamily: 'IBMPlexSansKR',
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // 구분선
-            Container(
-              width: 1,
-              height: 24,
-              color: Colors.grey[300],
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-            // 상태 필터들
-            ..._statusOptions.map((option) {
-            final isSelected = _selectedStatus == option['value'];
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedStatus = option['value']!;
-                  });
-                  _loadAppointments();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: isSelected
-                        ? const LinearGradient(
-                            colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                          )
-                        : null,
-                    color: isSelected ? null : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected 
-                          ? Colors.transparent 
-                          : Colors.grey[300]!,
-                      width: 1,
                     ),
                   ),
-                  child: Text(
-                    option['label']!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? Colors.white : Colors.grey[600],
-                      fontFamily: 'IBMPlexSansKR',
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+                );
+              }).toList(),
           ],
         ),
       ),
@@ -276,7 +361,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     }
 
     final appointments = _appointmentsResponse!.data;
-    
+
     return RefreshIndicator(
       onRefresh: _loadAppointments,
       color: const Color(0xFF10B981),
@@ -318,7 +403,8 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    backgroundColor:
+                        const Color(0xFF10B981).withValues(alpha: 0.1),
                     child: const Icon(
                       Icons.person,
                       color: Color(0xFF10B981),
@@ -353,12 +439,13 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                   _buildStatusBadge(appointment.status ?? _selectedStatus),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // 시간 정보
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(8),
@@ -376,23 +463,25 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF10B981),
+                        color: Colors.black,
                         fontFamily: 'IBMPlexSansKR',
                       ),
                     ),
                   ],
                 ),
               ),
-              
+
               // 변경 요청이 있는 경우
               if (appointment.changeRequestStartTime != null) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                    border:
+                        Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -425,7 +514,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   Widget _buildStatusBadge(String status) {
     Color color;
     String text;
-    
+
     switch (status) {
       case 'MEMBER_REQUESTED':
         color = Colors.blue;
@@ -475,23 +564,37 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     );
   }
 
+  void _showScheduleDetailPopup(PtSchedule schedule) {
+    showDialog(
+      context: context,
+      builder: (context) => _ScheduleDetailPopupDialog(
+        schedule: schedule,
+        onScheduleAction: (schedule, action) {
+          Navigator.pop(context);
+          _handleScheduleAction(schedule, action);
+        },
+      ),
+    );
+  }
+
   void _showTimetablePopup() {
     // PtAppointment를 PtSchedule로 변환
     final schedules = _appointmentsResponse?.data.map((appointment) {
-      return PtSchedule(
-        appointmentId: appointment.appointmentId,
-        contractId: appointment.contractId,
-        trainerName: appointment.trainerName,
-        memberName: appointment.memberName,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        status: appointment.status ?? _selectedStatus,
-        hasChangeRequest: appointment.changeRequestStartTime != null,
-        changeRequestBy: appointment.changeRequestBy,
-        requestedStartTime: appointment.changeRequestStartTime,
-        requestedEndTime: appointment.changeRequestEndTime,
-      );
-    }).toList() ?? [];
+          return PtSchedule(
+            appointmentId: appointment.appointmentId,
+            contractId: appointment.contractId,
+            trainerName: appointment.trainerName,
+            memberName: appointment.memberName,
+            startTime: appointment.startTime,
+            endTime: appointment.endTime,
+            status: appointment.status ?? _selectedStatus,
+            hasChangeRequest: appointment.changeRequestStartTime != null,
+            changeRequestBy: appointment.changeRequestBy,
+            requestedStartTime: appointment.changeRequestStartTime,
+            requestedEndTime: appointment.changeRequestEndTime,
+          );
+        }).toList() ??
+        [];
 
     showDialog(
       context: context,
@@ -521,43 +624,102 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     final appointment = _appointmentsResponse?.data.firstWhere(
       (a) => a.appointmentId == schedule.appointmentId,
     );
-    
+
     if (appointment == null) return;
 
     switch (action) {
       case 'approve_change':
-        // 변경 승인 처리
-        await ref.read(ptContractViewModelProvider.notifier).memberApproveTrainerChangeRequest(
-          appointmentId: appointment.appointmentId,
-        );
-        _loadAppointments();
+        // 트레이너가 멤버 변경요청 승인 처리
+        await ref.read(ptContractRepositoryProvider).approveAppointmentChange(
+              appointmentId: appointment.appointmentId,
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('변경 요청을 승인했습니다.',
+                  style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+              backgroundColor: Color(0xFF10B981),
+            ),
+          );
+        }
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          _loadAppointments();
+        }
         break;
       case 'reject_change':
         // 변경 거절 처리
-        await ref.read(ptContractViewModelProvider.notifier).rejectAppointmentChange(
-          appointmentId: appointment.appointmentId,
-        );
-        _loadAppointments();
+        await ref.read(ptContractRepositoryProvider).rejectAppointmentChange(
+              appointmentId: appointment.appointmentId,
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('변경 요청을 거절했습니다.',
+                  style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          _loadAppointments();
+        }
         break;
       case 'complete':
-        // 완료 처리
-        await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
-          appointmentId: appointment.appointmentId,
-          status: 'COMPLETED',
-        );
-        _loadAppointments();
+        // 세션 작성 다이얼로그 표시
+        _showSessionCreateDialog(appointment);
         break;
       case 'cancel':
         // 취소 처리
-        await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
-          appointmentId: appointment.appointmentId,
-          status: 'CANCELLED',
-        );
-        _loadAppointments();
+        await ref
+            .read(ptContractViewModelProvider.notifier)
+            .updateAppointmentStatus(
+              appointmentId: appointment.appointmentId,
+              status: 'CANCELLED',
+            );
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          _loadAppointments();
+        }
         break;
       case 'trainer_request_change':
-        // 시간 변경 요청
-        _showAppointmentDetail(appointment);
+        // 시간 변경 요청 다이얼로그 표시 (통일된 다이얼로그 사용)
+        showDialog(
+          context: context,
+          builder: (context) => ScheduleChangeRequestDialog(
+            schedule: schedule,
+            isTrainerRequest: true, // 트레이너가 요청하는 경우
+          ),
+        ).then((_) {
+          // 다이얼로그 종료 후 새로고침
+          _loadTimetableAppointments();
+        });
+        break;
+      case 'member_approve_change':
+        // 멤버가 트레이너 변경요청 승인
+        await ref
+            .read(ptContractRepositoryProvider)
+            .memberApproveTrainerChangeRequest(
+              appointmentId: appointment.appointmentId,
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('변경 요청을 승인했습니다.',
+                  style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+              backgroundColor: Color(0xFF10B981),
+            ),
+          );
+        }
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          _loadAppointments();
+        }
         break;
     }
   }
@@ -617,7 +779,11 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
         appointment: appointment,
         onAction: () {
           Navigator.pop(context);
-          _loadAppointments(); // 새로고침
+          if (!_isListView) {
+            _loadTimetableAppointments();
+          } else {
+            _loadAppointments();
+          } // 새로고침
         },
       ),
     );
@@ -668,7 +834,8 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    backgroundColor:
+                        const Color(0xFF10B981).withValues(alpha: 0.1),
                     child: const Icon(
                       Icons.fitness_center,
                       color: Color(0xFF10B981),
@@ -690,9 +857,9 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          contract.startDate != null 
-                            ? '시작일: ${contract.startDate}'
-                            : '시작일 미정',
+                          contract.startDate != null
+                              ? '시작일: ${contract.startDate}'
+                              : '시작일 미정',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -705,12 +872,13 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                   _buildContractStatusBadge(contract.status),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // 세션 정보
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(8),
@@ -746,15 +914,17 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
                   ],
                 ),
               ),
-              
+
               // 진행률 바
               const SizedBox(height: 8),
               LinearProgressIndicator(
-                value: contract.totalSessions > 0 
-                  ? (contract.totalSessions - contract.remainingSessions) / contract.totalSessions
-                  : 0.0,
+                value: contract.totalSessions > 0
+                    ? (contract.totalSessions - contract.remainingSessions) /
+                        contract.totalSessions
+                    : 0.0,
                 backgroundColor: Colors.grey[300],
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
               ),
             ],
           ),
@@ -816,6 +986,193 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     );
   }
 
+  Widget _buildTimetableView() {
+    // 빈 시간표라도 항상 표시
+    final schedules = (_appointmentsResponse?.data ?? []).map((appointment) {
+      return PtSchedule(
+        appointmentId: appointment.appointmentId,
+        contractId: appointment.contractId,
+        trainerName: appointment.trainerName,
+        memberName: appointment.memberName,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        status: appointment.status ?? 'SCHEDULED',
+        hasChangeRequest: appointment.changeRequestStartTime != null,
+        changeRequestBy: appointment.changeRequestBy,
+        requestedStartTime: appointment.changeRequestStartTime,
+        requestedEndTime: appointment.changeRequestEndTime,
+      );
+    }).toList();
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12), // 상단 여백 제거
+      child: EverytimeTimetableWidget(
+        schedules: schedules,
+        selectedWeek: DateTime.now(),
+        switchButton: _buildSwitchButton(), // 스위치 버튼을 시간표 위젯으로 전달
+        onScheduleTap: (schedule) {
+          // PtSchedule를 PtAppointment로 다시 변환
+          final appointment = _appointmentsResponse?.data.firstWhere(
+            (a) => a.appointmentId == schedule.appointmentId,
+            orElse: () => throw StateError('Appointment not found'),
+          );
+          // 시간표뷰에서는 시간표 형태의 상세 팝업 표시
+          _showScheduleDetailPopup(schedule);
+        },
+        onScheduleAction: (schedule, action) {
+          _handleScheduleAction(schedule, action);
+        },
+      ),
+    );
+  }
+
+  // 스위치 버튼 대상체를 별도 메서드로 추출
+  Widget _buildSwitchButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isListView = !_isListView;
+        });
+        // 뷰 변경 시 적절한 데이터 로드
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          // 리스트 뷰로 전환 시 현재 선택된 상태로 다시 로드
+          if (!_isListView) {
+            _loadTimetableAppointments();
+          } else {
+            _loadAppointments();
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF10B981), Color(0xFF34D399)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF10B981).withValues(alpha: 0.3),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _isListView ? Icons.calendar_view_week : Icons.view_list,
+              size: 16,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              _isListView ? '시간표' : '목록',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showScheduleChangeDialog(PtAppointment appointment) {
+    // PtAppointment을 PtSchedule로 변환
+    final schedule = PtSchedule(
+      appointmentId: appointment.appointmentId,
+      contractId: appointment.contractId,
+      trainerName: appointment.trainerName,
+      memberName: appointment.memberName,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      status: appointment.status ?? 'SCHEDULED',
+      hasChangeRequest: appointment.changeRequestStartTime != null,
+      changeRequestBy: appointment.changeRequestBy,
+      requestedStartTime: appointment.changeRequestStartTime,
+      requestedEndTime: appointment.changeRequestEndTime,
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => ScheduleChangeRequestDialog(
+        schedule: schedule,
+        isTrainerRequest: false, // 회원이 요청하는 경우
+      ),
+    ).then((_) {
+      // 다이얼로그 종료 후 새로고침
+      if (!_isListView) {
+        _loadTimetableAppointments();
+      } else {
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          _loadAppointments();
+        }
+      }
+    });
+  }
+
+  void _showSessionCreateDialog(PtAppointment appointment) {
+    showDialog(
+      context: context,
+      builder: (context) => SessionCreateDialog(
+        appointmentId: appointment.appointmentId,
+        memberName: appointment.memberName,
+        appointmentDate: DateTime.parse(appointment.startTime),
+        onSubmit: (sessionData) async {
+          try {
+            await ref
+                .read(ptContractRepositoryProvider)
+                .createPtSession(sessionData: sessionData);
+
+            // 세션 생성 후 자동으로 완료 처리
+            await ref
+                .read(ptContractViewModelProvider.notifier)
+                .updateAppointmentStatus(
+                  appointmentId: appointment.appointmentId,
+                  status: 'COMPLETED',
+                );
+
+            Navigator.of(context).pop();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('세션이 완료되었습니다.'),
+                backgroundColor: Color(0xFF10B981),
+              ),
+            );
+
+            // 새로고침
+            if (!_isListView) {
+              _loadTimetableAppointments();
+            } else {
+              if (!_isListView) {
+                _loadTimetableAppointments();
+              } else {
+                _loadAppointments();
+              }
+            }
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('세션 완료에 실패했습니다.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
   void _showContractDetail(PtContract contract) {
     showModalBottomSheet(
       context: context,
@@ -843,7 +1200,8 @@ class ContractDetailSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ContractDetailSheet> createState() => _ContractDetailSheetState();
+  ConsumerState<ContractDetailSheet> createState() =>
+      _ContractDetailSheetState();
 }
 
 class _ContractDetailSheetState extends ConsumerState<ContractDetailSheet> {
@@ -869,7 +1227,7 @@ class _ContractDetailSheetState extends ConsumerState<ContractDetailSheet> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           // 헤더
           Padding(
             padding: const EdgeInsets.all(20),
@@ -892,7 +1250,7 @@ class _ContractDetailSheetState extends ConsumerState<ContractDetailSheet> {
               ],
             ),
           ),
-          
+
           // 내용
           Expanded(
             child: SingleChildScrollView(
@@ -924,12 +1282,15 @@ class _ContractDetailSheetState extends ConsumerState<ContractDetailSheet> {
         children: [
           _buildContractDetailRow('트레이너', widget.contract.trainerName),
           _buildContractDetailRow('총 세션', '${widget.contract.totalSessions}회'),
-          _buildContractDetailRow('남은 세션', '${widget.contract.remainingSessions}회'),
-          _buildContractDetailRow('상태', _getContractStatusText(widget.contract.status)),
+          _buildContractDetailRow(
+              '남은 세션', '${widget.contract.remainingSessions}회'),
+          _buildContractDetailRow(
+              '상태', _getContractStatusText(widget.contract.status)),
           if (widget.contract.startDate != null)
             _buildContractDetailRow('시작일', widget.contract.startDate!),
           if (widget.contract.price != null)
-            _buildContractDetailRow('계약 금액', '₩${NumberFormat('#,###').format(widget.contract.price)}'),
+            _buildContractDetailRow('계약 금액',
+                '₩${NumberFormat('#,###').format(widget.contract.price)}'),
         ],
       ),
     );
@@ -972,15 +1333,15 @@ class _ContractDetailSheetState extends ConsumerState<ContractDetailSheet> {
     final List<Widget> buttons = [];
 
     // 계약 상태에 따른 버튼들
-    if (widget.contract.status.toLowerCase() == 'active' || 
+    if (widget.contract.status.toLowerCase() == 'active' ||
         widget.contract.status.toLowerCase() == 'ongoing') {
       buttons.add(
         SizedBox(
           width: double.infinity,
           height: 48,
-          child: ElevatedButton(
+          child: FilledButton(
             onPressed: _isLoading ? null : () => _createAppointment(),
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF10B981),
               foregroundColor: Colors.white,
               disabledBackgroundColor: Colors.grey[300],
@@ -1008,10 +1369,8 @@ class _ContractDetailSheetState extends ConsumerState<ContractDetailSheet> {
   Future<void> _createAppointment() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-          'PT 예약 기능은 곧 추가될 예정입니다.\n현재 API 개발이 진행 중입니다.', 
-          style: TextStyle(fontFamily: 'IBMPlexSansKR')
-        ),
+        content: Text('PT 예약 기능은 곧 추가될 예정입니다.\n현재 API 개발이 진행 중입니다.',
+            style: TextStyle(fontFamily: 'IBMPlexSansKR')),
         backgroundColor: Colors.blue,
         duration: Duration(seconds: 3),
       ),
@@ -1040,17 +1399,19 @@ class _ContractDetailSheetState extends ConsumerState<ContractDetailSheet> {
 class _AppointmentDetailSheet extends ConsumerStatefulWidget {
   final PtAppointment appointment;
   final VoidCallback onAction;
-  
+
   const _AppointmentDetailSheet({
     required this.appointment,
     required this.onAction,
   });
 
   @override
-  ConsumerState<_AppointmentDetailSheet> createState() => _AppointmentDetailSheetState();
+  ConsumerState<_AppointmentDetailSheet> createState() =>
+      _AppointmentDetailSheetState();
 }
 
-class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet> {
+class _AppointmentDetailSheetState
+    extends ConsumerState<_AppointmentDetailSheet> {
   bool _isLoading = false;
 
   @override
@@ -1074,7 +1435,7 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           // 헤더
           Padding(
             padding: const EdgeInsets.all(20),
@@ -1097,7 +1458,7 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
               ],
             ),
           ),
-          
+
           // 내용
           Expanded(
             child: SingleChildScrollView(
@@ -1124,9 +1485,11 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
         _buildDetailRow('트레이너', widget.appointment.trainerName),
         _buildDetailRow('회원', widget.appointment.memberName),
         _buildDetailRow('날짜', _formatDate(widget.appointment.startTime)),
-        _buildDetailRow('시간', '${_formatTime(widget.appointment.startTime)} - ${_formatTime(widget.appointment.endTime)}'),
-        _buildDetailRow('상태', _getStatusText(widget.appointment.status ?? 'MEMBER_REQUESTED')),
-        
+        _buildDetailRow('시간',
+            '${_formatTime(widget.appointment.startTime)} - ${_formatTime(widget.appointment.endTime)}'),
+        _buildDetailRow('상태',
+            _getStatusText(widget.appointment.status ?? 'MEMBER_REQUESTED')),
+
         // 변경 요청 정보
         if (widget.appointment.changeRequestStartTime != null) ...[
           const SizedBox(height: 16),
@@ -1230,7 +1593,8 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
                   child: SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : () => _confirmAppointment(),
+                      onPressed:
+                          _isLoading ? null : () => _confirmAppointment(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF10B981),
                         foregroundColor: Colors.white,
@@ -1280,7 +1644,7 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
               ],
             ),
           );
-        } 
+        }
         // 회원인 경우: 취소만 가능
         else {
           buttons.add(
@@ -1311,7 +1675,7 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
           );
         }
         break;
-        
+
       case 'SCHEDULED':
         // 확정된 예약 - 일정 변경 요청, 취소 가능
         buttons.addAll([
@@ -1345,10 +1709,15 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
             ),
           ),
         ]);
-        
-        // 변경 요청이 있고 트레이너가 요청한 경우 승인/거절 버튼
-        if (widget.appointment.changeRequestBy == 'TRAINER' && 
-            widget.appointment.changeRequestStatus == 'PENDING') {
+
+        // 변경 요청이 있고 상대방이 요청한 경우 승인/거절 버튼
+        final currentUser = ref.read(currentUserProvider);
+        final isTrainer = currentUser?.userType == UserType.trainer;
+        final shouldShowApproveReject = ((isTrainer &&
+                widget.appointment.changeRequestBy == 'MEMBER') ||
+            (!isTrainer && widget.appointment.changeRequestBy == 'TRAINER'));
+
+        if (shouldShowApproveReject) {
           buttons.insertAll(0, [
             Row(
               children: [
@@ -1409,6 +1778,152 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
           ]);
         }
         break;
+
+      case 'CHANGE_REQUESTED':
+      case 'TRAINER_CHANGE_REQUESTED':
+        // 변경요청 상태 - 승인/거절 버튼만 표시
+        final currentUser = ref.read(currentUserProvider);
+        final isTrainer = currentUser?.userType == UserType.trainer;
+
+        // 상태 기반으로 버튼 표시 결정
+        // CHANGE_REQUESTED: 회원이 요청했으므로 트레이너가 승인/거절 가능
+        // TRAINER_CHANGE_REQUESTED: 트레이너가 요청했으므로 회원이 승인/거절 가능
+        final shouldShowApproveReject =
+            (appointmentStatus == 'CHANGE_REQUESTED' && isTrainer) ||
+                (appointmentStatus == 'TRAINER_CHANGE_REQUESTED' && !isTrainer);
+
+        if (shouldShowApproveReject) {
+          buttons.addAll([
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () => _approveChange(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        '변경 승인',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () => _rejectChange(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[600],
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        '변경 거절',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ]);
+        }
+        break;
+
+      default:
+        // 기본 케이스 - 변경요청이 있는 다른 상태들 처리
+        if (widget.appointment.changeRequestStartTime != null) {
+          final currentUser = ref.read(currentUserProvider);
+          final isTrainer = currentUser?.userType == UserType.trainer;
+
+          final shouldShowApproveReject = ((isTrainer &&
+                  widget.appointment.changeRequestBy == 'MEMBER') ||
+              (!isTrainer && widget.appointment.changeRequestBy == 'TRAINER'));
+
+          if (shouldShowApproveReject) {
+            buttons.addAll([
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : () => _approveChange(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.grey[300],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          '변경 승인',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : () => _rejectChange(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[600],
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.grey[300],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          '변경 거절',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ]);
+          }
+        }
+        break;
     }
 
     return Column(children: buttons);
@@ -1417,16 +1932,17 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
   // API 호출 메서드들
   Future<void> _confirmAppointment() async {
     setState(() => _isLoading = true);
-    
+
     try {
       await ref.read(ptContractViewModelProvider.notifier).confirmAppointment(
-        appointmentId: widget.appointment.appointmentId,
-      );
-      
+            appointmentId: widget.appointment.appointmentId,
+          );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('예약이 승인되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('예약이 승인되었습니다',
+                style: TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -1436,7 +1952,8 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('승인 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('승인 실패: ${e.toString()}',
+                style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Colors.red[600],
           ),
         );
@@ -1448,17 +1965,20 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
 
   Future<void> _rejectAppointment() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
-        appointmentId: widget.appointment.appointmentId,
-        status: 'CANCELLED',
-      );
-      
+      await ref
+          .read(ptContractViewModelProvider.notifier)
+          .updateAppointmentStatus(
+            appointmentId: widget.appointment.appointmentId,
+            status: 'CANCELLED',
+          );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('예약이 거절되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('예약이 거절되었습니다',
+                style: TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -1468,7 +1988,8 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('거절 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('거절 실패: ${e.toString()}',
+                style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Colors.red[600],
           ),
         );
@@ -1480,17 +2001,20 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
 
   Future<void> _cancelAppointment() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
-        appointmentId: widget.appointment.appointmentId,
-        status: 'CANCELLED',
-      );
-      
+      await ref
+          .read(ptContractViewModelProvider.notifier)
+          .updateAppointmentStatus(
+            appointmentId: widget.appointment.appointmentId,
+            status: 'CANCELLED',
+          );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('예약이 취소되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('예약이 취소되었습니다',
+                style: TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -1500,7 +2024,8 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('취소 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('취소 실패: ${e.toString()}',
+                style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Colors.red[600],
           ),
         );
@@ -1511,222 +2036,63 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
   }
 
   Future<void> _requestScheduleChange() async {
-    // 날짜/시간 선택 다이얼로그 표시
-    DateTime? selectedDate;
-    TimeOfDay? startTime;
-    TimeOfDay? endTime;
+    // PtAppointment을 PtSchedule로 변환
+    final schedule = PtSchedule(
+      appointmentId: widget.appointment.appointmentId,
+      contractId: widget.appointment.contractId,
+      trainerName: widget.appointment.trainerName,
+      memberName: widget.appointment.memberName,
+      startTime: widget.appointment.startTime,
+      endTime: widget.appointment.endTime,
+      status: widget.appointment.status ?? 'SCHEDULED',
+      hasChangeRequest: widget.appointment.changeRequestStartTime != null,
+      changeRequestBy: widget.appointment.changeRequestBy,
+      requestedStartTime: widget.appointment.changeRequestStartTime,
+      requestedEndTime: widget.appointment.changeRequestEndTime,
+    );
 
-    // 현재 예약 시간을 기본값으로 설정
-    try {
-      final currentStart = DateTime.parse(widget.appointment.startTime);
-      selectedDate = currentStart;
-      startTime = TimeOfDay.fromDateTime(currentStart);
-      endTime = TimeOfDay.fromDateTime(DateTime.parse(widget.appointment.endTime));
-    } catch (e) {
-      selectedDate = DateTime.now();
-      startTime = const TimeOfDay(hour: 9, minute: 0);
-      endTime = const TimeOfDay(hour: 10, minute: 0);
-    }
+    final user = ref.read(currentUserProvider);
+    final isTrainerRequest = user?.userType == UserType.trainer;
 
-    // 날짜 선택
-    final pickedDate = await showDatePicker(
+    showDialog(
       context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF10B981),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedDate == null) return;
-
-    // 시작 시간 선택
-    final pickedStartTime = await showTimePicker(
-      context: context,
-      initialTime: startTime,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF10B981),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedStartTime == null) return;
-
-    // 종료 시간 선택
-    final pickedEndTime = await showTimePicker(
-      context: context,
-      initialTime: endTime,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF10B981),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedEndTime == null) return;
-
-    // 새로운 시간 생성
-    final newStartDateTime = DateTime(
-      pickedDate.year,
-      pickedDate.month,
-      pickedDate.day,
-      pickedStartTime.hour,
-      pickedStartTime.minute,
-    );
-
-    final newEndDateTime = DateTime(
-      pickedDate.year,
-      pickedDate.month,
-      pickedDate.day,
-      pickedEndTime.hour,
-      pickedEndTime.minute,
-    );
-
-    // 유효성 검사
-    if (newEndDateTime.isBefore(newStartDateTime)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('종료 시간은 시작 시간 이후여야 합니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // 확인 다이얼로그
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('일정 변경 요청', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('다음 일정으로 변경을 요청하시겠습니까?', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '날짜: ${DateFormat('yyyy년 M월 d일').format(pickedDate)}',
-                    style: const TextStyle(fontFamily: 'IBMPlexSansKR'),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '시간: ${pickedStartTime.format(context)} - ${pickedEndTime.format(context)}',
-                    style: const TextStyle(fontFamily: 'IBMPlexSansKR'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('요청', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
-          ),
-        ],
+      builder: (context) => ScheduleChangeRequestDialog(
+        schedule: schedule,
+        isTrainerRequest: isTrainerRequest,
       ),
-    );
-
-    if (confirmed != true) return;
-
-    // API 호출
-    setState(() => _isLoading = true);
-    
-    try {
-      final user = ref.read(currentUserProvider);
-      
-      // 트레이너인지 회원인지에 따라 다른 API 호출
-      if (user?.userType == UserType.trainer) {
-        await ref.read(ptContractViewModelProvider.notifier).trainerRequestScheduleChange(
-          appointmentId: widget.appointment.appointmentId,
-          newStartTime: newStartDateTime.toIso8601String(),
-          newEndTime: newEndDateTime.toIso8601String(),
-        );
-      } else {
-        await ref.read(ptContractViewModelProvider.notifier).memberRequestScheduleChange(
-          appointmentId: widget.appointment.appointmentId,
-          newStartTime: newStartDateTime.toIso8601String(),
-          newEndTime: newEndDateTime.toIso8601String(),
-        );
-      }
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('일정 변경이 요청되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
-            backgroundColor: Color(0xFF10B981),
-          ),
-        );
-        widget.onAction();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('변경 요청 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
-            backgroundColor: Colors.red[600],
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    ).then((_) {
+      // 다이얼로그 종료 후 액션 콜백 호출
+      widget.onAction();
+    });
   }
 
   Future<void> _approveChange() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      await ref.read(ptContractViewModelProvider.notifier).memberApproveTrainerChangeRequest(
-        appointmentId: widget.appointment.appointmentId,
-      );
-      
+      final user = ref.read(currentUserProvider);
+      final isTrainer = user?.userType == UserType.trainer;
+      final appointmentStatus = widget.appointment.status ?? 'MEMBER_REQUESTED';
+
+      // 트레이너 변경요청을 회원이 승인하는 경우는 member-approve-change 사용
+      if (appointmentStatus == 'TRAINER_CHANGE_REQUESTED' && !isTrainer) {
+        await ref
+            .read(ptContractRepositoryProvider)
+            .memberApproveTrainerChangeRequest(
+              appointmentId: widget.appointment.appointmentId,
+            );
+      } else {
+        // 회원 변경요청을 트레이너가 승인하는 경우는 공통 change-approval 사용
+        await ref.read(ptContractRepositoryProvider).approveAppointmentChange(
+              appointmentId: widget.appointment.appointmentId,
+            );
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('일정 변경이 승인되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('일정 변경이 승인되었습니다',
+                style: TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -1736,7 +2102,8 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('승인 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('승인 실패: ${e.toString()}',
+                style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Colors.red[600],
           ),
         );
@@ -1748,16 +2115,17 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
 
   Future<void> _rejectChange() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      await ref.read(ptContractViewModelProvider.notifier).rejectAppointmentChange(
-        appointmentId: widget.appointment.appointmentId,
-      );
-      
+      await ref.read(ptContractRepositoryProvider).rejectAppointmentChange(
+            appointmentId: widget.appointment.appointmentId,
+          );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('일정 변경이 거절되었습니다', style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('일정 변경이 거절되었습니다',
+                style: TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -1767,7 +2135,8 @@ class _AppointmentDetailSheetState extends ConsumerState<_AppointmentDetailSheet
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('거절 실패: ${e.toString()}', style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
+            content: Text('거절 실패: ${e.toString()}',
+                style: const TextStyle(fontFamily: 'IBMPlexSansKR')),
             backgroundColor: Colors.red[600],
           ),
         );
@@ -1866,9 +2235,11 @@ class _TimetablePopupDialogState extends State<_TimetablePopupDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final mondayOfWeek = _selectedWeek.subtract(Duration(days: _selectedWeek.weekday - 1));
-    final isCurrentWeek = DateFormat('yyyy-MM-dd').format(mondayOfWeek) == 
-                         DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)));
+    final mondayOfWeek =
+        _selectedWeek.subtract(Duration(days: _selectedWeek.weekday - 1));
+    final isCurrentWeek = DateFormat('yyyy-MM-dd').format(mondayOfWeek) ==
+        DateFormat('yyyy-MM-dd').format(DateTime.now()
+            .subtract(Duration(days: DateTime.now().weekday - 1)));
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -1919,7 +2290,7 @@ class _TimetablePopupDialogState extends State<_TimetablePopupDialog> {
                 ],
               ),
             ),
-            
+
             // 주차 네비게이션
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1945,7 +2316,7 @@ class _TimetablePopupDialogState extends State<_TimetablePopupDialog> {
                       ),
                     ),
                   ),
-                  
+
                   // 현재 주차 정보
                   Expanded(
                     child: Column(
@@ -1963,17 +2334,20 @@ class _TimetablePopupDialogState extends State<_TimetablePopupDialog> {
                           GestureDetector(
                             onTap: _goToCurrentWeek,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                color: const Color(0xFF10B981)
+                                    .withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFF10B981)),
+                                border:
+                                    Border.all(color: const Color(0xFF10B981)),
                               ),
                               child: const Text(
                                 '이번 주로 이동',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: Color(0xFF10B981),
+                                  color: Colors.black87,
                                   fontWeight: FontWeight.w600,
                                   fontFamily: 'IBMPlexSansKR',
                                 ),
@@ -1984,7 +2358,7 @@ class _TimetablePopupDialogState extends State<_TimetablePopupDialog> {
                       ],
                     ),
                   ),
-                  
+
                   // 다음 주 버튼
                   IconButton(
                     onPressed: _goToNextWeek,
@@ -2001,7 +2375,7 @@ class _TimetablePopupDialogState extends State<_TimetablePopupDialog> {
                 ],
               ),
             ),
-            
+
             // 시간표 위젯
             Expanded(
               child: Padding(
@@ -2018,5 +2392,354 @@ class _TimetablePopupDialogState extends State<_TimetablePopupDialog> {
         ),
       ),
     );
+  }
+}
+
+// 시간표 형태의 일정 상세 팝업
+class _ScheduleDetailPopupDialog extends ConsumerWidget {
+  final PtSchedule schedule;
+  final Function(PtSchedule, String) onScheduleAction;
+
+  const _ScheduleDetailPopupDialog({
+    required this.schedule,
+    required this.onScheduleAction,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 헤더
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.event,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'PT 일정 상세',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+
+            // 내용
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildDetailSection(),
+                    const SizedBox(height: 20),
+                    _buildActionButtons(context, ref),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        children: [
+          _buildDetailRow('트레이너', schedule.trainerName),
+          _buildDetailRow('회원', schedule.memberName),
+          _buildDetailRow('날짜', _formatDate(schedule.startTime)),
+          _buildDetailRow('시간',
+              '${_formatTime(schedule.startTime)} - ${_formatTime(schedule.endTime)}'),
+          _buildDetailRow('상태', _getStatusText(schedule.status)),
+
+          // 변경 요청 정보
+          if ((schedule.hasChangeRequest ?? false) &&
+              schedule.requestedStartTime != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '⏱️ 일정 변경 요청',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '요청자: ${schedule.changeRequestBy == 'TRAINER' ? '트레이너' : '회원'}',
+                    style: const TextStyle(
+                        fontSize: 12, fontFamily: 'IBMPlexSansKR'),
+                  ),
+                  Text(
+                    '변경 시간: ${_formatTime(schedule.requestedStartTime!)} - ${_formatTime(schedule.requestedEndTime!)}',
+                    style: const TextStyle(
+                        fontSize: 12, fontFamily: 'IBMPlexSansKR'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 60,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
+    final List<Widget> buttons = [];
+
+    // 상태에 따른 버튼들
+    switch (schedule.status) {
+      case 'SCHEDULED':
+        buttons.addAll([
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () =>
+                  onScheduleAction(schedule, 'trainer_request_change'),
+              icon: const Icon(Icons.schedule, size: 18),
+              label: const Text('시간 변경 요청'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: const TextStyle(
+                  fontFamily: 'IBMPlexSansKR',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => onScheduleAction(schedule, 'complete'),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text('완료'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF10B981),
+                    side: const BorderSide(color: Color(0xFF10B981)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: const TextStyle(
+                      fontFamily: 'IBMPlexSansKR',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => onScheduleAction(schedule, 'cancel'),
+                  icon: const Icon(Icons.cancel_outlined, size: 18),
+                  label: const Text('취소'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: const TextStyle(
+                      fontFamily: 'IBMPlexSansKR',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ]);
+
+        // 상대방 변경요청에 대한 승인/거절 버튼
+        final currentUser = ref.read(currentUserProvider);
+        final isTrainer = currentUser?.userType == UserType.trainer;
+        final shouldShowChangeActions = (schedule.hasChangeRequest ?? false) &&
+            ((isTrainer && schedule.changeRequestBy == 'MEMBER') ||
+                (!isTrainer && schedule.changeRequestBy == 'TRAINER'));
+
+        if (shouldShowChangeActions) {
+          buttons.insertAll(0, [
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => onScheduleAction(schedule,
+                        isTrainer ? 'approve_change' : 'member_approve_change'),
+                    icon: const Icon(Icons.thumb_up_outlined, size: 18),
+                    label: const Text('변경 승인'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      textStyle: const TextStyle(
+                        fontFamily: 'IBMPlexSansKR',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        onScheduleAction(schedule, 'reject_change'),
+                    icon: const Icon(Icons.thumb_down_outlined, size: 18),
+                    label: const Text('변경 거절'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      textStyle: const TextStyle(
+                        fontFamily: 'IBMPlexSansKR',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ]);
+        }
+        break;
+    }
+
+    return Column(children: buttons);
+  }
+
+  String _formatDate(String dateTimeStr) {
+    try {
+      final dateTime = DateTime.parse(dateTimeStr);
+      return DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(dateTime);
+    } catch (e) {
+      return dateTimeStr;
+    }
+  }
+
+  String _formatTime(String dateTimeStr) {
+    try {
+      final dateTime = DateTime.parse(dateTimeStr);
+      return DateFormat('HH:mm').format(dateTime);
+    } catch (e) {
+      return dateTimeStr;
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'SCHEDULED':
+        return '예정됨';
+      case 'COMPLETED':
+        return '완료됨';
+      case 'CANCELLED':
+        return '취소됨';
+      case 'CHANGE_REQUESTED':
+        return '변경요청';
+      case 'TRAINER_CHANGE_REQUESTED':
+        return '트레이너변경요청';
+      default:
+        return status;
+    }
   }
 }

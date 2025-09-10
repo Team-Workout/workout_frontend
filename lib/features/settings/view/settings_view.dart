@@ -34,53 +34,57 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    
+
     // 트레이너인지 확인 (트레이너는 앱바 유지, 멤버는 앱바 제거)
     final isTrainer = user?.userType == UserType.trainer;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: isTrainer ? AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
-            ),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          '설정',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'IBMPlexSansKR',
-          ),
-        ),
-        centerTitle: true,
-      ) : null,
-      body: isTrainer 
-        ? ListView(
-            children: [
+      appBar: isTrainer
+          ? AppBar(
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF10B981),
+                      Color(0xFF34D399),
+                      Color(0xFF6EE7B7)
+                    ],
+                  ),
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              automaticallyImplyLeading: true,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              title: const Text(
+                '설정',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+              centerTitle: true,
+            )
+          : null,
+      body: isTrainer
+          ? ListView(children: [
               _buildMainContent(),
-            ]
-          )
-        : SafeArea(
-            child: ListView(
-              children: [
-                _buildMainContent(),
-              ],
+            ])
+          : SafeArea(
+              child: ListView(
+                children: [
+                  _buildMainContent(),
+                ],
+              ),
             ),
-          ),
     );
   }
 
@@ -93,6 +97,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       children: [
         // 프로필 섹션
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -215,7 +220,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
         ),
         const SizedBox(height: 20),
-        
+
         // 개인정보 공개 설정 (멤버만)
         if (!isTrainer) ...[
           Container(
@@ -252,7 +257,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
           const SizedBox(height: 20),
         ],
-        
+
         // 일반 설정
         _buildSection(
           context,
@@ -273,7 +278,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ],
         ),
         const SizedBox(height: 20),
-        
+
         // 정보
         _buildSection(
           context,
@@ -294,7 +299,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ],
         ),
         const SizedBox(height: 20),
-        
+
         // 로그아웃 버튼
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -365,7 +370,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     );
   }
 
-  Widget _buildSettingItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+  Widget _buildSettingItem(
+      IconData icon, String title, String subtitle, VoidCallback onTap) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
@@ -596,7 +602,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     }
 
     final cacheKey = imageUrl.hashCode.toString();
-    _imageCache[fullImageUrl] ??= _loadProfileImageWithCache(fullImageUrl, cacheKey);
+    _imageCache[fullImageUrl] ??=
+        _loadProfileImageWithCache(fullImageUrl, cacheKey);
 
     return FutureBuilder<String?>(
       future: _imageCache[fullImageUrl],
@@ -657,7 +664,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     );
   }
 
-  Future<String?> _loadProfileImageWithCache(String fullImageUrl, String cacheKey) async {
+  Future<String?> _loadProfileImageWithCache(
+      String fullImageUrl, String cacheKey) async {
     try {
       final hasValidCache = await ImageCacheManager().hasValidCache(
         cacheKey: cacheKey,
@@ -768,7 +776,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           );
         }
 
-        await ref.read(profileImageProvider.notifier).uploadProfileImage(pickedFile);
+        await ref
+            .read(profileImageProvider.notifier)
+            .uploadProfileImage(pickedFile);
         _imageCache.clear();
 
         if (mounted) {
@@ -1099,7 +1109,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('캐시 초기화'),
-            content: const Text('모든 마스터 데이터 캐시를 초기화하시겠습니까?\n다음 앱 실행 시 새로 동기화됩니다.'),
+            content:
+                const Text('모든 마스터 데이터 캐시를 초기화하시겠습니까?\n다음 앱 실행 시 새로 동기화됩니다.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),

@@ -6,14 +6,14 @@ class CustomDatePicker extends StatefulWidget {
   final DateTime firstDate;
   final DateTime lastDate;
   final Function(DateTime) onDateSelected;
-  
+
   const CustomDatePicker({
-    Key? key,
+    super.key,
     required this.initialDate,
     required this.firstDate,
     required this.lastDate,
     required this.onDateSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomDatePicker> createState() => _CustomDatePickerState();
@@ -22,7 +22,7 @@ class CustomDatePicker extends StatefulWidget {
 class _CustomDatePickerState extends State<CustomDatePicker> {
   late DateTime currentDate;
   late DateTime displayedMonth;
-  
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +38,6 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF10B981), width: 2),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF10B981).withValues(alpha: 0.1),
@@ -97,7 +96,8 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
           ),
           IconButton(
             onPressed: _nextMonth,
-            icon: const Icon(Icons.chevron_right, color: Colors.white, size: 28),
+            icon:
+                const Icon(Icons.chevron_right, color: Colors.white, size: 28),
           ),
         ],
       ),
@@ -109,27 +109,32 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
-        children: weekDays.map((day) => Expanded(
-          child: Center(
-            child: Text(
-              day,
-              style: TextStyle(
-                color: const Color(0xFF10B981),
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        )).toList(),
+        children: weekDays
+            .map((day) => Expanded(
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: TextStyle(
+                        color: const Color(0xFF10B981),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ))
+            .toList(),
       ),
     );
   }
 
   Widget _buildCalendar() {
-    final firstDayOfMonth = DateTime(displayedMonth.year, displayedMonth.month, 1);
-    final lastDayOfMonth = DateTime(displayedMonth.year, displayedMonth.month + 1, 0);
-    final startDate = firstDayOfMonth.subtract(Duration(days: firstDayOfMonth.weekday % 7));
-    
+    final firstDayOfMonth =
+        DateTime(displayedMonth.year, displayedMonth.month, 1);
+    final lastDayOfMonth =
+        DateTime(displayedMonth.year, displayedMonth.month + 1, 0);
+    final startDate =
+        firstDayOfMonth.subtract(Duration(days: firstDayOfMonth.weekday % 7));
+
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -143,17 +148,17 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
         final date = startDate.add(Duration(days: index));
         final isCurrentMonth = date.month == displayedMonth.month;
         final isSelected = date.day == currentDate.day &&
-                          date.month == currentDate.month &&
-                          date.year == currentDate.year;
+            date.month == currentDate.month &&
+            date.year == currentDate.year;
         final isToday = date.day == DateTime.now().day &&
-                       date.month == DateTime.now().month &&
-                       date.year == DateTime.now().year;
-        
+            date.month == DateTime.now().month &&
+            date.year == DateTime.now().year;
+
         return GestureDetector(
           onTap: isCurrentMonth ? () => _selectDate(date) : null,
           child: Container(
             decoration: BoxDecoration(
-              color: isSelected 
+              color: isSelected
                   ? const Color(0xFF10B981)
                   : isToday && isCurrentMonth
                       ? const Color(0xFF10B981).withValues(alpha: 0.1)
@@ -172,7 +177,9 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
                       : isCurrentMonth
                           ? Colors.black87
                           : Colors.grey.withValues(alpha: 0.4),
-                  fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isSelected || isToday
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                   fontSize: 16,
                 ),
               ),
@@ -232,13 +239,15 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
 
   void _previousMonth() {
     setState(() {
-      displayedMonth = DateTime(displayedMonth.year, displayedMonth.month - 1, 1);
+      displayedMonth =
+          DateTime(displayedMonth.year, displayedMonth.month - 1, 1);
     });
   }
 
   void _nextMonth() {
     setState(() {
-      displayedMonth = DateTime(displayedMonth.year, displayedMonth.month + 1, 1);
+      displayedMonth =
+          DateTime(displayedMonth.year, displayedMonth.month + 1, 1);
     });
   }
 
@@ -295,19 +304,21 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
     super.initState();
     selectedYear = widget.initialYear;
     selectedMonth = widget.initialMonth;
-    
+
     _yearScrollController = ScrollController();
-    
+
     // 위젯이 빌드된 후 스크롤 위치 조정
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_yearScrollController.hasClients) {
         // 선택된 년도가 화면 중앙에 오도록 스크롤
         final int selectedIndex = selectedYear - widget.firstYear;
         final double itemHeight = 40.0; // margin + padding 포함한 아이템 높이
-        final double targetOffset = selectedIndex * itemHeight - 80.0; // 위쪽에 약간 여백
-        
+        final double targetOffset =
+            selectedIndex * itemHeight - 80.0; // 위쪽에 약간 여백
+
         _yearScrollController.animateTo(
-          targetOffset.clamp(0.0, _yearScrollController.position.maxScrollExtent),
+          targetOffset.clamp(
+              0.0, _yearScrollController.position.maxScrollExtent),
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
@@ -400,7 +411,8 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
                         Navigator.of(context).pop();
                       },
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         child: Text(
                           '선택',
                           style: TextStyle(
@@ -445,7 +457,9 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
                   margin: const EdgeInsets.symmetric(vertical: 2),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF10B981) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFF10B981)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -453,7 +467,8 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
                       '$year',
                       style: TextStyle(
                         color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ),
@@ -467,8 +482,21 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
   }
 
   Widget _buildMonthPicker() {
-    const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-    
+    const months = [
+      '1월',
+      '2월',
+      '3월',
+      '4월',
+      '5월',
+      '6월',
+      '7월',
+      '8월',
+      '9월',
+      '10월',
+      '11월',
+      '12월'
+    ];
+
     return Column(
       children: [
         Text(
@@ -492,7 +520,9 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
                   margin: const EdgeInsets.symmetric(vertical: 2),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF10B981) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFF10B981)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -500,7 +530,8 @@ class _YearMonthPickerDialogState extends State<_YearMonthPickerDialog> {
                       months[index],
                       style: TextStyle(
                         color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ),

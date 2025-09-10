@@ -16,7 +16,7 @@ class DashboardWeightChart extends StatelessWidget {
     if (compositions.isEmpty) {
       return const Center(
         child: Text(
-          '데이터가 없습니다', 
+          '데이터가 없습니다',
           style: TextStyle(
             color: Colors.grey,
             fontFamily: 'IBMPlexSansKR',
@@ -47,7 +47,7 @@ class DashboardWeightChart extends StatelessWidget {
         lineTouchData: LineTouchData(
           enabled: true,
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (touchedSpot) => const Color(0xFF4CAF50),
+            getTooltipColor: (touchedSpot) => const Color(0xFF10B981),
             tooltipRoundedRadius: 8,
             tooltipPadding: const EdgeInsets.all(8),
             getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
@@ -71,7 +71,8 @@ class DashboardWeightChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: (maxWeight - minWeight) <= 0 ? 1.0 : (maxWeight - minWeight) / 2,
+          horizontalInterval:
+              (maxWeight - minWeight) <= 0 ? 1.0 : (maxWeight - minWeight) / 2,
           getDrawingHorizontalLine: (value) {
             return const FlLine(
               color: Colors.grey,
@@ -124,7 +125,7 @@ class DashboardWeightChart extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: const Color(0xFF4CAF50),
+            color: const Color(0xFF10B981),
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: FlDotData(
@@ -132,7 +133,7 @@ class DashboardWeightChart extends StatelessWidget {
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 4,
-                  color: const Color(0xFF4CAF50),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.7),
                   strokeWidth: 2,
                   strokeColor: Colors.white,
                 );
@@ -140,7 +141,7 @@ class DashboardWeightChart extends StatelessWidget {
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+              color: const Color(0xFF10B981).withValues(alpha: 0.3),
             ),
           ),
         ],

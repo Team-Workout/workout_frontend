@@ -46,55 +46,38 @@ class _PTMainViewState extends ConsumerState<PTMainView>
         body: SafeArea(
           child: Column(
             children: [
-              // 서브탭 바만 유지
+              // 탭바 (운동탭과 동일한 스타일)
               Container(
-                margin: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
+                      blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.grey[600],
-                  indicator: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  dividerColor: Colors.transparent,
+                  labelColor: const Color(0xFF10B981),
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: const Color(0xFF10B981),
+                  indicatorWeight: 3,
                   labelStyle: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                    fontSize: 16,
                     fontFamily: 'IBMPlexSansKR',
                   ),
                   unselectedLabelStyle: const TextStyle(
                     fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                    fontSize: 16,
                     fontFamily: 'IBMPlexSansKR',
                   ),
                   tabs: const [
-                    Tab(
-                      icon: Icon(Icons.person_search, size: 14),
-                      text: '트레이너',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.schedule, size: 14),
-                      text: '시간표',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.pending_actions, size: 14),
-                      text: 'PT 예약',
-                    ),
+                    Tab(text: '트레이너'),
+                    Tab(text: '시간표'),
+                    Tab(text: 'PT'),
                   ],
                 ),
               ),
@@ -129,7 +112,6 @@ class _TrainersViewWrapper extends StatelessWidget {
     );
   }
 }
-
 
 // 시간표를 AppBar 없이 표시하는 래퍼
 class _ScheduleViewWrapper extends StatelessWidget {
@@ -166,9 +148,7 @@ class _LessonRequestContent extends ConsumerStatefulWidget {
       _LessonRequestContentState();
 }
 
-class _LessonRequestContentState
-    extends ConsumerState<_LessonRequestContent> {
-  
+class _LessonRequestContentState extends ConsumerState<_LessonRequestContent> {
   @override
   void initState() {
     super.initState();
@@ -183,7 +163,7 @@ class _LessonRequestContentState
   @override
   Widget build(BuildContext context) {
     final contractsState = ref.watch(ptContractViewModelProvider);
-    
+
     return Container(
       color: const Color(0xFFF8F9FA),
       child: Column(
@@ -234,8 +214,10 @@ class _LessonRequestContentState
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: contractsState.when(
-                  data: (contractResponse) => _buildContractsList(contractResponse),
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  data: (contractResponse) =>
+                      _buildContractsList(contractResponse),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, stack) => _buildErrorState(),
                 ),
               ),
@@ -264,15 +246,20 @@ class _LessonRequestContentState
   }
 
   Widget _buildContractCard(PtContract contract) {
+    final bool isDisabled = contract.remainingSessions <= 0;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: isDisabled ? Colors.grey[100] : Colors.grey[50],
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+            color: isDisabled ? Colors.grey[300]! : Colors.grey[200]!),
       ),
       child: InkWell(
-        onTap: () => _showLessonRequestDialog(contract),
+        onTap: contract.remainingSessions > 0
+            ? () => _showLessonRequestDialog(contract)
+            : null,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -281,10 +268,13 @@ class _LessonRequestContentState
               // 트레이너 프로필 이미지 (기본)
               CircleAvatar(
                 radius: 30,
-                backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.1),
-                child: const Icon(
+                backgroundColor: isDisabled
+                    ? Colors.grey.withOpacity(0.2)
+                    : const Color(0xFF10B981).withValues(alpha: 0.1),
+                child: Icon(
                   Icons.person,
-                  color: Color(0xFF10B981),
+                  color:
+                      isDisabled ? Colors.grey[400] : const Color(0xFF10B981),
                   size: 30,
                 ),
               ),
@@ -296,10 +286,11 @@ class _LessonRequestContentState
                   children: [
                     Text(
                       '${contract.trainerName} 트레이너',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'IBMPlexSansKR',
+                        color: isDisabled ? Colors.grey[600] : Colors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -307,8 +298,8 @@ class _LessonRequestContentState
                       '잔여 수업: ${contract.remainingSessions}회 / ${contract.totalSessions}회',
                       style: TextStyle(
                         fontSize: 12,
-                        color: contract.remainingSessions > 0 
-                            ? const Color(0xFF10B981) 
+                        color: contract.remainingSessions > 0
+                            ? const Color(0xFF1F2937)
                             : Colors.grey[600],
                         fontFamily: 'IBMPlexSansKR',
                         fontWeight: FontWeight.w600,
@@ -317,7 +308,8 @@ class _LessonRequestContentState
                     if (contract.status == 'ACTIVE')
                       Container(
                         margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFF10B981).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
@@ -326,7 +318,7 @@ class _LessonRequestContentState
                           '활성 계약',
                           style: TextStyle(
                             fontSize: 10,
-                            color: Color(0xFF10B981),
+                            color: Color(0xFF1F2937),
                             fontFamily: 'IBMPlexSansKR',
                             fontWeight: FontWeight.w600,
                           ),
@@ -337,7 +329,7 @@ class _LessonRequestContentState
               ),
               // 화살표 아이콘
               Icon(
-                Icons.arrow_forward_ios,
+                isDisabled ? Icons.block : Icons.arrow_forward_ios,
                 size: 16,
                 color: Colors.grey[400],
               ),
@@ -473,7 +465,7 @@ class _LessonRequestContentState
 // 수업 예약 요청 바텀시트
 class _LessonRequestBottomSheet extends ConsumerStatefulWidget {
   final PtContract contract;
-  
+
   const _LessonRequestBottomSheet({required this.contract});
 
   @override
@@ -522,7 +514,8 @@ class _LessonRequestBottomSheetState
               children: [
                 CircleAvatar(
                   radius: 25,
-                  backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  backgroundColor:
+                      const Color(0xFF10B981).withValues(alpha: 0.1),
                   child: const Icon(
                     Icons.person,
                     color: Color(0xFF10B981),
@@ -618,8 +611,10 @@ class _LessonRequestBottomSheetState
                 color: Colors.black87,
                 fontFamily: 'IBMPlexSansKR',
               ),
-              leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF10B981)),
-              rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF10B981)),
+              leftChevronIcon:
+                  Icon(Icons.chevron_left, color: Color(0xFF10B981)),
+              rightChevronIcon:
+                  Icon(Icons.chevron_right, color: Color(0xFF10B981)),
               headerPadding: EdgeInsets.symmetric(vertical: 8),
             ),
             daysOfWeekStyle: const DaysOfWeekStyle(
@@ -678,10 +673,12 @@ class _LessonRequestBottomSheetState
             ),
             enabledDayPredicate: (day) {
               // 오늘 이후의 날짜만 선택 가능
-              return day.isAfter(DateTime.now().subtract(const Duration(days: 1)));
+              return day
+                  .isAfter(DateTime.now().subtract(const Duration(days: 1)));
             },
             onDaySelected: (selectedDay, focusedDay) {
-              if (selectedDay.isAfter(DateTime.now().subtract(const Duration(days: 1)))) {
+              if (selectedDay
+                  .isAfter(DateTime.now().subtract(const Duration(days: 1)))) {
                 setState(() {
                   _selectedDate = selectedDay;
                   _focusedDate = focusedDay;
@@ -703,7 +700,8 @@ class _LessonRequestBottomSheetState
             decoration: BoxDecoration(
               color: const Color(0xFF10B981).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+              border: Border.all(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -778,7 +776,7 @@ class _LessonRequestBottomSheetState
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[300]!),
           borderRadius: BorderRadius.circular(12),
-          color: time != null 
+          color: time != null
               ? const Color(0xFF10B981).withValues(alpha: 0.05)
               : Colors.white,
         ),
@@ -795,18 +793,13 @@ class _LessonRequestBottomSheetState
             ),
             const SizedBox(height: 4),
             Text(
-              time != null 
-                  ? time.format(context)
-                  : '--:--',
+              time != null ? time.format(context) : '--:--',
               style: TextStyle(
                 fontSize: 16,
                 fontFamily: 'IBMPlexSansKR',
-                color: time != null 
-                    ? const Color(0xFF10B981)
-                    : Colors.grey[600],
-                fontWeight: time != null 
-                    ? FontWeight.w600 
-                    : FontWeight.normal,
+                color:
+                    time != null ? const Color(0xFF10B981) : Colors.grey[600],
+                fontWeight: time != null ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],
@@ -816,10 +809,10 @@ class _LessonRequestBottomSheetState
   }
 
   Widget _buildRequestButton() {
-    final bool canRequest = _selectedDate != null && 
-                           _selectedStartTime != null && 
-                           _selectedEndTime != null &&
-                           !_isRequesting;
+    final bool canRequest = _selectedDate != null &&
+        _selectedStartTime != null &&
+        _selectedEndTime != null &&
+        !_isRequesting;
 
     return SizedBox(
       width: double.infinity,
@@ -832,7 +825,6 @@ class _LessonRequestBottomSheetState
     );
   }
 
-
   void _selectStartTime() {
     _showTimeDropdown(
       title: '시작 시간 선택',
@@ -843,7 +835,8 @@ class _LessonRequestBottomSheetState
           // 시작 시간이 변경되면 종료 시간 초기화 (종료 시간이 시작 시간보다 이르면)
           if (_selectedEndTime != null) {
             final startMinutes = time.hour * 60 + time.minute;
-            final endMinutes = _selectedEndTime!.hour * 60 + _selectedEndTime!.minute;
+            final endMinutes =
+                _selectedEndTime!.hour * 60 + _selectedEndTime!.minute;
             if (endMinutes <= startMinutes) {
               _selectedEndTime = null;
             }
@@ -873,9 +866,10 @@ class _LessonRequestBottomSheetState
       startTime: _selectedStartTime,
       onTimeSelected: (time) {
         // 종료 시간이 시작 시간보다 이후인지 확인
-        final startMinutes = _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
+        final startMinutes =
+            _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
         final endMinutes = time.hour * 60 + time.minute;
-        
+
         if (endMinutes <= startMinutes) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -888,7 +882,7 @@ class _LessonRequestBottomSheetState
           );
           return;
         }
-        
+
         setState(() {
           _selectedEndTime = time;
         });
@@ -916,7 +910,9 @@ class _LessonRequestBottomSheetState
   }
 
   Future<void> _requestLesson() async {
-    if (_selectedDate == null || _selectedStartTime == null || _selectedEndTime == null) {
+    if (_selectedDate == null ||
+        _selectedStartTime == null ||
+        _selectedEndTime == null) {
       return;
     }
 
@@ -942,10 +938,10 @@ class _LessonRequestBottomSheetState
       );
 
       await ref.read(ptContractViewModelProvider.notifier).proposeAppointment(
-        contractId: widget.contract.contractId,
-        startTime: startDateTime.toIso8601String(),
-        endTime: endDateTime.toIso8601String(),
-      );
+            contractId: widget.contract.contractId,
+            startTime: startDateTime.toIso8601String(),
+            endTime: endDateTime.toIso8601String(),
+          );
 
       if (mounted) {
         Navigator.pop(context);
@@ -1019,7 +1015,7 @@ class _TimeDropdownSheet extends StatefulWidget {
   final TimeOfDay? selectedTime;
   final TimeOfDay? startTime;
   final Function(TimeOfDay) onTimeSelected;
-  
+
   const _TimeDropdownSheet({
     required this.title,
     required this.selectedTime,
@@ -1044,22 +1040,23 @@ class _TimeDropdownSheetState extends State<_TimeDropdownSheet> {
 
   void _generateAvailableTimes() {
     availableTimes = [];
-    
+
     // 6:00 AM부터 11:00 PM까지 30분 간격으로 시간 생성
     for (int hour = 6; hour <= 23; hour++) {
       for (int minute = 0; minute < 60; minute += 30) {
         final time = TimeOfDay(hour: hour, minute: minute);
-        
+
         // 종료 시간 선택 시 시작 시간 이후의 시간만 표시
         if (widget.startTime != null) {
-          final startMinutes = widget.startTime!.hour * 60 + widget.startTime!.minute;
+          final startMinutes =
+              widget.startTime!.hour * 60 + widget.startTime!.minute;
           final currentMinutes = time.hour * 60 + time.minute;
-          
+
           if (currentMinutes <= startMinutes) {
             continue;
           }
         }
-        
+
         availableTimes.add(time);
       }
     }
@@ -1114,9 +1111,9 @@ class _TimeDropdownSheetState extends State<_TimeDropdownSheet> {
               itemCount: availableTimes.length,
               itemBuilder: (context, index) {
                 final time = availableTimes[index];
-                final isSelected = tempSelectedTime?.hour == time.hour && 
-                                 tempSelectedTime?.minute == time.minute;
-                
+                final isSelected = tempSelectedTime?.hour == time.hour &&
+                    tempSelectedTime?.minute == time.minute;
+
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: InkWell(
@@ -1127,14 +1124,15 @@ class _TimeDropdownSheetState extends State<_TimeDropdownSheet> {
                     },
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 20),
                       decoration: BoxDecoration(
-                        color: isSelected 
+                        color: isSelected
                             ? const Color(0xFF10B981).withValues(alpha: 0.1)
                             : Colors.grey[50],
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected 
+                          color: isSelected
                               ? const Color(0xFF10B981)
                               : Colors.grey[200]!,
                           width: isSelected ? 2 : 1,
@@ -1148,10 +1146,10 @@ class _TimeDropdownSheetState extends State<_TimeDropdownSheet> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontFamily: 'IBMPlexSansKR',
-                                fontWeight: isSelected 
-                                    ? FontWeight.w600 
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
                                     : FontWeight.normal,
-                                color: isSelected 
+                                color: isSelected
                                     ? const Color(0xFF10B981)
                                     : Colors.black87,
                               ),
@@ -1178,7 +1176,7 @@ class _TimeDropdownSheetState extends State<_TimeDropdownSheet> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: tempSelectedTime != null 
+                onPressed: tempSelectedTime != null
                     ? () {
                         widget.onTimeSelected(tempSelectedTime!);
                         Navigator.pop(context);
@@ -1214,7 +1212,7 @@ class _TimeDropdownSheetState extends State<_TimeDropdownSheet> {
     final minute = time.minute.toString().padLeft(2, '0');
     final period = hour < 12 ? '오전' : '오후';
     final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-    
+
     return '$period ${displayHour}:${minute}';
   }
 }

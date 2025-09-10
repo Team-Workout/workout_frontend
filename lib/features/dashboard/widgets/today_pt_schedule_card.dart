@@ -1,18 +1,55 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../schedule/model/pt_schedule_model.dart';
-import '../../schedule/viewmodel/schedule_viewmodel.dart';
+import '../../pt_contract/model/pt_appointment_models.dart';
+import '../../pt_contract/viewmodel/pt_contract_viewmodel.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../auth/model/user_model.dart';
 
-class TodayPTScheduleCard extends ConsumerWidget {
+class TodayPTScheduleCard extends ConsumerStatefulWidget {
   const TodayPTScheduleCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final schedulesAsync = ref.watch(ptScheduleListProvider);
+  ConsumerState<TodayPTScheduleCard> createState() => _TodayPTScheduleCardState();
+}
 
+class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
+  PtAppointmentsResponse? _todayAppointments;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadTodayAppointments();
+    });
+  }
+
+  Future<void> _loadTodayAppointments() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      // 오늘 날짜만 조회
+      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      
+      final response = await ref.read(ptContractViewModelProvider.notifier).getMyScheduledAppointments(
+        startDate: today,
+        endDate: today,
+        status: 'SCHEDULED',
+      );
+      
+      setState(() {
+        _todayAppointments = response;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      print('오늘의 PT 조회 실패: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -22,21 +59,35 @@ class TodayPTScheduleCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '오늘의 PT 일정',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-              fontFamily: 'IBMPlexSansKR',
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '오늘의 PT 일정',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+              GestureDetector(
+                onTap: _loadTodayAppointments,
+                child: Icon(
+                  Icons.refresh,
+                  size: 20,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
-          schedulesAsync.when(
-            loading: () => _buildLoadingState(),
-            error: (error, _) => _buildErrorState(),
-            data: (schedules) => _buildScheduleList(schedules),
-          ),
+          if (_isLoading)
+            _buildLoadingState()
+          else if (_todayAppointments == null)
+            _buildErrorState()
+          else
+            _buildScheduleList(_todayAppointments!.data),
         ],
       ),
     );
@@ -82,27 +133,29 @@ class TodayPTScheduleCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildScheduleList(List<PTSchedule> schedules) {
-    final today = DateTime.now();
-    final todaySchedules = schedules.where((schedule) {
-      return schedule.dateTime.day == today.day &&
-          schedule.dateTime.month == today.month &&
-          schedule.dateTime.year == today.year;
-    }).toList();
+  Widget _buildScheduleList(List<PtAppointment> appointments) {
+    // 시간순으로 정렬
+    final sortedAppointments = List<PtAppointment>.from(appointments);
+    sortedAppointments.sort((a, b) {
+      try {
+        final timeA = DateTime.parse(a.startTime);
+        final timeB = DateTime.parse(b.startTime);
+        return timeA.compareTo(timeB);
+      } catch (e) {
+        return 0;
+      }
+    });
 
-    // 오늘 일정을 시간순으로 정렬
-    todaySchedules.sort((a, b) => a.dateTime.compareTo(b.dateTime));
-
-    if (todaySchedules.isEmpty) {
+    if (sortedAppointments.isEmpty) {
       return _buildEmptyState();
     }
 
     return Column(
       children: [
-        ...todaySchedules.map((schedule) => _buildScheduleItem(schedule)),
-        if (todaySchedules.length > 1) const SizedBox(height: 8),
-        if (todaySchedules.length > 1)
-          _buildScheduleSummary(todaySchedules.length),
+        ...sortedAppointments.map((appointment) => _buildScheduleItem(appointment)),
+        if (sortedAppointments.length > 1) const SizedBox(height: 8),
+        if (sortedAppointments.length > 1)
+          _buildScheduleSummary(sortedAppointments.length),
       ],
     );
   }
@@ -152,10 +205,28 @@ class TodayPTScheduleCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildScheduleItem(PTSchedule schedule) {
-    final timeFormat = DateFormat('HH:mm');
-    final time = timeFormat.format(schedule.dateTime);
-    final duration = '${schedule.durationMinutes}분';
+  Widget _buildScheduleItem(PtAppointment appointment) {
+    String startTime = '';
+    String endTime = '';
+    String duration = '';
+    
+    try {
+      final start = DateTime.parse(appointment.startTime);
+      final end = DateTime.parse(appointment.endTime);
+      startTime = DateFormat('HH:mm').format(start);
+      endTime = DateFormat('HH:mm').format(end);
+      final diff = end.difference(start).inMinutes;
+      duration = '${diff}분';
+    } catch (e) {
+      startTime = '시간 미정';
+      duration = '-';
+    }
+
+    final user = ref.watch(currentUserProvider);
+    final displayName = user?.userType == UserType.trainer 
+        ? appointment.memberName 
+        : appointment.trainerName;
+    final roleText = user?.userType == UserType.trainer ? '회원' : '트레이너';
 
     return Container(
       width: double.infinity,
@@ -181,14 +252,13 @@ class TodayPTScheduleCard extends ConsumerWidget {
               Row(
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      time,
+                      '$startTime - $endTime',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -199,8 +269,7 @@ class TodayPTScheduleCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(6),
@@ -216,20 +285,20 @@ class TodayPTScheduleCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              _buildStatusBadge(schedule.status),
+              _buildStatusBadge(appointment.status ?? 'SCHEDULED'),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(
-                Icons.person,
+              Icon(
+                user?.userType == UserType.trainer ? Icons.person : Icons.fitness_center,
                 size: 16,
                 color: Colors.white,
               ),
               const SizedBox(width: 6),
               Text(
-                schedule.trainerName,
+                '$displayName $roleText',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -239,26 +308,28 @@ class TodayPTScheduleCard extends ConsumerWidget {
               ),
             ],
           ),
-          if (schedule.notes != null && schedule.notes!.isNotEmpty) ...[
+          // 변경 요청이 있는 경우 표시
+          if (appointment.changeRequestStartTime != null) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.orange.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(
-                    Icons.note,
+                    Icons.schedule_outlined,
                     size: 14,
                     color: Colors.white,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      schedule.notes!,
+                      '일정 변경 요청이 있습니다',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.white,
@@ -275,26 +346,36 @@ class TodayPTScheduleCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusBadge(PTScheduleStatus status) {
+  Widget _buildStatusBadge(String status) {
     Color backgroundColor;
     String text;
     IconData icon;
 
     switch (status) {
-      case PTScheduleStatus.scheduled:
+      case 'SCHEDULED':
         backgroundColor = Colors.white.withOpacity(0.2);
         text = '예정';
         icon = Icons.schedule;
         break;
-      case PTScheduleStatus.completed:
+      case 'COMPLETED':
         backgroundColor = Colors.white.withOpacity(0.2);
         text = '완료';
         icon = Icons.check_circle;
         break;
-      case PTScheduleStatus.cancelled:
+      case 'CANCELLED':
         backgroundColor = Colors.red.withOpacity(0.2);
         text = '취소';
         icon = Icons.cancel;
+        break;
+      case 'MEMBER_REQUESTED':
+        backgroundColor = Colors.blue.withOpacity(0.2);
+        text = '요청됨';
+        icon = Icons.pending;
+        break;
+      default:
+        backgroundColor = Colors.white.withOpacity(0.2);
+        text = '예정';
+        icon = Icons.schedule;
         break;
     }
 

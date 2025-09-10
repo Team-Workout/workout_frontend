@@ -6,9 +6,9 @@ class BodyStatsCard extends StatelessWidget {
   final BodyStats? stats;
 
   const BodyStatsCard({
-    Key? key,
+    super.key,
     required this.stats,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class BodyStatsCard extends StatelessWidget {
       child: Column(
         children: [
           _buildHorizontalStatCard(
-            '현재 체중',
+            '체중',
             '${stats!.currentWeight.toStringAsFixed(1)}kg',
             stats!.weightChange >= 0
                 ? '+${stats!.weightChange.toStringAsFixed(1)}kg'
@@ -92,12 +92,10 @@ class BodyStatsCard extends StatelessWidget {
               color: Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Center( // 아이콘을 정중앙에 배치
-              child: Icon(
-                Icons.help_outline, 
-                size: 24, 
-                color: Colors.grey[400]
-              ),
+            child: Center(
+              // 아이콘을 정중앙에 배치
+              child:
+                  Icon(Icons.help_outline, size: 24, color: Colors.grey[400]),
             ),
           ),
           const SizedBox(width: 20),
@@ -161,7 +159,8 @@ class BodyStatsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _getIconColor(title).withValues(alpha: 0.1), width: 1.5),
+        border: Border.all(
+            color: _getIconColor(title).withValues(alpha: 0.1), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: _getIconColor(title).withValues(alpha: 0.08),
@@ -181,7 +180,8 @@ class BodyStatsCard extends StatelessWidget {
               color: _getIconColor(title).withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Center( // 아이콘을 정중앙에 배치
+            child: Center(
+              // 아이콘을 정중앙에 배치
               child: Icon(icon, size: 24, color: _getIconColor(title)),
             ),
           ),
@@ -262,7 +262,6 @@ class BodyStatsCard extends StatelessWidget {
     if (bodyFat < 25) return Colors.orange;
     return Colors.red;
   }
-
 
   Color _getIconColor(String title) {
     switch (title) {
