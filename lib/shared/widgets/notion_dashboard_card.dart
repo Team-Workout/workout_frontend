@@ -8,8 +8,8 @@ class NotionDashboardCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final VoidCallback? onTap;
-  final bool isHighlighted;  // 강조가 필요한 경우 (PT 신청 대기 등)
-  
+  final bool isHighlighted; // 강조가 필요한 경우 (PT 신청 대기 등)
+
   const NotionDashboardCard({
     super.key,
     required this.title,
@@ -26,8 +26,8 @@ class NotionDashboardCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isHighlighted 
-              ? const Color(0xFF10B981) 
+          color: isHighlighted
+              ? const Color(0xFF10B981)
               : const Color(0xFF10B981).withOpacity(0.2),
           width: isHighlighted ? 1.5 : 1,
         ),
@@ -52,16 +52,15 @@ class NotionDashboardCard extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: isHighlighted 
-                        ? const Color(0xFF10B981) 
+                    color: isHighlighted
+                        ? const Color(0xFF10B981)
                         : const Color(0xFF10B981).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
                     icon,
-                    color: isHighlighted 
-                        ? Colors.white 
-                        : const Color(0xFF10B981),
+                    color:
+                        isHighlighted ? Colors.white : const Color(0xFF10B981),
                     size: 18,
                   ),
                 ),
@@ -73,7 +72,7 @@ class NotionDashboardCard extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: Colors.black,
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.3,
@@ -85,11 +84,9 @@ class NotionDashboardCard extends StatelessWidget {
                     Text(
                       value,
                       style: TextStyle(
-                        color: isHighlighted 
-                            ? const Color(0xFF10B981) 
-                            : const Color(0xFF10B981).withOpacity(0.9),
                         fontSize: 13,
-                        fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w600,
+                        fontWeight:
+                            isHighlighted ? FontWeight.w700 : FontWeight.w600,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -121,7 +118,7 @@ class NotionStatCard extends StatelessWidget {
   final Widget child;
   final String? subtitle;
   final Widget? action;
-  
+
   const NotionStatCard({
     super.key,
     required this.title,
@@ -177,14 +174,14 @@ class NotionStatCard extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Divider
           const Divider(
             height: 1,
             thickness: 1,
             color: NotionColors.divider,
           ),
-          
+
           // 콘텐츠
           Padding(
             padding: const EdgeInsets.all(20),

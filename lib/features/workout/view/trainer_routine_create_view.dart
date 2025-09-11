@@ -3,21 +3,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodel/workout_record_viewmodel.dart';
 import '../viewmodel/routine_viewmodel.dart';
 import '../model/routine_models.dart';
+import '../service/workout_api_service.dart';
+import '../service/local_storage_service.dart';
 import '../../../common/widgets/enhanced_exercise_selector.dart';
 import '../../../common/constants/muscle_translations.dart';
 import '../../../features/sync/model/sync_models.dart';
 import '../../../core/theme/notion_colors.dart';
+import '../../../core/providers/auth_provider.dart';
 
-class WorkoutRoutineTab extends ConsumerStatefulWidget {
-  final WorkoutRecordViewmodel viewModel;
+// Provider for WorkoutRecordViewmodel
+final trainerWorkoutRecordViewModelProvider = ChangeNotifierProvider<WorkoutRecordViewmodel>((ref) {
+  final apiService = ref.watch(workoutApiServiceProvider);
+  final localStorageService = ref.watch(localStorageServiceProvider);
+  final authState = ref.watch(authStateProvider);
+  
+  return WorkoutRecordViewmodel(apiService, localStorageService, authState);
+});
 
-  const WorkoutRoutineTab({super.key, required this.viewModel});
+class TrainerRoutineCreateView extends ConsumerStatefulWidget {
+  final int memberId;
+  final String memberName;
+
+  const TrainerRoutineCreateView({
+    super.key,
+    required this.memberId,
+    required this.memberName,
+  });
 
   @override
-  ConsumerState<WorkoutRoutineTab> createState() => _WorkoutRoutineTabState();
+  ConsumerState<TrainerRoutineCreateView> createState() => _TrainerRoutineCreateViewState();
 }
 
-class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
+class _TrainerRoutineCreateViewState extends ConsumerState<TrainerRoutineCreateView> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final List<RoutineExercise> _routineExercises = [];
@@ -225,43 +242,29 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
         routineExercises: _routineExercises,
       );
 
-      final response =
-          await widget.viewModel.workoutApiService.createRoutine(request);
-
-      // 루틴 리스트 새로고침
-      await ref.read(routineProvider.notifier).loadRoutines();
+      // 트레이너용 API 호출
+      final workoutApiService = ref.read(workoutApiServiceProvider);
+      final response = await workoutApiService.createRoutineForMember(
+        memberId: widget.memberId,
+        request: request,
+      );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('루틴이 성공적으로 저장되었습니다'),
-          backgroundColor: Color(0xFF10B981),
+        SnackBar(
+          content: Text('${widget.memberName}님을 위한 루틴이 성공적으로 생성되었습니다'),
+          backgroundColor: const Color(0xFF10B981),
         ),
       );
 
       _resetForm();
 
-      // 이전 화면으로 돌아가기 (보통 루틴 리스트 화면)
-      // Navigator.canPop() 확인 후 pop 실행
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context, true); // true를 전달하여 새로고침 필요함을 알림
-      } else {
-        // 독립 실행된 경우 탭 전환 시도
-        try {
-          final TabController? tabController =
-              DefaultTabController.maybeOf(context);
-          if (tabController != null) {
-            tabController.animateTo(0); // 루틴 리스트 탭으로 이동
-          }
-        } catch (e) {
-          // TabController를 찾을 수 없는 경우 무시
-          debugPrint('TabController를 찾을 수 없습니다: $e');
-        }
-      }
+      // 이전 화면으로 돌아가기
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('루틴 저장 실패: $e')),
+        SnackBar(content: Text('루틴 생성 실패: $e')),
       );
     }
 
@@ -280,6 +283,20 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NotionColors.gray50,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        title: Text(
+          '${widget.memberName}님을 위한 루틴',
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -332,7 +349,7 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                 children: [
                   Text(
                     _nameController.text.trim().isEmpty
-                        ? '새 루틴'
+                        ? '${widget.memberName}님의 새 루틴'
                         : _nameController.text.trim(),
                     style: const TextStyle(
                       fontSize: 20,
@@ -366,14 +383,14 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                     _buildModernTextField(
                       controller: _nameController,
                       label: '이름',
-                      hint: '예: 가슴/삼두 루틴',
+                      hint: '예: ${widget.memberName}님 가슴/삼두 루틴',
                       icon: Icons.label_outline,
                     ),
                     const SizedBox(height: 20),
                     _buildModernTextField(
                       controller: _descriptionController,
                       label: '설명',
-                      hint: '루틴에 대한 간단한 설명을 입력하세요',
+                      hint: '${widget.memberName}님을 위한 루틴 설명을 입력하세요',
                       icon: Icons.description_outlined,
                       maxLines: 3,
                     ),
@@ -595,6 +612,10 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   Container(
                     width: 40,
                     height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Center(
                       child: Text(
                         '${exerciseIndex + 1}',
@@ -1082,9 +1103,9 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : const Text(
-                '루틴 저장',
-                style: TextStyle(
+            : Text(
+                '${widget.memberName}님을 위한 루틴 저장',
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,

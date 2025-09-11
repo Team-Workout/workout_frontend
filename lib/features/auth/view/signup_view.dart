@@ -68,7 +68,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
     setState(() {
       if (_emailController.text.isEmpty) {
         _emailError = null;
-      } else if (!_emailController.text.contains('@') || !_emailController.text.contains('.')) {
+      } else if (!_emailController.text.contains('@') ||
+          !_emailController.text.contains('.')) {
         _emailError = '올바른 이메일 형식이 아닙니다';
       } else {
         _emailError = null;
@@ -239,14 +240,18 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                 height: 80,
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [Color(0xFF10B981), Color(0xFF059669)],
+                                    colors: [
+                                      Color(0xFF10B981),
+                                      Color(0xFF059669)
+                                    ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                                      color: const Color(0xFF10B981)
+                                          .withValues(alpha: 0.3),
                                       blurRadius: 15,
                                       offset: const Offset(0, 6),
                                     ),
@@ -314,16 +319,19 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               // Name Field
                               Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: _nameError != null 
+                                    color: _nameError != null
                                         ? Colors.red.withValues(alpha: 0.5)
-                                        : const Color(0xFF10B981).withValues(alpha: 0.2),
+                                        : const Color(0xFF10B981)
+                                            .withValues(alpha: 0.2),
                                     width: 1.5,
                                   ),
                                 ),
                                 child: TextFormField(
+                                  cursorColor: Colors.black,
                                   controller: _nameController,
                                   style: const TextStyle(
                                     fontFamily: 'IBMPlexSansKR',
@@ -358,11 +366,13 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               if (_nameError != null) ...[
                                 const SizedBox(height: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.red.shade200),
+                                    border:
+                                        Border.all(color: Colors.red.shade200),
                                   ),
                                   child: Row(
                                     children: [
@@ -391,16 +401,19 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               // Email Field
                               Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: _emailError != null 
+                                    color: _emailError != null
                                         ? Colors.red.withValues(alpha: 0.5)
-                                        : const Color(0xFF10B981).withValues(alpha: 0.2),
+                                        : const Color(0xFF10B981)
+                                            .withValues(alpha: 0.2),
                                     width: 1.5,
                                   ),
                                 ),
                                 child: TextFormField(
+                                  cursorColor: Colors.black,
                                   controller: _emailController,
                                   style: const TextStyle(
                                     fontFamily: 'IBMPlexSansKR',
@@ -426,7 +439,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                     if (value == null || value.isEmpty) {
                                       return '이메일을 입력해주세요';
                                     }
-                                    if (!value.contains('@') || !value.contains('.')) {
+                                    if (!value.contains('@') ||
+                                        !value.contains('.')) {
                                       return '올바른 이메일 형식이 아닙니다';
                                     }
                                     return null;
@@ -436,11 +450,13 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               if (_emailError != null) ...[
                                 const SizedBox(height: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.red.shade200),
+                                    border:
+                                        Border.all(color: Colors.red.shade200),
                                   ),
                                   child: Row(
                                     children: [
@@ -469,12 +485,14 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               // Password Field
                               Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: _passwordError != null 
+                                    color: _passwordError != null
                                         ? Colors.red.withValues(alpha: 0.5)
-                                        : const Color(0xFF10B981).withValues(alpha: 0.2),
+                                        : const Color(0xFF10B981)
+                                            .withValues(alpha: 0.2),
                                     width: 1.5,
                                   ),
                                 ),
@@ -508,7 +526,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          _isPasswordVisible = !_isPasswordVisible;
+                                          _isPasswordVisible =
+                                              !_isPasswordVisible;
                                         });
                                       },
                                     ),
@@ -527,11 +546,13 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               if (_passwordError != null) ...[
                                 const SizedBox(height: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.red.shade200),
+                                    border:
+                                        Border.all(color: Colors.red.shade200),
                                   ),
                                   child: Row(
                                     children: [
@@ -560,16 +581,19 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               // Confirm Password Field
                               Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: _confirmPasswordError != null 
+                                    color: _confirmPasswordError != null
                                         ? Colors.red.withValues(alpha: 0.5)
-                                        : const Color(0xFF10B981).withValues(alpha: 0.2),
+                                        : const Color(0xFF10B981)
+                                            .withValues(alpha: 0.2),
                                     width: 1.5,
                                   ),
                                 ),
                                 child: TextFormField(
+                                  cursorColor: Colors.black,
                                   controller: _confirmPasswordController,
                                   obscureText: !_isConfirmPasswordVisible,
                                   style: const TextStyle(
@@ -599,7 +623,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                                          _isConfirmPasswordVisible =
+                                              !_isConfirmPasswordVisible;
                                         });
                                       },
                                     ),
@@ -618,11 +643,13 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               if (_confirmPasswordError != null) ...[
                                 const SizedBox(height: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.red.shade200),
+                                    border:
+                                        Border.all(color: Colors.red.shade200),
                                   ),
                                   child: Row(
                                     children: [
@@ -651,10 +678,12 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               // Birthday Field
                               Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                    color: const Color(0xFF10B981)
+                                        .withValues(alpha: 0.2),
                                     width: 1.5,
                                   ),
                                 ),
@@ -680,7 +709,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                       size: 22,
                                     ),
                                     suffixIcon: IconButton(
-                                      icon: const Icon(Icons.calendar_today, color: Color(0xFF10B981)),
+                                      icon: const Icon(Icons.calendar_today,
+                                          color: Color(0xFF10B981)),
                                       onPressed: () => _selectDate(context),
                                     ),
                                   ),
@@ -711,10 +741,12 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                 child: Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                                    color: const Color(0xFF10B981)
+                                        .withValues(alpha: 0.05),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                      color: const Color(0xFF10B981)
+                                          .withValues(alpha: 0.1),
                                     ),
                                   ),
                                   child: Row(
@@ -723,10 +755,11 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                         width: 20,
                                         height: 20,
                                         decoration: BoxDecoration(
-                                          color: _agreedToTerms 
-                                              ? const Color(0xFF10B981) 
+                                          color: _agreedToTerms
+                                              ? const Color(0xFF10B981)
                                               : Colors.transparent,
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
                                           border: Border.all(
                                             color: const Color(0xFF10B981),
                                             width: 2,
@@ -755,7 +788,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                               TextSpan(
                                                 text: '서비스 이용약관',
                                                 style: TextStyle(
-                                                  decoration: TextDecoration.underline,
+                                                  decoration:
+                                                      TextDecoration.underline,
                                                   color: Color(0xFF10B981),
                                                   fontWeight: FontWeight.w600,
                                                 ),
@@ -764,7 +798,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                               TextSpan(
                                                 text: '개인정보 처리방침',
                                                 style: TextStyle(
-                                                  decoration: TextDecoration.underline,
+                                                  decoration:
+                                                      TextDecoration.underline,
                                                   color: Color(0xFF10B981),
                                                   fontWeight: FontWeight.w600,
                                                 ),
@@ -783,17 +818,23 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                 height: 60,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: (!_agreedToTerms || authViewState.isLoading)
+                                    colors: (!_agreedToTerms ||
+                                            authViewState.isLoading)
                                         ? [Colors.grey[400]!, Colors.grey[500]!]
-                                        : [const Color(0xFF10B981), const Color(0xFF059669)],
+                                        : [
+                                            const Color(0xFF10B981),
+                                            const Color(0xFF059669)
+                                          ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
-                                    if (_agreedToTerms && !authViewState.isLoading)
+                                    if (_agreedToTerms &&
+                                        !authViewState.isLoading)
                                       BoxShadow(
-                                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                                        color: const Color(0xFF10B981)
+                                            .withValues(alpha: 0.3),
                                         blurRadius: 15,
                                         offset: const Offset(0, 8),
                                       ),
@@ -803,21 +844,30 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                   color: Colors.transparent,
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(20),
-                                    onTap: (!_agreedToTerms || authViewState.isLoading)
+                                    onTap: (!_agreedToTerms ||
+                                            authViewState.isLoading)
                                         ? null
                                         : () {
-                                            if (_formKey.currentState!.validate()) {
+                                            if (_formKey.currentState!
+                                                .validate()) {
                                               if (_selectedGender == null) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
                                                   SnackBar(
                                                     content: const Text(
                                                       '성별을 선택해주세요',
-                                                      style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+                                                      style: TextStyle(
+                                                          fontFamily:
+                                                              'IBMPlexSansKR'),
                                                     ),
                                                     backgroundColor: Colors.red,
-                                                    behavior: SnackBarBehavior.floating,
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(12),
+                                                    behavior: SnackBarBehavior
+                                                        .floating,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
                                                     ),
                                                   ),
                                                 );
@@ -827,17 +877,25 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                               String? genderInEnglish;
                                               if (_selectedGender == '남성') {
                                                 genderInEnglish = 'Male';
-                                              } else if (_selectedGender == '여성') {
+                                              } else if (_selectedGender ==
+                                                  '여성') {
                                                 genderInEnglish = 'Female';
                                               }
 
-                                              ref.read(authViewModelProvider.notifier).signup(
-                                                    email: _emailController.text,
-                                                    password: _passwordController.text,
+                                              ref
+                                                  .read(authViewModelProvider
+                                                      .notifier)
+                                                  .signup(
+                                                    email:
+                                                        _emailController.text,
+                                                    password:
+                                                        _passwordController
+                                                            .text,
                                                     name: _nameController.text,
-                                                    userType: _selectedRole == '회원'
-                                                        ? UserType.member
-                                                        : UserType.trainer,
+                                                    userType:
+                                                        _selectedRole == '회원'
+                                                            ? UserType.member
+                                                            : UserType.trainer,
                                                     gender: genderInEnglish,
                                                   );
                                             }
@@ -853,9 +911,12 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                               ),
                                             )
                                           : Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: const [
-                                                Icon(Icons.person_add, color: Colors.white, size: 24),
+                                                Icon(Icons.person_add,
+                                                    color: Colors.white,
+                                                    size: 24),
                                                 SizedBox(width: 12),
                                                 Text(
                                                   '가입하기',
@@ -892,9 +953,11 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                       context.pop();
                                     },
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                        color: const Color(0xFF10B981)
+                                            .withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: const Text(
@@ -968,14 +1031,17 @@ class _SignupViewState extends ConsumerState<SignupView> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient: isSelected 
+          gradient: isSelected
               ? const LinearGradient(
                   colors: [Color(0xFF10B981), Color(0xFF059669)],
                 )
               : null,
-          color: isSelected ? null : const Color(0xFF10B981).withValues(alpha: 0.05),
+          color: isSelected
+              ? null
+              : const Color(0xFF10B981).withValues(alpha: 0.05),
           border: Border.all(
-            color: const Color(0xFF10B981).withValues(alpha: isSelected ? 0.8 : 0.2),
+            color: const Color(0xFF10B981)
+                .withValues(alpha: isSelected ? 0.8 : 0.2),
             width: isSelected ? 2 : 1.5,
           ),
           borderRadius: BorderRadius.circular(16),
@@ -1026,14 +1092,17 @@ class _SignupViewState extends ConsumerState<SignupView> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient: isSelected 
+          gradient: isSelected
               ? const LinearGradient(
                   colors: [Color(0xFF10B981), Color(0xFF059669)],
                 )
               : null,
-          color: isSelected ? null : const Color(0xFF10B981).withValues(alpha: 0.05),
+          color: isSelected
+              ? null
+              : const Color(0xFF10B981).withValues(alpha: 0.05),
           border: Border.all(
-            color: const Color(0xFF10B981).withValues(alpha: isSelected ? 0.8 : 0.2),
+            color: const Color(0xFF10B981)
+                .withValues(alpha: isSelected ? 0.8 : 0.2),
             width: isSelected ? 2 : 1.5,
           ),
           borderRadius: BorderRadius.circular(16),

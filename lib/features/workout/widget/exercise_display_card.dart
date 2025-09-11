@@ -27,10 +27,10 @@ class ExerciseDisplayCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 28,
-                height: 28,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50),
+                  color: const Color(0xFF10B981),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -62,7 +62,8 @@ class ExerciseDisplayCard extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: NotionColors.gray100,
                             borderRadius: BorderRadius.circular(4),
@@ -78,7 +79,8 @@ class ExerciseDisplayCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: NotionColors.gray100,
                             borderRadius: BorderRadius.circular(4),
@@ -96,7 +98,8 @@ class ExerciseDisplayCard extends StatelessWidget {
                         if (exercise.sets.any((set) => set.weight != null)) ...[
                           const SizedBox(width: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: NotionColors.gray100,
                               borderRadius: BorderRadius.circular(4),
@@ -177,7 +180,8 @@ class ExerciseDisplayCard extends StatelessWidget {
                           if (set.weight != null) ...[
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: NotionColors.gray100,
                                 borderRadius: BorderRadius.circular(4),

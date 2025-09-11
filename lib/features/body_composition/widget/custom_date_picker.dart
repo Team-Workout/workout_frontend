@@ -6,6 +6,7 @@ class CustomDatePicker extends StatefulWidget {
   final DateTime firstDate;
   final DateTime lastDate;
   final Function(DateTime) onDateSelected;
+  final bool restrictFuture; // 미래 날짜 제한 옵션 추가
 
   const CustomDatePicker({
     super.key,
@@ -13,6 +14,7 @@ class CustomDatePicker extends StatefulWidget {
     required this.firstDate,
     required this.lastDate,
     required this.onDateSelected,
+    this.restrictFuture = false, // 기본값은 false (제한 없음)
   });
 
   @override
@@ -153,9 +155,11 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
         final isToday = date.day == DateTime.now().day &&
             date.month == DateTime.now().month &&
             date.year == DateTime.now().year;
+        final isFutureDate = widget.restrictFuture && date.isAfter(DateTime.now());
+        final isSelectableDate = isCurrentMonth && !isFutureDate;
 
         return GestureDetector(
-          onTap: isCurrentMonth ? () => _selectDate(date) : null,
+          onTap: isSelectableDate ? () => _selectDate(date) : null,
           child: Container(
             decoration: BoxDecoration(
               color: isSelected
@@ -174,9 +178,11 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
                 style: TextStyle(
                   color: isSelected
                       ? Colors.white
-                      : isCurrentMonth
-                          ? Colors.black87
-                          : Colors.grey.withValues(alpha: 0.4),
+                      : isFutureDate
+                          ? Colors.grey.withValues(alpha: 0.3)
+                          : isCurrentMonth
+                              ? Colors.black87
+                              : Colors.grey.withValues(alpha: 0.4),
                   fontWeight: isSelected || isToday
                       ? FontWeight.bold
                       : FontWeight.normal,
@@ -551,6 +557,7 @@ Future<DateTime?> showCustomDatePicker({
   required DateTime initialDate,
   required DateTime firstDate,
   required DateTime lastDate,
+  bool restrictFuture = false, // 미래 날짜 제한 옵션 추가
 }) {
   return showDialog<DateTime>(
     context: context,
@@ -560,6 +567,7 @@ Future<DateTime?> showCustomDatePicker({
         initialDate: initialDate,
         firstDate: firstDate,
         lastDate: lastDate,
+        restrictFuture: restrictFuture,
         onDateSelected: (date) {},
       ),
     ),

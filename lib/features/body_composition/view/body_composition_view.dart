@@ -1322,6 +1322,7 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                               initialDate: selectedDate,
                               firstDate: DateTime(1900),
                               lastDate: DateTime.now(),
+                              restrictFuture: true, // 체성분 데이터는 미래 날짜 제한
                             );
                             if (picked != null) {
                               setState(() {
@@ -2258,6 +2259,7 @@ class _BodyImageUploadDialogState
                                           initialDate: selectedDate,
                                           firstDate: DateTime(1900),
                                           lastDate: DateTime.now(),
+                                          restrictFuture: true, // 체성분 데이터는 미래 날짜 제한
                                         );
                                         if (date != null) {
                                           setState(() {

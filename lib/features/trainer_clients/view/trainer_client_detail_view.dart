@@ -10,6 +10,8 @@ import '../../body_composition/widget/mini_weight_chart.dart';
 import '../../body_composition/widget/combined_progress_section.dart';
 import '../../body_composition/model/body_composition_model.dart';
 import '../../body_composition/viewmodel/body_composition_viewmodel.dart';
+import '../../workout/widget/trainer_member_workout_stats_tab.dart';
+import '../../workout/view/trainer_routine_create_view.dart';
 
 class TrainerClientDetailView extends ConsumerStatefulWidget {
   final TrainerClient client;
@@ -34,7 +36,7 @@ class _TrainerClientDetailViewState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
     // 기본적으로 최근 3개월 데이터를 조회
     final now = DateTime.now();
@@ -137,9 +139,10 @@ class _TrainerClientDetailViewState
               unselectedLabelColor: Colors.grey[600],
               indicatorColor: Colors.black,
               tabs: const [
-                Tab(text: '체성분 분석'),
-                Tab(text: '몸 사진'),
-                Tab(text: '운동 분석'),
+                Tab(text: '체성분'),
+                Tab(text: '사진'),
+                Tab(text: '분석'),
+                Tab(text: '루틴'),
               ],
             ),
           ),
@@ -152,6 +155,7 @@ class _TrainerClientDetailViewState
                 _buildBodyCompositionTab(),
                 _buildBodyImagesTab(),
                 _buildWorkoutAnalysisTab(),
+                _buildRoutineTab(),
               ],
             ),
           ),
@@ -245,25 +249,6 @@ class _TrainerClientDetailViewState
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.green[100],
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        'ACTIVE MEMBER',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green[700],
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -307,18 +292,20 @@ class _TrainerClientDetailViewState
         }
 
         // BodyComposition 타입으로 변환
-        final bodyCompositions = compositions.map((comp) => BodyComposition(
-          id: comp.id,
-          member: {
-            'id': widget.client.memberId,
-            'name': widget.client.name,
-            'email': widget.client.email,
-          },
-          measurementDate: comp.measurementDate,
-          weightKg: comp.weightKg ?? 0.0,
-          fatKg: comp.fatKg ?? 0.0,
-          muscleMassKg: comp.muscleMassKg ?? 0.0,
-        )).toList();
+        final bodyCompositions = compositions
+            .map((comp) => BodyComposition(
+                  id: comp.id,
+                  member: {
+                    'id': widget.client.memberId,
+                    'name': widget.client.name,
+                    'email': widget.client.email,
+                  },
+                  measurementDate: comp.measurementDate,
+                  weightKg: comp.weightKg ?? 0.0,
+                  fatKg: comp.fatKg ?? 0.0,
+                  muscleMassKg: comp.muscleMassKg ?? 0.0,
+                ))
+            .toList();
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -331,17 +318,22 @@ class _TrainerClientDetailViewState
                 data: bodyCompositions.map((comp) => comp.weightKg).toList(),
                 unit: 'kg',
                 color: const Color(0xFF10B981),
-                dates: bodyCompositions.map((comp) => DateTime.parse(comp.measurementDate)).toList(),
+                dates: bodyCompositions
+                    .map((comp) => DateTime.parse(comp.measurementDate))
+                    .toList(),
               ),
               const SizedBox(height: 24),
 
-              // 근육량 변화 그래프  
+              // 근육량 변화 그래프
               _buildSingleChart(
                 title: '근육량 변화 추이',
-                data: bodyCompositions.map((comp) => comp.muscleMassKg).toList(),
+                data:
+                    bodyCompositions.map((comp) => comp.muscleMassKg).toList(),
                 unit: 'kg',
                 color: const Color(0xFF3B82F6),
-                dates: bodyCompositions.map((comp) => DateTime.parse(comp.measurementDate)).toList(),
+                dates: bodyCompositions
+                    .map((comp) => DateTime.parse(comp.measurementDate))
+                    .toList(),
               ),
               const SizedBox(height: 24),
 
@@ -351,7 +343,9 @@ class _TrainerClientDetailViewState
                 data: bodyCompositions.map((comp) => comp.fatKg).toList(),
                 unit: 'kg',
                 color: const Color(0xFFF59E0B),
-                dates: bodyCompositions.map((comp) => DateTime.parse(comp.measurementDate)).toList(),
+                dates: bodyCompositions
+                    .map((comp) => DateTime.parse(comp.measurementDate))
+                    .toList(),
               ),
             ],
           ),
@@ -466,42 +460,43 @@ class _TrainerClientDetailViewState
                   },
                 ),
                 titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
-                        getTitlesWidget: (value, meta) {
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 50,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          '${value.toInt()}$unit',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontFamily: 'IBMPlexSansKR'),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= 0 &&
+                            value.toInt() < dates.length) {
+                          final date = dates[value.toInt()];
                           return Text(
-                            '${value.toInt()}$unit',
+                            '${date.month}/${date.day}',
                             style: TextStyle(
-                                fontSize: 12, 
+                                fontSize: 10,
                                 color: Colors.grey[600],
                                 fontFamily: 'IBMPlexSansKR'),
                           );
-                        },
-                      ),
+                        }
+                        return const Text('');
+                      },
                     ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= 0 && value.toInt() < dates.length) {
-                            final date = dates[value.toInt()];
-                            return Text(
-                              '${date.month}/${date.day}',
-                              style: TextStyle(
-                                  fontSize: 10, 
-                                  color: Colors.grey[600],
-                                  fontFamily: 'IBMPlexSansKR'),
-                            );
-                          }
-                          return const Text('');
-                        },
-                      ),
-                    ),
-                    topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                   rightTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false)),
                 ),
@@ -594,10 +589,10 @@ class _TrainerClientDetailViewState
 
   Widget _buildImageCard(MemberBodyImage image) {
     final date = DateTime.parse(image.recordDate);
-    
+
     // 상대 경로를 절대 경로로 변환
-    final fullImageUrl = image.fileUrl.startsWith('http') 
-        ? image.fileUrl 
+    final fullImageUrl = image.fileUrl.startsWith('http')
+        ? image.fileUrl
         : 'http://211.220.34.173${image.fileUrl}';
 
     return FutureBuilder<String?>(
@@ -663,7 +658,8 @@ class _TrainerClientDetailViewState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -759,7 +755,7 @@ class _TrainerClientDetailViewState
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: isPrivacyError 
+                color: isPrivacyError
                     ? const Color(0xFFF59E0B).withValues(alpha: 0.1)
                     : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
@@ -767,9 +763,8 @@ class _TrainerClientDetailViewState
               child: Icon(
                 isPrivacyError ? Icons.lock_outline : Icons.error_outline,
                 size: 64,
-                color: isPrivacyError 
-                    ? const Color(0xFFF59E0B)
-                    : Colors.red[400],
+                color:
+                    isPrivacyError ? const Color(0xFFF59E0B) : Colors.red[400],
               ),
             ),
             const SizedBox(height: 24),
@@ -785,9 +780,7 @@ class _TrainerClientDetailViewState
             ),
             const SizedBox(height: 12),
             Text(
-              isPrivacyError 
-                  ? message
-                  : '네트워크 연결을 확인하고 다시 시도해주세요',
+              isPrivacyError ? message : '네트워크 연결을 확인하고 다시 시도해주세요',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -798,7 +791,8 @@ class _TrainerClientDetailViewState
             if (isPrivacyError) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -832,26 +826,102 @@ class _TrainerClientDetailViewState
   }
 
   Widget _buildWorkoutAnalysisTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+    return TrainerMemberWorkoutStatsTab(
+      memberId: widget.client.memberId,
+      memberName: widget.client.name,
+    );
+  }
+
+  Widget _buildRoutineTab() {
+    return Container(
+      color: Colors.grey[50],
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 운동 통계 카드
-          _buildWorkoutStatsCard(),
-          const SizedBox(height: 24),
-          
-          // 주간 운동 빈도 차트
-          _buildWorkoutFrequencyChart(),
-          const SizedBox(height: 24),
-          
-          // 운동 부위별 분석
-          _buildMuscleGroupAnalysis(),
-          const SizedBox(height: 24),
-          
-          // 최근 운동 기록
-          _buildRecentWorkouts(),
+          // 루틴 생성 버튼
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                _navigateToCreateRoutine();
+              },
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                '새 루틴 만들기',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+          // 기존 루틴 목록 (향후 구현 가능)
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Icon(
+                      Icons.fitness_center_outlined,
+                      size: 64,
+                      color: const Color(0xFF10B981),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    '${widget.client.name}님을 위한 루틴',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '위의 버튼을 눌러 새로운 루틴을 만들어보세요',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToCreateRoutine() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TrainerRoutineCreateView(
+          memberId: widget.client.memberId,
+          memberName: widget.client.name,
+        ),
       ),
     );
   }
@@ -928,7 +998,8 @@ class _TrainerClientDetailViewState
     );
   }
 
-  Widget _buildStatItem(String title, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1013,7 +1084,7 @@ class _TrainerClientDetailViewState
   Widget _buildBarChart(String day, int count, Color color) {
     const maxHeight = 120.0;
     final height = (count / 5) * maxHeight;
-    
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -1088,7 +1159,8 @@ class _TrainerClientDetailViewState
     );
   }
 
-  Widget _buildMuscleProgressItem(String muscleName, double progress, Color color) {
+  Widget _buildMuscleProgressItem(
+      String muscleName, double progress, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

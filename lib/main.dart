@@ -135,7 +135,13 @@ class _WorkoutAppState extends ConsumerState<WorkoutApp> {
     return MaterialApp.router(
       title: 'Workout - PT 관리 플랫폼',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.light.copyWith(
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Colors.black,
+          selectionColor: Color(0x33000000), // Black with 20% opacity
+          selectionHandleColor: Colors.black,
+        ),
+      ),
       routerConfig: router,
       scaffoldMessengerKey: scaffoldMessengerKey,
       locale: const Locale('ko', 'KR'),

@@ -28,25 +28,26 @@ class _CalendarViewState extends State<CalendarView> {
     // ViewModel의 변경사항을 감지하여 달력 데이터 새로고침
     widget.viewModel.addListener(_onViewModelChanged);
   }
-  
+
   @override
   void dispose() {
     widget.viewModel.removeListener(_onViewModelChanged);
     super.dispose();
   }
-  
+
   void _onViewModelChanged() {
     // 운동기록 변경 시 달력 데이터 새로고침
     _loadWorkoutDates();
   }
-  
+
   Future<void> _loadWorkoutDates() async {
     try {
-      final dates = await widget.viewModel.getWorkoutDatesInMonth(widget.viewModel.focusedDate);
+      final dates = await widget.viewModel
+          .getWorkoutDatesInMonth(widget.viewModel.focusedDate);
       setState(() {
         _workoutDates = dates;
       });
-      
+
       // 각 날짜의 운동 데이터도 미리 로드
       for (final dateString in dates) {
         await _loadWorkoutDataForDate(dateString);
@@ -58,7 +59,8 @@ class _CalendarViewState extends State<CalendarView> {
 
   Future<void> _loadWorkoutDataForDate(String dateString) async {
     try {
-      final localWorkouts = await widget.viewModel.localStorageService.getWorkoutLogsByDate(dateString);
+      final localWorkouts = await widget.viewModel.localStorageService
+          .getWorkoutLogsByDate(dateString);
       if (localWorkouts.isNotEmpty) {
         setState(() {
           _workoutDataCache[dateString] = localWorkouts;
@@ -74,8 +76,8 @@ class _CalendarViewState extends State<CalendarView> {
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: Theme.of(context).textTheme.apply(
-          fontFamily: 'IBMPlexSansKR',
-        ),
+              fontFamily: 'IBMPlexSansKR',
+            ),
       ),
       child: Column(
         children: [
@@ -88,7 +90,8 @@ class _CalendarViewState extends State<CalendarView> {
                 firstDay: DateTime.utc(1900, 1, 1),
                 lastDay: DateTime.utc(2030, 12, 31),
                 focusedDay: widget.viewModel.focusedDate,
-                selectedDayPredicate: (day) => isSameDay(widget.viewModel.selectedDate, day),
+                selectedDayPredicate: (day) =>
+                    isSameDay(widget.viewModel.selectedDate, day),
                 eventLoader: (day) => _getEventsForDay(day),
                 calendarFormat: CalendarFormat.month,
                 locale: 'ko_KR', // 한국어 설정
@@ -101,8 +104,10 @@ class _CalendarViewState extends State<CalendarView> {
                     color: Colors.black,
                     fontFamily: 'IBMPlexSansKR',
                   ),
-                  leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF10B981)),
-                  rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF10B981)),
+                  leftChevronIcon:
+                      Icon(Icons.chevron_left, color: Color(0xFF10B981)),
+                  rightChevronIcon:
+                      Icon(Icons.chevron_right, color: Color(0xFF10B981)),
                 ),
                 daysOfWeekStyle: const DaysOfWeekStyle(
                   weekendStyle: TextStyle(
@@ -143,7 +148,7 @@ class _CalendarViewState extends State<CalendarView> {
                     )),
                     boxShadow: [
                       BoxShadow(
-                        color: Color(0x6610B981), // withOpacity(0.4) 대신 16진수로
+                        color: Color(0xFF10B981), // withOpacity(0.4) 대신 16진수로
                         blurRadius: 3,
                         offset: Offset(0, 1),
                       ),
@@ -174,7 +179,8 @@ class _CalendarViewState extends State<CalendarView> {
                   widget.viewModel.updateSelectedDate(selectedDay);
                   widget.viewModel.updateFocusedDate(focusedDay);
                   // 선택된 날짜의 운동 기록이 캐시에 없다면 로드
-                  final dateString = DateFormat('yyyy-MM-dd').format(selectedDay);
+                  final dateString =
+                      DateFormat('yyyy-MM-dd').format(selectedDay);
                   if (!_workoutDataCache.containsKey(dateString)) {
                     _loadWorkoutDataForDate(dateString);
                   }
@@ -188,17 +194,17 @@ class _CalendarViewState extends State<CalendarView> {
               ),
             ),
           ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SingleChildScrollView(
-                  child: _buildSelectedDayWorkouts(),
-                ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SingleChildScrollView(
+                child: _buildSelectedDayWorkouts(),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -219,12 +225,17 @@ class _CalendarViewState extends State<CalendarView> {
   }
 
   // 서버 데이터를 WorkoutDayRecord로 변환
-  WorkoutDayRecord _convertServerDataToWorkoutDayRecord(Map<String, dynamic> serverData, DateTime day) {
-    final workoutExercises = (serverData['workoutExercises'] as List<dynamic>).map((exerciseData) {
-      final workoutSets = (exerciseData['workoutSets'] as List<dynamic>).map((setData) {
+  WorkoutDayRecord _convertServerDataToWorkoutDayRecord(
+      Map<String, dynamic> serverData, DateTime day) {
+    final workoutExercises =
+        (serverData['workoutExercises'] as List<dynamic>).map((exerciseData) {
+      final workoutSets =
+          (exerciseData['workoutSets'] as List<dynamic>).map((setData) {
         return SetRecord(
           reps: setData['reps'] as int,
-          weight: setData['weight'] != null ? (setData['weight'] as num).toDouble() : null,
+          weight: setData['weight'] != null
+              ? (setData['weight'] as num).toDouble()
+              : null,
           memo: null, // 서버 데이터에서는 세트별 메모가 feedbacks에 있음
         );
       }).toList();
@@ -238,13 +249,13 @@ class _CalendarViewState extends State<CalendarView> {
 
     // 전체 운동 로그의 피드백을 diaryMemo로 사용
     final feedbacks = serverData['feedbacks'] as List<dynamic>;
-    final diaryMemo = feedbacks.isNotEmpty 
+    final diaryMemo = feedbacks.isNotEmpty
         ? feedbacks.map((f) => '${f['authorName']}: ${f['content']}').join('\n')
         : null;
 
     return WorkoutDayRecord(
       date: day,
-      title: workoutExercises.isNotEmpty 
+      title: workoutExercises.isNotEmpty
           ? '${workoutExercises.length}개 운동 완료'
           : '운동 완료',
       diaryMemo: diaryMemo,
@@ -253,12 +264,16 @@ class _CalendarViewState extends State<CalendarView> {
   }
 
   // 로컬 저장소 데이터를 WorkoutDayRecord로 변환
-  WorkoutDayRecord _convertLocalDataToWorkoutDayRecord(Map<String, dynamic> workoutData, DateTime day) {
-    final exercises = (workoutData['exercises'] as List<dynamic>).map((exerciseData) {
+  WorkoutDayRecord _convertLocalDataToWorkoutDayRecord(
+      Map<String, dynamic> workoutData, DateTime day) {
+    final exercises =
+        (workoutData['exercises'] as List<dynamic>).map((exerciseData) {
       final sets = (exerciseData['sets'] as List<dynamic>).map((setData) {
         return SetRecord(
           reps: setData['reps'] as int,
-          weight: setData['weight'] != null ? (setData['weight'] as num).toDouble() : null,
+          weight: setData['weight'] != null
+              ? (setData['weight'] as num).toDouble()
+              : null,
           memo: setData['memo']?.toString(),
         );
       }).toList();
@@ -272,9 +287,7 @@ class _CalendarViewState extends State<CalendarView> {
 
     return WorkoutDayRecord(
       date: day,
-      title: exercises.isNotEmpty 
-          ? '${exercises.length}개 운동 완료'
-          : '운동 완료',
+      title: exercises.isNotEmpty ? '${exercises.length}개 운동 완료' : '운동 완료',
       diaryMemo: null, // 로컬 데이터에 일반 메모가 없으므로 null
       exercises: exercises,
     );
@@ -282,7 +295,7 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildSelectedDayWorkouts() {
     final events = _getEventsForDay(widget.viewModel.selectedDate);
-    
+
     return Container(
       color: NotionColors.white,
       child: Column(
@@ -315,12 +328,14 @@ class _CalendarViewState extends State<CalendarView> {
                     SizedBox(height: 16),
                     Text(
                       '이 날에는 운동 기록이 없습니다',
-                      style: TextStyle(color: NotionColors.textSecondary, fontSize: 16),
+                      style: TextStyle(
+                          color: NotionColors.textSecondary, fontSize: 16),
                     ),
                     SizedBox(height: 8),
                     Text(
                       '운동 기록 탭에서 새로운 기록을 작성해보세요!',
-                      style: TextStyle(color: NotionColors.textSecondary, fontSize: 14),
+                      style: TextStyle(
+                          color: NotionColors.textSecondary, fontSize: 14),
                     ),
                   ],
                 ),
@@ -328,9 +343,9 @@ class _CalendarViewState extends State<CalendarView> {
             )
           else
             ...events.map((event) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: WorkoutDayCard(dayRecord: event),
-            )),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: WorkoutDayCard(dayRecord: event),
+                )),
         ],
       ),
     );

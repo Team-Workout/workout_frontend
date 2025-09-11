@@ -7,8 +7,6 @@ import 'package:pt_service/shared/widgets/notion_dashboard_card.dart';
 import 'package:pt_service/features/pt_offerings/viewmodel/pt_offering_viewmodel.dart';
 import 'package:pt_service/features/pt_applications/viewmodel/pt_application_viewmodel.dart';
 import 'package:pt_service/features/pt_contract/viewmodel/pt_contract_viewmodel.dart';
-import '../../../features/trainer_clients/view/trainer_clients_list_view.dart';
-import '../../../features/pt_reservation/view/reservation_recommendation_view.dart';
 import '../../../core/theme/notion_colors.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../widgets/today_pt_schedule_card.dart';
@@ -182,14 +180,25 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      drawer: _buildDrawer(context, ref),
+      appBar: AppBar(
+        title: Text(
+          '${ref.watch(currentUserProvider)?.name ?? '트레이너'} 님',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+            color: Colors.black87,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 32),
-
             // 📊 이번 주 PT 현황 차트 (맨 위로 이동)
             Container(
               decoration: BoxDecoration(
@@ -607,260 +616,12 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
             // 📅 오늘의 PT 일정
             const SizedBox(height: 32),
             const TodayPTScheduleCard(),
-
-            // 📋 카테고리별 관리 메뉴
-            const SizedBox(height: 32),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.dashboard_customize,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '관리 메뉴',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      fontFamily: 'IBMPlexSansKR',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // 관리 메뉴 버튼들
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: NotionDashboardCard(
-                          title: 'PT 일정 관리',
-                          value: '예약 일정',
-                          icon: Icons.schedule,
-                          onTap: () {
-                            context.push('/pt-schedule');
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: NotionDashboardCard(
-                          title: '회원 관리',
-                          value: '내 회원 보기',
-                          icon: Icons.people,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const TrainerClientsListView(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: NotionDashboardCard(
-                          title: 'PT 상품 관리',
-                          value: '상품 보기',
-                          icon: Icons.shopping_bag,
-                          onTap: () {
-                            context.push('/pt-offerings');
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: NotionDashboardCard(
-                          title: 'PT',
-                          value: 'PT 관리',
-                          icon: Icons.assignment_turned_in,
-                          onTap: () {
-                            context.push('/pt-contracts');
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: NotionDashboardCard(
-                          title: 'PT 예약 생성',
-                          value: '새 예약 만들기',
-                          icon: Icons.add_circle,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ReservationRecommendationView(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: NotionDashboardCard(
-                          title: '설정',
-                          value: '앱 설정 관리',
-                          icon: Icons.settings,
-                          onTap: () {
-                            context.push('/trainer-settings');
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(
-              height: 30,
-            )
+            
+            const SizedBox(height: 100),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDrawer(BuildContext context, WidgetRef ref) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF10B981),
-                  Color(0xFF34D399),
-                  Color(0xFF6EE7B7)
-                ],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const SizedBox(height: 12),
-                Text(
-                  ref.watch(currentUserProvider)?.name ?? '트레이너',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                ),
-                Text(
-                  ref.watch(currentUserProvider)?.email ?? '',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 14,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.dashboard),
-            title: const Text('대시보드'),
-            selected: true,
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.assignment),
-            title: const Text('PT 신청 관리'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/pt-applications');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.calendar_month),
-            title: const Text('PT 일정'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/pt-schedule');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.fitness_center),
-            title: const Text('운동 루틴 관리'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/workout-routines');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.shopping_bag),
-            title: const Text('PT 상품 관리'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/pt-offerings');
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('설정'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/trainer-settings');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('로그아웃'),
-            onTap: () {
-              ref.read(authStateProvider).logout();
-              context.go('/login');
-            },
-          ),
-        ],
-      ),
-    );
-  }
 }

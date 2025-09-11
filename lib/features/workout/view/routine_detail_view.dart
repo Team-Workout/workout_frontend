@@ -7,7 +7,7 @@ import '../../dashboard/widgets/notion_button.dart';
 
 class RoutineDetailView extends ConsumerStatefulWidget {
   final int routineId;
-  
+
   const RoutineDetailView({super.key, required this.routineId});
 
   @override
@@ -32,7 +32,9 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
     });
 
     try {
-      final routine = await ref.read(routineProvider.notifier).getRoutineDetail(widget.routineId);
+      final routine = await ref
+          .read(routineProvider.notifier)
+          .getRoutineDetail(widget.routineId);
       setState(() {
         _routine = routine;
         _isLoading = false;
@@ -50,8 +52,8 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: Theme.of(context).textTheme.apply(
-          fontFamily: 'IBMPlexSansKR',
-        ),
+              fontFamily: 'IBMPlexSansKR',
+            ),
       ),
       child: Scaffold(
         appBar: AppBar(
@@ -65,37 +67,37 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
           elevation: 0,
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
-        actions: [
-          if (_routine != null)
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'delete') {
-                  _showDeleteConfirmDialog();
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('삭제'),
-                    ],
+          actions: [
+            if (_routine != null)
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    _showDeleteConfirmDialog();
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('삭제'),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-        ],
-      ),
-      backgroundColor: Colors.grey.shade50,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? _buildErrorState()
-              : _routine != null
-                  ? _buildContent()
-                  : const Center(child: Text('루틴을 찾을 수 없습니다')),
+                ],
+              ),
+          ],
+        ),
+        backgroundColor: Colors.grey.shade50,
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+                ? _buildErrorState()
+                : _routine != null
+                    ? _buildContent()
+                    : const Center(child: Text('루틴을 찾을 수 없습니다')),
       ),
     );
   }
@@ -120,8 +122,8 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
           Text(
             _errorMessage!,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
+                  color: Colors.grey[600],
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -173,12 +175,12 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.fitness_center,
-                    color: Color(0xFF4CAF50),
+                    color: Color(0xFF10B981),
                     size: 20,
                   ),
                 ),
@@ -214,14 +216,6 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                   icon: Icons.list_alt,
                   label: '운동 수',
                   value: _routine!.routineExercises?.length.toString() ?? '0',
-                ),
-                const SizedBox(width: 16),
-                _buildStatItem(
-                  icon: Icons.calendar_today,
-                  label: '생성일',
-                  value: _routine!.createdAt != null 
-                      ? _formatDate(_routine!.createdAt!) 
-                      : '미정',
                 ),
               ],
             ),
@@ -274,7 +268,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
 
   Widget _buildExerciseListCard() {
     final exercises = _routine!.routineExercises ?? [];
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -294,7 +288,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
           children: [
             Row(
               children: [
-                Icon(Icons.list_alt, color: const Color(0xFF4CAF50)),
+                Icon(Icons.list_alt, color: const Color(0xFF10B981)),
                 const SizedBox(width: 8),
                 Text(
                   '운동 목록',
@@ -337,9 +331,10 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF4CAF50).withValues(alpha: 0.05),
+        color: const Color(0xFF10B981).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.2)),
+        border:
+            Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -352,7 +347,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50),
+                    color: const Color(0xFF10B981),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -370,7 +365,8 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    exercise.exerciseName ?? 'Exercise ID: ${exercise.exerciseId}',
+                    exercise.exerciseName ??
+                        'Exercise ID: ${exercise.exerciseId}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -394,7 +390,8 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
             const SizedBox(height: 8),
             ...List.generate(
               exercise.routineSets.length,
-              (setIndex) => _buildSetInfo(exercise.routineSets[setIndex], setIndex + 1),
+              (setIndex) =>
+                  _buildSetInfo(exercise.routineSets[setIndex], setIndex + 1),
             ),
           ],
         ),
@@ -409,14 +406,15 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50),
+              color: const Color(0xFF10B981),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -455,7 +453,8 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('루틴 삭제'),
-        content: Text('\'${_routine!.name}\' 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.'),
+        content:
+            Text('\'${_routine!.name}\' 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -465,7 +464,9 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await ref.read(routineProvider.notifier).deleteRoutine(_routine!.id);
+                await ref
+                    .read(routineProvider.notifier)
+                    .deleteRoutine(_routine!.id);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('루틴이 삭제되었습니다.')),

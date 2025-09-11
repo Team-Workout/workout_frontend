@@ -38,7 +38,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
           onPressed: () {
             context.push('/workout-routine-create');
           },
-          backgroundColor: const Color(0xFF4CAF50),
+          backgroundColor: const Color(0xFF10B981),
           child: const Icon(
             Icons.add,
             color: Colors.white,
@@ -157,7 +157,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
               child: const Icon(
                 Icons.fitness_center,
                 size: 80,
-                color: Color(0xFF4CAF50),
+                color: Color(0xFF10B981),
               ),
             ),
             const SizedBox(height: 24),
@@ -186,7 +186,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                 context.push('/workout-routine-create');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4CAF50),
+                backgroundColor: const Color(0xFF10B981),
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
@@ -345,9 +345,9 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                 const SizedBox(height: 16),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    color: const Color(0x00000000),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -360,7 +360,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                         ),
                         child: const Icon(
                           Icons.list_alt,
-                          size: 16,
+                          size: 32,
                           color: Color(0xFF10B981),
                         ),
                       ),

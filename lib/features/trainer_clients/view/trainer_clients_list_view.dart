@@ -6,14 +6,17 @@ import '../model/trainer_client_model.dart';
 import '../../../services/image_cache_manager.dart';
 import 'trainer_client_detail_view.dart';
 import '../../dashboard/widgets/notion_button.dart';
+
 class TrainerClientsListView extends ConsumerStatefulWidget {
   const TrainerClientsListView({super.key});
 
   @override
-  ConsumerState<TrainerClientsListView> createState() => _TrainerClientsListViewState();
+  ConsumerState<TrainerClientsListView> createState() =>
+      _TrainerClientsListViewState();
 }
 
-class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView> {
+class _TrainerClientsListViewState
+    extends ConsumerState<TrainerClientsListView> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
@@ -32,7 +35,8 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
       ref.read(trainerClientListProvider.notifier).loadMoreClients();
     }
   }
@@ -43,7 +47,8 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
     }
     return clients.where((client) {
       return client.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             (client.email?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+          (client.email?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+              false);
     }).toList();
   }
 
@@ -114,6 +119,7 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
               ),
               child: TextField(
                 controller: _searchController,
+                cursorColor: Colors.black,
                 style: const TextStyle(
                   fontFamily: 'IBMPlexSansKR',
                   fontSize: 16,
@@ -143,13 +149,13 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
               ),
             ),
           ),
-          
+
           Expanded(
             child: clientsState.when(
               data: (clientsResponse) {
                 final allClients = clientsResponse.data;
                 final filteredClients = _filterClients(allClients);
-                
+
                 if (filteredClients.isEmpty) {
                   return Center(
                     child: Column(
@@ -162,14 +168,16 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Icon(
-                            _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
+                            _searchQuery.isEmpty
+                                ? Icons.people_outline
+                                : Icons.search_off,
                             size: 64,
                             color: const Color(0xFF10B981).withOpacity(0.7),
                           ),
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          _searchQuery.isEmpty 
+                          _searchQuery.isEmpty
                               ? '아직 관리 중인 회원이 없습니다'
                               : '검색 결과가 없습니다',
                           style: const TextStyle(
@@ -197,15 +205,18 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                 }
 
                 return RefreshIndicator(
-                  onRefresh: () => ref.read(trainerClientListProvider.notifier).refresh(),
+                  onRefresh: () =>
+                      ref.read(trainerClientListProvider.notifier).refresh(),
                   child: ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(16),
-                    itemCount: filteredClients.length + 1, // +1 for loading indicator
+                    itemCount:
+                        filteredClients.length + 1, // +1 for loading indicator
                     itemBuilder: (context, index) {
                       if (index == filteredClients.length) {
                         // 로딩 인디케이터 (더 불러올 데이터가 있을 때)
-                        if (!clientsResponse.pageInfo.last && _searchQuery.isEmpty) {
+                        if (!clientsResponse.pageInfo.last &&
+                            _searchQuery.isEmpty) {
                           return const Padding(
                             padding: EdgeInsets.all(16),
                             child: Center(child: CircularProgressIndicator()),
@@ -266,27 +277,32 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
 
   Widget _buildClientCard(TrainerClient client) {
     return FutureBuilder<String?>(
-      future: client.profileImageUrl != null && client.profileImageUrl!.isNotEmpty
-          ? ImageCacheManager().getCachedImage(
-              imageUrl: client.profileImageUrl!,
-              cacheKey: 'member_${client.memberId}',
-              type: ImageType.profile,
-            ).catchError((error) {
-              // 이미지 로딩 실패 시 null 반환
-              print('프로필 이미지 로딩 실패: $error');
-              return null;
-            })
-          : Future.value(null),
+      future:
+          client.profileImageUrl != null && client.profileImageUrl!.isNotEmpty
+              ? ImageCacheManager()
+                  .getCachedImage(
+                  imageUrl: client.profileImageUrl!,
+                  cacheKey: 'member_${client.memberId}',
+                  type: ImageType.profile,
+                )
+                  .catchError((error) {
+                  // 이미지 로딩 실패 시 null 반환
+                  print('프로필 이미지 로딩 실패: $error');
+                  return null;
+                })
+              : Future.value(null),
       builder: (context, snapshot) {
         // 이미지 로딩 상태 확인
-        final hasValidImage = snapshot.connectionState == ConnectionState.done && 
-                             !snapshot.hasError &&
-                             snapshot.hasData && 
-                             snapshot.data != null && 
-                             File(snapshot.data!).existsSync();
+        final hasValidImage =
+            snapshot.connectionState == ConnectionState.done &&
+                !snapshot.hasError &&
+                snapshot.hasData &&
+                snapshot.data != null &&
+                File(snapshot.data!).existsSync();
         final isGenderMale = client.gender == 'MALE';
-        final genderColor = isGenderMale ? const Color(0xFF3B82F6) : const Color(0xFFEC4899);
-        
+        final genderColor =
+            isGenderMale ? const Color(0xFF3B82F6) : const Color(0xFFEC4899);
+
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
@@ -324,59 +340,40 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                         Stack(
                           children: [
                             Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(0xFF10B981).withOpacity(0.2),
-                                  width: 2,
-                                ),
-                              ),
                               child: CircleAvatar(
                                 radius: 32,
-                                backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+                                backgroundColor:
+                                    const Color(0xFF10B981).withOpacity(0.1),
                                 backgroundImage: hasValidImage
                                     ? FileImage(File(snapshot.data!))
                                     : null,
                                 child: hasValidImage
                                     ? null
-                                    : snapshot.connectionState == ConnectionState.waiting
+                                    : snapshot.connectionState ==
+                                            ConnectionState.waiting
                                         ? const SizedBox(
                                             width: 20,
                                             height: 20,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Color(0xFF10B981)),
                                             ),
                                           )
                                         : Icon(
                                             Icons.person,
                                             size: 36,
-                                            color: const Color(0xFF10B981).withOpacity(0.7),
+                                            color: const Color(0xFF10B981)
+                                                .withOpacity(0.7),
                                           ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 2,
-                              right: 2,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.white, width: 2),
-                                ),
-                                child: const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 12,
-                                ),
                               ),
                             ),
                           ],
                         ),
-                        
+
                         const SizedBox(width: 20),
-                        
+
                         // 회원 정보 섹션
                         Expanded(
                           child: Column(
@@ -424,28 +421,6 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                               Row(
                                 children: [
                                   Icon(
-                                    Icons.email_outlined,
-                                    size: 16,
-                                    color: Colors.grey[600],
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      client.email ?? '이메일 정보 없음',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
-                                        fontFamily: 'IBMPlexSansKR',
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Icon(
                                     Icons.location_on_outlined,
                                     size: 16,
                                     color: Colors.grey[600],
@@ -466,9 +441,9 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // 상태 및 액션 섹션
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -480,48 +455,7 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0xFF10B981).withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF10B981),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  '활성',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                    fontFamily: 'IBMPlexSansKR',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
+                                horizontal: 12, vertical: 6),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -529,7 +463,7 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                                   '상세 정보',
                                   style: TextStyle(
                                     color: Colors.black87,
-                                    fontSize: 12,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     fontFamily: 'IBMPlexSansKR',
                                   ),
@@ -537,8 +471,8 @@ class _TrainerClientsListViewState extends ConsumerState<TrainerClientsListView>
                                 const SizedBox(width: 4),
                                 const Icon(
                                   Icons.arrow_forward_ios,
-                                  size: 12,
-                                  color: Color(0xFF10B981),
+                                  size: 16,
+                                  color: Colors.black,
                                 ),
                               ],
                             ),

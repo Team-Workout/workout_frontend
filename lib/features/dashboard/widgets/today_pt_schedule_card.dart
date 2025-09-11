@@ -96,9 +96,9 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
   Widget _buildLoadingState() {
     return Container(
       height: 80,
-      child: const Center(
+      child: Center(
         child: CircularProgressIndicator(
-          color: Color(0xFF10B981),
+          color: Colors.grey.shade600,
           strokeWidth: 2,
         ),
       ),
@@ -233,12 +233,12 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF10B981),
-            Color(0xFF34D399),
+            Colors.grey.shade700,
+            Colors.grey.shade800,
           ],
         ),
         borderRadius: BorderRadius.circular(12),
@@ -412,24 +412,24 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF10B981).withOpacity(0.1),
+        color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.today,
             size: 16,
-            color: Color(0xFF10B981),
+            color: Colors.grey.shade700,
           ),
           const SizedBox(width: 6),
           Text(
             '총 ${count}개의 PT 세션이 예정되어 있습니다',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF10B981),
+              color: Colors.grey.shade800,
               fontFamily: 'IBMPlexSansKR',
             ),
           ),

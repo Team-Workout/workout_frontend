@@ -95,7 +95,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   // Logo and Title Section
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 40),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(32),
@@ -122,7 +123,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                                color: const Color(0xFF10B981)
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 25,
                                 offset: const Offset(0, 10),
                                 spreadRadius: 2,
@@ -202,14 +204,17 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           // Email Field
                           Container(
                             decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                              color: const Color(0xFF10B981)
+                                  .withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                color: const Color(0xFF10B981)
+                                    .withValues(alpha: 0.2),
                                 width: 1.5,
                               ),
                             ),
                             child: TextFormField(
+                              cursorColor: Colors.black,
                               controller: _emailController,
                               decoration: const InputDecoration(
                                 hintText: '이메일을 입력하세요',
@@ -241,14 +246,17 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           // Password Field
                           Container(
                             decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                              color: const Color(0xFF10B981)
+                                  .withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                color: const Color(0xFF10B981)
+                                    .withValues(alpha: 0.2),
                                 width: 1.5,
                               ),
                             ),
                             child: TextFormField(
+                              cursorColor: Colors.black,
                               controller: _passwordController,
                               obscureText: !_isPasswordVisible,
                               decoration: InputDecoration(
@@ -342,7 +350,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.3),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
@@ -357,10 +366,17 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                     : () async {
                                         if (_formKey.currentState!.validate()) {
                                           // 자동 로그인 설정 저장
-                                          await ref.read(authViewModelProvider.notifier).setAutoLogin(_isAutoLoginEnabled);
-                                          
+                                          await ref
+                                              .read(authViewModelProvider
+                                                  .notifier)
+                                              .setAutoLogin(
+                                                  _isAutoLoginEnabled);
+
                                           // 로그인 실행
-                                          ref.read(authViewModelProvider.notifier).login(
+                                          ref
+                                              .read(authViewModelProvider
+                                                  .notifier)
+                                              .login(
                                                 _emailController.text,
                                                 _passwordController.text,
                                               );
@@ -377,9 +393,11 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                           ),
                                         )
                                       : Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: const [
-                                            Icon(Icons.login, color: Colors.white, size: 24),
+                                            Icon(Icons.login,
+                                                color: Colors.white, size: 24),
                                             SizedBox(width: 12),
                                             Text(
                                               '로그인',
@@ -414,9 +432,11 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                   context.push('/signup');
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                    color: const Color(0xFF10B981)
+                                        .withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Text(

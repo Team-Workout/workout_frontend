@@ -34,7 +34,7 @@ class NotionButton extends StatelessWidget {
         height: height,
         padding: padding,
         decoration: BoxDecoration(
-          color: Color(0xFF4CAF50),
+          color: Color(0xFF10B981),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isOutlined

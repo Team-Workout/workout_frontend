@@ -106,6 +106,8 @@ class WorkoutStatsViewmodel extends ChangeNotifier {
     List<Map<String, dynamic>> workoutLogs,
     DateRange dateRange,
   ) {
+    print('📊 통계 계산 시작 - 운동 로그 수: ${workoutLogs.length}');
+    
     // 운동별로 데이터 그룹화
     Map<String, List<ExerciseSetData>> exerciseGroups = {};
     Set<String> workoutDates = {};
@@ -115,15 +117,20 @@ class WorkoutStatsViewmodel extends ChangeNotifier {
     for (var log in workoutLogs) {
       final logDate = log['workout_date'] as String;
       workoutDates.add(logDate);
+      print('📊 처리 중인 날짜: $logDate');
       
       final exercises = log['exercises'] as List<dynamic>;
+      print('📊 해당 날짜 운동 수: ${exercises.length}');
       
       for (var exerciseData in exercises) {
         final exerciseName = exerciseData['exercise_name'] as String;
         final sets = exerciseData['sets'] as List<dynamic>;
         
+        print('📊 운동: $exerciseName, 세트 수: ${sets.length}');
+        
         // 운동 이름 필터링 - 실제 운동 종류만 포함
         if (!_isValidExerciseName(exerciseName)) {
+          print('📊 필터링된 운동: $exerciseName');
           continue;
         }
         
@@ -135,6 +142,8 @@ class WorkoutStatsViewmodel extends ChangeNotifier {
           final weight = (setData['weight'] as num).toDouble();
           final reps = setData['reps'] as int;
           final setVolume = weight * reps;
+          
+          print('📊 세트 - 중량: ${weight}kg, 횟수: ${reps}회, 볼륨: ${setVolume}');
           
           totalSets++;
           totalVolume += setVolume;
@@ -149,6 +158,8 @@ class WorkoutStatsViewmodel extends ChangeNotifier {
         }
       }
     }
+    
+    print('📊 처리 완료 - 총 세트: $totalSets, 총 볼륨: $totalVolume, 운동 종류: ${exerciseGroups.length}');
 
     // 운동별 통계 계산
     List<ExerciseStats> exerciseStatsList = [];

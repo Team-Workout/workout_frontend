@@ -586,6 +586,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           Switch(
             value: value,
             onChanged: onChanged,
+            inactiveTrackColor: const Color(0X000000),
             activeTrackColor: const Color(0xFF10B981),
             activeThumbColor: Colors.white,
           ),
@@ -974,7 +975,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('취소'),
+                        child: const Text(
+                          '취소',
+                          style: TextStyle(
+                              color: Colors.red, fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -988,7 +993,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF10B981),
                         ),
-                        child: const Text('로그아웃'),
+                        child: const Text(
+                          '로그아웃',
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ),
                   ],

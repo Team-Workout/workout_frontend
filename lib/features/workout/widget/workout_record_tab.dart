@@ -431,44 +431,57 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
         ),
         const SizedBox(height: 16),
 
-        // 메모
-        TextField(
-          controller: _memoController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            labelText: '🏋️ 운동 메모',
-            hintText: '운동에 대한 메모를 입력하세요',
-            labelStyle: const TextStyle(
-              color: Color(0xFF10B981),
-              fontWeight: FontWeight.w600,
-            ),
-            hintStyle: TextStyle(
-              color: const Color(0xFF10B981).withValues(alpha: 0.6),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF10B981),
-                width: 1.5,
+        // 운동 메모
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '운동 메모',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151),
+                fontFamily: 'IBMPlexSansKR',
               ),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: TextField(
+                controller: _memoController,
+                maxLines: 3,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1A1A1A),
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+                decoration: InputDecoration(
+                  hintText: '🏋️ 운동에 대한 메모를 입력하세요',
+                  hintStyle: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey.shade500,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF10B981),
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF10B981),
-                width: 2,
-              ),
-            ),
-            filled: true,
-            fillColor: const Color(0xFF10B981).withValues(alpha: 0.05),
-            alignLabelWithHint: true,
-          ),
+          ],
         ),
         const SizedBox(height: 20),
 
@@ -501,7 +514,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  color: Colors.black,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -509,7 +522,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF2E7D32),
+                    color: Colors.white,
                     fontFamily: 'IBMPlexSansKR',
                   ),
                 ),
@@ -667,70 +680,65 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
           const SizedBox(height: 12),
 
           // 세트별 메모 입력 필드
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.note_alt_outlined,
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '세트 메모',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade700,
-                        fontFamily: 'IBMPlexSansKR',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                    ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.note_alt_outlined,
+                    size: 16,
+                    color: Colors.grey.shade600,
                   ),
-                  child: TextField(
-                    controller: set.memoController,
-                    maxLines: 2,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
+                  const SizedBox(width: 6),
+                  Text(
+                    '세트 메모',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade700,
                       fontFamily: 'IBMPlexSansKR',
-                      color: Colors.black87,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: '💡 이 세트에 대한 메모를 입력하세요',
-                      hintStyle: TextStyle(
-                        fontSize: 13,
-                        color: const Color(0xFF10B981).withValues(alpha: 0.7),
-                        fontFamily: 'IBMPlexSansKR',
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
-              ],
-            ),
+                child: TextField(
+                  controller: set.memoController,
+                  maxLines: 2,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'IBMPlexSansKR',
+                    color: Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '💡 이 세트에 대한 메모를 입력하세요',
+                    hintStyle: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade500,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF10B981),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

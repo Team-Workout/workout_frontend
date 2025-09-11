@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pt_service/screens/splash_screen.dart';
 import 'package:pt_service/features/auth/view/login_view.dart';
 import 'package:pt_service/features/auth/view/signup_view.dart';
-import 'package:pt_service/features/dashboard/view/trainer_dashboard_view.dart';
+import 'package:pt_service/features/dashboard/view/trainer_main_view.dart';
 import 'package:pt_service/features/dashboard/view/member_dashboard_view.dart';
 import 'package:pt_service/features/dashboard/view/manager_dashboard_view.dart';
 import '../../shared/widgets/app_scaffold_with_nav.dart';
@@ -88,7 +88,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/trainer-dashboard',
-        builder: (context, state) => const TrainerDashboardView(),
+        builder: (context, state) => const TrainerMainView(),
       ),
       // Member Shell Route with Bottom Navigation
       ShellRoute(
