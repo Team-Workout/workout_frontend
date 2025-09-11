@@ -132,15 +132,21 @@ class _TrainerPTMainViewState extends ConsumerState<TrainerPTMainView> {
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: _buildStatCard(
-                          title: 'PT 신청',
-                          value: ptApplicationsAsync.when(
-                            data: (applications) => applications.length.toString(),
-                            loading: () => '...',
-                            error: (_, __) => '0',
+                        child: GestureDetector(
+                          onTap: () {
+                            context.push('/pt-applications');
+                          },
+                          child: _buildStatCard(
+                            title: 'PT 신청',
+                            value: ptApplicationsAsync.when(
+                              data: (applications) =>
+                                  applications.length.toString(),
+                              loading: () => '...',
+                              error: (_, __) => '0',
+                            ),
+                            subtitle: '건',
+                            color: const Color(0xFFFA8D8D),
                           ),
-                          subtitle: '건',
-                          color: const Color(0xFF6366F1),
                         ),
                       ),
                     ],
@@ -211,7 +217,8 @@ class _TrainerPTMainViewState extends ConsumerState<TrainerPTMainView> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const TrainerClientsListView(),
+                                builder: (context) =>
+                                    const TrainerClientsListView(),
                               ),
                             );
                           },
@@ -235,8 +242,8 @@ class _TrainerPTMainViewState extends ConsumerState<TrainerPTMainView> {
                     children: [
                       Expanded(
                         child: NotionDashboardCard(
-                          title: 'PT 계약 관리',
-                          value: '계약 현황',
+                          title: 'PT 관리',
+                          value: 'PT 현황',
                           icon: Icons.assignment_turned_in,
                           onTap: () {
                             context.push('/pt-contracts');
@@ -274,7 +281,7 @@ class _TrainerPTMainViewState extends ConsumerState<TrainerPTMainView> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withOpacity(0.01),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.2)),
       ),

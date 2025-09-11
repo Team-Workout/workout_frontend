@@ -189,8 +189,8 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
 
-    // 직접 접근시 또는 트레이너일 때 Scaffold로 감싸고 AppBar 추가
-    if (widget.isDirectAccess || user?.userType == UserType.trainer) {
+    // 직접 접근시에만 AppBar 추가 (트레이너는 네비게이션바 유지를 위해 AppBar 제거)
+    if (widget.isDirectAccess && user?.userType != UserType.trainer) {
       return SafeArea(
         child: Scaffold(
           backgroundColor: const Color(0xFFF8F9FA),
@@ -227,19 +227,21 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     }
 
     // 탭 뷰에서 사용시 Container로 반환
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF10B981).withValues(alpha: 0.02),
-            const Color(0xFF34D399).withValues(alpha: 0.03),
-            const Color(0xFF6EE7B7).withValues(alpha: 0.02),
-          ],
+    return SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF10B981).withValues(alpha: 0.02),
+              const Color(0xFF34D399).withValues(alpha: 0.03),
+              const Color(0xFF6EE7B7).withValues(alpha: 0.02),
+            ],
+          ),
         ),
+        child: _buildScheduleContent(),
       ),
-      child: _buildScheduleContent(),
     );
   }
 

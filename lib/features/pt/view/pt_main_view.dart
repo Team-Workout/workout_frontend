@@ -216,8 +216,11 @@ class _LessonRequestContentState extends ConsumerState<_LessonRequestContent> {
                 child: contractsState.when(
                   data: (contractResponse) =>
                       _buildContractsList(contractResponse),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                    ),
+                  ),
                   error: (error, stack) => _buildErrorState(),
                 ),
               ),

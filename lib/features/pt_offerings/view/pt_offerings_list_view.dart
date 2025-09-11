@@ -55,70 +55,84 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      // 트레이너가 직접 접근했을 때만 AppBar 표시 (자신의 상품 관리)
-      appBar: isOwnOfferings && widget.isTrainerView
-          ? AppBar(
-              flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF10B981),
-                      Color(0xFF34D399),
-                      Color(0xFF6EE7B7)
-                    ],
+      // 트레이너 관리메뉴에서는 AppBar 제거 (네비게이션바 유지를 위해)
+      appBar: null,
+      body: Column(
+        children: [
+          // 헤더
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 50, 16, 20),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF10B981),
+                  Color(0xFF34D399),
+                  Color(0xFF6EE7B7)
+                ],
+              ),
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => context.go('/trainer-pt-main'),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
-                ),
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
-              title: const Text(
-                'PT 상품 관리',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-              ),
-              centerTitle: true,
-              actions: [
-                Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  child: TextButton(
-                    onPressed: () {
-                      context.push('/pt-offerings/create');
-                    },
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Text(
-                      '추가',
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'PT 상품 관리',
                       style: TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                         fontFamily: 'IBMPlexSansKR',
                       ),
                     ),
                   ),
-                ),
-              ],
-            )
-          : null,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          _loadPtOfferings();
-        },
+                  if (widget.isTrainerView)
+                    Container(
+                      margin: const EdgeInsets.only(left: 12),
+                      child: TextButton(
+                        onPressed: () {
+                          context.push('/pt-offerings/create');
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: const Text(
+                          '추가',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          // 내용
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                _loadPtOfferings();
+              },
         child: ptOfferingsAsync.when(
           loading: () => const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+            ),
           ),
           error: (error, stackTrace) => Center(
             child: Column(
@@ -170,6 +184,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
             );
           },
         ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -637,7 +654,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          ),
         ),
       );
 
@@ -1043,7 +1062,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+            ),
             SizedBox(height: 16),
             Text('PT를 신청하고 있습니다...'),
           ],

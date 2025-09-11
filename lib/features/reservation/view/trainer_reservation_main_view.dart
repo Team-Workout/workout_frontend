@@ -485,7 +485,9 @@ class _TrainerReservationBottomSheetState
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          )),
           error: (error, stack) => Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(

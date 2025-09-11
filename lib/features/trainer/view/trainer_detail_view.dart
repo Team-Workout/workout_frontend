@@ -122,7 +122,9 @@ class _TrainerDetailViewState extends ConsumerState<TrainerDetailView>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(),
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+              ),
               SizedBox(height: 16),
               Text(
                 '트레이너 정보를 불러오는 중...',

@@ -633,7 +633,8 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: (maxWeight - minWeight) <= 0 ? 1.0 : (maxWeight - minWeight) / 2,
+          horizontalInterval:
+              (maxWeight - minWeight) <= 0 ? 1.0 : (maxWeight - minWeight) / 2,
           getDrawingHorizontalLine: (value) {
             return const FlLine(
               color: Colors.grey,
@@ -747,7 +748,7 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                       ),
                       const SizedBox(width: 12),
                       const Text(
-                        '현재 PT 계약',
+                        '현재 PT',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -885,7 +886,8 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
       decoration: BoxDecoration(
         color: const Color(0xFF27AE60).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12), // 더 둥글게
-        border: Border.all(color: const Color(0xFF27AE60).withValues(alpha: 0.2)),
+        border:
+            Border.all(color: const Color(0xFF27AE60).withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch, // 전체 너비 사용
@@ -918,7 +920,8 @@ class _FitProTabState extends ConsumerState<_FitProTab> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFF27AE60),
                   borderRadius: BorderRadius.circular(16),

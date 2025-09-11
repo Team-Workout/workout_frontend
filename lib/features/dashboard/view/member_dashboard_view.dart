@@ -234,7 +234,9 @@ class _MemberDashboardViewState extends ConsumerState<MemberDashboardView> {
                 height: 200,
                 child: compositionsAsync.when(
                   loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                      const Center(child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                      )),
                   error: (error, _) =>
                       const Center(child: Text('데이터를 불러올 수 없습니다')),
                   data: (compositions) =>

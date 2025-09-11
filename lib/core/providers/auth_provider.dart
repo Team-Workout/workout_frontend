@@ -21,6 +21,21 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 프로필 이미지 URL 업데이트
+  void updateProfileImageUrl(String? profileImageUrl) {
+    print('🔄 AuthState.updateProfileImageUrl called with: $profileImageUrl');
+    print('🔄 Current user before update: $_user');
+    if (_user != null) {
+      _user = _user!.copyWith(profileImageUrl: profileImageUrl);
+      print('🔄 User after update: $_user');
+      _saveUserToPrefs();
+      notifyListeners();
+      print('🔄 notifyListeners() called');
+    } else {
+      print('❌ _user is null, cannot update profile image URL');
+    }
+  }
+
   // 사용자 정보를 SharedPreferences에 저장
   Future<void> _saveUserToPrefs() async {
     if (_user == null) return;
@@ -31,6 +46,9 @@ class AuthState extends ChangeNotifier {
       await prefs.setString('user_email', _user!.email);
       await prefs.setString('user_name', _user!.name);
       await prefs.setString('user_type', _user!.userType.toString());
+      if (_user!.profileImageUrl != null) {
+        await prefs.setString('user_profile_image_url', _user!.profileImageUrl!);
+      }
       await prefs.setString('current_user', 'logged_in'); // 간단한 플래그
     } catch (e) {
       // 저장 실패시 로그 출력 등
@@ -45,6 +63,7 @@ class AuthState extends ChangeNotifier {
       await prefs.remove('user_email');
       await prefs.remove('user_name');
       await prefs.remove('user_type');
+      await prefs.remove('user_profile_image_url');
       await prefs.remove('current_user');
     } catch (e) {
       // 삭제 실패시 로그 출력 등

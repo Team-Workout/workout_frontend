@@ -24,8 +24,8 @@ class BodyStatsCard extends StatelessWidget {
             '체중',
             '${stats!.currentWeight.toStringAsFixed(1)}kg',
             stats!.weightChange >= 0
-                ? '+${stats!.weightChange.toStringAsFixed(1)}kg'
-                : '${stats!.weightChange.toStringAsFixed(1)}kg',
+                ? '+${stats!.weightChange.toStringAsFixed(1)}'
+                : '${stats!.weightChange.toStringAsFixed(1)}',
             Icons.monitor_weight,
             (stats!.currentWeight / 120).clamp(0.0, 1.0),
           ),
@@ -33,7 +33,7 @@ class BodyStatsCard extends StatelessWidget {
           _buildHorizontalStatCard(
             '근육량',
             '${stats!.muscleMass.toStringAsFixed(1)}kg',
-            _getMuscleMassCategory(stats!.muscleMass),
+            '+0.0', // 임시로 0 표시, 추후 모델에 근육량 변화 필드가 추가되면 수정
             Icons.fitness_center,
             (stats!.muscleMass / 80).clamp(0.0, 1.0),
           ),
@@ -41,7 +41,9 @@ class BodyStatsCard extends StatelessWidget {
           _buildHorizontalStatCard(
             '체지방률',
             '${stats!.bodyFatPercentage.toStringAsFixed(1)}%',
-            _getBodyFatCategory(stats!.bodyFatPercentage),
+            stats!.fatChange >= 0
+                ? '+${stats!.fatChange.toStringAsFixed(1)}'
+                : '${stats!.fatChange.toStringAsFixed(1)}',
             Icons.speed,
             (stats!.bodyFatPercentage / 35).clamp(0.0, 1.0),
           ),
@@ -196,7 +198,7 @@ class BodyStatsCard extends StatelessWidget {
                   title,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: Colors.black,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,
                   ),
@@ -206,19 +208,19 @@ class BodyStatsCard extends StatelessWidget {
                   children: [
                     Text(
                       value,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
-                        color: _getIconColor(title),
+                        color: Colors.black,
                         letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       subtitle,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: _getIconColor(title).withValues(alpha: 0.8),
+                        color: Colors.black54,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.2,
                       ),

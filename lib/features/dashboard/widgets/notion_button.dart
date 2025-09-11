@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/notion_colors.dart';
 
 /// Notion 스타일 버튼 (ElevatedButton 대체용)
-class NotionButton extends StatelessWidget {
+class NotionButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
@@ -25,35 +25,47 @@ class NotionButton extends StatelessWidget {
   });
 
   @override
+  State<NotionButton> createState() => _NotionButtonState();
+}
+
+class _NotionButtonState extends State<NotionButton> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: isLoading ? null : onPressed,
+      onTap: widget.isLoading ? null : widget.onPressed,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        width: width,
-        height: height,
-        padding: padding,
+        width: widget.width,
+        height: widget.height,
+        padding: widget.padding,
         decoration: BoxDecoration(
-          color: Color(0xFF10B981),
+          color: widget.isOutlined 
+              ? Colors.transparent 
+              : const Color(0xFF10B981),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isOutlined
-                ? (onPressed == null || isLoading
+            color: widget.isOutlined
+                ? (widget.onPressed == null || widget.isLoading
                     ? NotionColors.gray300
-                    : NotionColors.black)
+                    : (_isPressed ? const Color(0xFF10B981) : NotionColors.gray600))
                 : Colors.transparent,
-            width: isOutlined ? 1.5 : 0,
+            width: widget.isOutlined ? 1.5 : 0,
           ),
         ),
         child: Center(
-          child: isLoading
+          child: widget.isLoading
               ? SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      isOutlined ? NotionColors.black : NotionColors.white,
+                      widget.isOutlined ? NotionColors.black : NotionColors.white,
                     ),
                   ),
                 )
@@ -61,31 +73,31 @@ class NotionButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (icon != null) ...[
+                    if (widget.icon != null) ...[
                       Icon(
-                        icon,
+                        widget.icon,
                         size: 18,
-                        color: isOutlined
-                            ? (onPressed == null
+                        color: widget.isOutlined
+                            ? (widget.onPressed == null
                                 ? NotionColors.gray400
-                                : NotionColors.black)
-                            : (onPressed == null
+                                : (_isPressed ? const Color(0xFF10B981) : NotionColors.gray600))
+                            : (widget.onPressed == null
                                 ? NotionColors.gray500
                                 : NotionColors.white),
                       ),
                       const SizedBox(width: 8),
                     ],
                     Text(
-                      text,
+                      widget.text,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'IBMPlexSansKR',
-                        color: isOutlined
-                            ? (onPressed == null
+                        color: widget.isOutlined
+                            ? (widget.onPressed == null
                                 ? NotionColors.gray400
-                                : NotionColors.black)
-                            : (onPressed == null
+                                : (_isPressed ? const Color(0xFF10B981) : NotionColors.gray600))
+                            : (widget.onPressed == null
                                 ? NotionColors.gray500
                                 : NotionColors.white),
                       ),

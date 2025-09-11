@@ -14,7 +14,7 @@ class TrainerClient with _$TrainerClient {
     required String name,
     required String gender,
     String? email,
-    String? profileImageUrl,
+    @JsonKey(name: 'profileUri') String? profileImageUrl,
   }) = _TrainerClient;
 
   factory TrainerClient.fromJson(Map<String, dynamic> json) =>

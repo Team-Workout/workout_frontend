@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/api_service.dart';
 import '../model/trainer_client_model.dart';
+import '../model/member_routine_models.dart';
 
 final trainerClientRepositoryProvider =
     Provider<TrainerClientRepository>((ref) {
@@ -107,6 +108,42 @@ class TrainerClientRepository {
       throw Exception('회원 체성분 데이터를 불러오는데 실패했습니다: ${e.message}');
     } catch (e) {
       throw Exception('회원 체성분 데이터를 불러오는데 실패했습니다: $e');
+    }
+  }
+
+  // 특정 회원의 운동 루틴 조회
+  Future<MemberRoutineResponse> getMemberRoutines({
+    required int memberId,
+    int page = 0,
+    int size = 10,
+  }) async {
+    try {
+      final queryParams = {
+        'page': page,
+        'size': size,
+      };
+
+      print('🔍 회원 $memberId의 루틴 조회 API 호출');
+      final response = await _apiService.get(
+        '/workout/trainer/clients/$memberId/routines',
+        queryParameters: queryParams,
+      );
+
+      print('✅ 회원 루틴 조회 성공');
+      return MemberRoutineResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      print('❌ 회원 루틴 조회 API 실패: ${e.response?.statusCode} - ${e.message}');
+      if (e.response?.statusCode == 401) {
+        throw Exception('인증되지 않은 사용자입니다');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('회원 루틴에 접근할 권한이 없습니다');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('회원을 찾을 수 없습니다');
+      }
+      throw Exception('회원 루틴을 불러오는데 실패했습니다: ${e.message}');
+    } catch (e) {
+      print('❌ 회원 루틴 조회 예외: $e');
+      throw Exception('회원 루틴을 불러오는데 실패했습니다: $e');
     }
   }
 }

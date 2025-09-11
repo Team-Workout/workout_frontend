@@ -281,7 +281,9 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
     return Scaffold(
       backgroundColor: NotionColors.gray50,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+            ))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(

@@ -48,7 +48,7 @@ class DashboardPtContractCard extends ConsumerWidget {
                       ),
                       const SizedBox(width: 12),
                       const Text(
-                        '현재 PT 계약',
+                        '현재 PT',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -165,7 +165,7 @@ class _NoContractState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '진행 중인 PT 계약이 없습니다',
+            '진행 중인 PT가 없습니다',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 14,
@@ -205,7 +205,8 @@ class _ActiveContractState extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF27AE60).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF27AE60).withValues(alpha: 0.2)),
+        border:
+            Border.all(color: const Color(0xFF27AE60).withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,7 +247,8 @@ class _ActiveContractState extends StatelessWidget {
             children: [
               _ContractStat('잔여 횟수', '${contract.remainingSessions}회'),
               _ContractStat('다음 결제일', formattedDate),
-              _ContractStat('총 계약 금액', '${NumberFormat('#,###').format(contract.price)}원'),
+              _ContractStat('총 계약 금액',
+                  '${NumberFormat('#,###').format(contract.price)}원'),
             ],
           ),
         ],

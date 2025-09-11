@@ -7,6 +7,7 @@ import 'package:pt_service/shared/widgets/notion_dashboard_card.dart';
 import 'package:pt_service/features/pt_offerings/viewmodel/pt_offering_viewmodel.dart';
 import 'package:pt_service/features/pt_applications/viewmodel/pt_application_viewmodel.dart';
 import 'package:pt_service/features/pt_contract/viewmodel/pt_contract_viewmodel.dart';
+import 'package:pt_service/features/settings/viewmodel/settings_viewmodel.dart';
 import '../../../core/theme/notion_colors.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../widgets/today_pt_schedule_card.dart';
@@ -193,6 +194,71 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
         elevation: 0,
         centerTitle: false,
         automaticallyImplyLeading: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: GestureDetector(
+              onTap: () {
+                context.push('/trainer-profile-edit');
+              },
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final user = ref.watch(currentUserProvider);
+                  final profileImageAsync = ref.watch(profileImageProvider);
+                  
+                  return profileImageAsync.maybeWhen(
+                    data: (profileImage) {
+                      final profileUrl = profileImage?.profileImageUrl;
+                      print('🔍 Dashboard profile check: profileUrl=$profileUrl');
+
+                      return Container(
+                        width: 45,
+                        height: 45,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22.5),
+                          border: Border.all(
+                            color: const Color(0xFF10B981).withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20.5),
+                          child: profileUrl != null && profileUrl.isNotEmpty
+                              ? Image.network(
+                                  profileUrl.startsWith('/') 
+                                    ? 'http://211.220.34.173$profileUrl' 
+                                    : profileUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    print('🚫 Image load error for URL: $profileUrl, error: $error');
+                                    return _buildDefaultAvatar(user?.name);
+                                  },
+                                )
+                              : _buildDefaultAvatar(user?.name),
+                        ),
+                      );
+                    },
+                    orElse: () => Container(
+                      width: 45,
+                      height: 45,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(22.5),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20.5),
+                        child: _buildDefaultAvatar(user?.name),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -275,6 +341,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                             BarChartData(
                               alignment: BarChartAlignment.spaceAround,
                               maxY: maxY,
+                              minY: 0,
                               barTouchData: BarTouchData(
                                 enabled: true,
                                 touchTooltipData: BarTouchTooltipData(
@@ -315,10 +382,9 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                                         ? (maxY / 3).ceilToDouble()
                                         : (maxY > 5 ? 2 : 1),
                                     getTitlesWidget: (value, meta) {
-                                      if (value == 0) return const SizedBox();
-                                      // 실제 데이터 값만 표시
+                                      // 0도 포함하여 표시
                                       final intValue = value.toInt();
-                                      if (intValue <= maxY.toInt()) {
+                                      if (intValue <= maxY.toInt() && value == intValue) {
                                         return Padding(
                                           padding:
                                               const EdgeInsets.only(right: 8),
@@ -412,8 +478,11 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                             ),
                           );
                         },
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
+                        loading: () => const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                          ),
+                        ),
                         error: (error, stack) => Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -494,31 +563,6 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.push('/pt-schedule'),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0xFF10B981).withOpacity(0.3),
-                              ),
-                            ),
-                            child: const Text(
-                              '전체보기',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'IBMPlexSansKR',
-                              ),
-                            ),
                           ),
                         ),
                       ],
@@ -616,7 +660,7 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
             // 📅 오늘의 PT 일정
             const SizedBox(height: 32),
             const TodayPTScheduleCard(),
-            
+
             const SizedBox(height: 100),
           ],
         ),
@@ -624,4 +668,27 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
     );
   }
 
+  Widget _buildDefaultAvatar(String? name) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF10B981), Color(0xFF34D399)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20.5),
+      ),
+      child: Center(
+        child: Text(
+          name?.substring(0, 1).toUpperCase() ?? 'T',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../model/trainer_profile_model.dart';
 import '../viewmodel/trainer_profile_viewmodel.dart';
+import '../../settings/viewmodel/settings_viewmodel.dart';
 
 class TrainerProfileEditView extends ConsumerStatefulWidget {
   const TrainerProfileEditView({super.key});
@@ -42,6 +44,25 @@ class _TrainerProfileEditViewState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 프로필 이미지 로드
+      ref.read(profileImageProvider.notifier).loadProfileImage();
+      
+      // 프로필 데이터 로드
+      _loadProfileData();
+    });
+  }
+
+  Future<void> _loadProfileData() async {
+    try {
+      await ref.read(trainerProfileViewModelProvider.notifier).loadProfile();
+      final profile = ref.read(trainerProfileViewModelProvider).value;
+      if (profile != null && mounted) {
+        _initializeControllers(profile);
+      }
+    } catch (e) {
+      print('Error loading profile data: $e');
+    }
   }
 
   @override
@@ -151,7 +172,9 @@ class _TrainerProfileEditViewState
 
   @override
   Widget build(BuildContext context) {
+    // 현재 프로필 상태 가져오기 (실제 데이터 또는 빈 프로필)
     final profileState = ref.watch(trainerProfileViewModelProvider);
+    final profile = profileState.value ?? TrainerProfile.empty();
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -159,142 +182,233 @@ class _TrainerProfileEditViewState
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           '프로필 수정',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.black87,
             fontSize: 20,
             fontWeight: FontWeight.w600,
+            fontFamily: 'IBMPlexSansKR',
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => _saveProfile(),
-            child: const Text(
-              '저장',
-              style: TextStyle(
-                color: Color(0xFF2C3E50),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: FilledButton(
+              onPressed: () => _saveProfile(),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                '저장',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
               ),
             ),
           ),
         ],
       ),
-      body: profileState.when(
-        data: (profile) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_introductionController.text.isEmpty) {
-              _initializeControllers(profile);
-            }
-          });
-
-          return Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 프로필 헤더 추가
-                  if (profile.name != null || profile.email != null)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withValues(alpha: 0.1),
-                            spreadRadius: 1,
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundColor: const Color(0xFF2C3E50),
-                            child: Text(
-                              profile.name?.substring(0, 1).toUpperCase() ??
-                                  'T',
-                              style: const TextStyle(
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 프로필 헤더 (항상 표시)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withOpacity(0.2),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF10B981).withOpacity(0.08),
+                      spreadRadius: 0,
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Stack(
+                      children: [
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final profileImageAsync = ref.watch(profileImageProvider);
+                            return profileImageAsync.maybeWhen(
+                              data: (profileImage) {
+                                final profileUrl = profileImage?.profileImageUrl;
+                                
+                                return Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(40),
+                                    border: Border.all(
+                                      color: const Color(0xFF10B981).withOpacity(0.3),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(38),
+                                    child: profileUrl != null && profileUrl.isNotEmpty
+                                        ? Image.network(
+                                            profileUrl.startsWith('/') 
+                                              ? 'http://211.220.34.173$profileUrl' 
+                                              : profileUrl,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return _buildDefaultAvatar(profile.name ?? 'T');
+                                            },
+                                          )
+                                        : _buildDefaultAvatar(profile.name ?? 'T'),
+                                  ),
+                                );
+                              },
+                              loading: () => Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(40),
+                                  border: Border.all(
+                                    color: const Color(0xFF10B981).withOpacity(0.3),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                              error: (error, stack) => Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(40),
+                                  border: Border.all(
+                                    color: const Color(0xFF10B981).withOpacity(0.3),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(38),
+                                  child: _buildDefaultAvatar(profile.name ?? 'T'),
+                                ),
+                              ),
+                              orElse: () => Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(40),
+                                  border: Border.all(
+                                    color: const Color(0xFF10B981).withOpacity(0.3),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(38),
+                                  child: _buildDefaultAvatar(profile.name ?? 'T'),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () => _showImagePickerOptions(context, ref),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
                                 color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                                size: 16,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  profile.name ?? '트레이너',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final user = ref.watch(currentUserProvider);
+                              return Text(
+                                user?.name ?? profile.name ?? '트레이너',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  fontFamily: 'IBMPlexSansKR',
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  profile.email ?? '',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 4),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final user = ref.watch(currentUserProvider);
+                              return Text(
+                                user?.email ?? profile.email ?? '',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF10B981),
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'IBMPlexSansKR',
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ],
                       ),
                     ),
-                  if (profile.name != null || profile.email != null)
-                    const SizedBox(height: 24),
-                  _buildIntroductionSection(),
-                  const SizedBox(height: 24),
-                  _buildSpecialtiesSection(profile),
-                  const SizedBox(height: 24),
-                  _buildAwardsSection(profile),
-                  const SizedBox(height: 24),
-                  _buildCertificationsSection(profile),
-                  const SizedBox(height: 24),
-                  _buildEducationsSection(profile),
-                  const SizedBox(height: 24),
-                  _buildWorkExperiencesSection(profile),
-                  const SizedBox(height: 32),
-                  _buildDangerZone(),
-                  const SizedBox(height: 100),
-                ],
-              ),
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('오류가 발생했습니다: $error'),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => ref
-                    .read(trainerProfileViewModelProvider.notifier)
-                    .loadProfile(),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF2C3E50),
+                  ],
                 ),
-                child: const Text('다시 시도'),
               ),
+              const SizedBox(height: 24),
+              _buildIntroductionSection(),
+              const SizedBox(height: 24),
+              _buildSpecialtiesSection(profile),
+              const SizedBox(height: 24),
+              _buildAwardsSection(profile),
+              const SizedBox(height: 24),
+              _buildCertificationsSection(profile),
+              const SizedBox(height: 24),
+              _buildEducationsSection(profile),
+              const SizedBox(height: 24),
+              _buildWorkExperiencesSection(profile),
+              const SizedBox(height: 32),
+              _buildDangerZone(),
+              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -308,11 +422,27 @@ class _TrainerProfileEditViewState
       child: TextFormField(
         controller: _introductionController,
         maxLines: 4,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           hintText: '자신을 소개해주세요...',
-          border: OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+          ),
           filled: true,
           fillColor: Colors.white,
+          contentPadding: const EdgeInsets.all(16),
+          hintStyle: const TextStyle(
+            fontFamily: 'IBMPlexSansKR',
+            color: Colors.grey,
+          ),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -334,11 +464,27 @@ class _TrainerProfileEditViewState
               Expanded(
                 child: TextFormField(
                   controller: _specialtyController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: '전문 분야를 입력하세요',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+                    ),
                     filled: true,
                     fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.all(16),
+                    hintStyle: const TextStyle(
+                      fontFamily: 'IBMPlexSansKR',
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               ),
@@ -353,9 +499,20 @@ class _TrainerProfileEditViewState
                   }
                 },
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF2C3E50),
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('추가'),
+                child: const Text(
+                  '추가',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
               ),
             ],
           ),
@@ -364,8 +521,24 @@ class _TrainerProfileEditViewState
             spacing: 8,
             children: profile.specialties.map((specialty) {
               return Chip(
-                label: Text(specialty),
-                deleteIcon: const Icon(Icons.close, size: 18),
+                label: Text(
+                  specialty,
+                  style: const TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+                backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+                deleteIcon: const Icon(
+                  Icons.close,
+                  size: 18,
+                  color: Color(0xFF10B981),
+                ),
+                side: BorderSide(
+                  color: const Color(0xFF10B981).withOpacity(0.3),
+                  width: 1,
+                ),
                 onDeleted: () {
                   ref
                       .read(trainerProfileViewModelProvider.notifier)
@@ -878,29 +1051,51 @@ class _TrainerProfileEditViewState
   Widget _buildSection({required String title, required Widget child}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF10B981).withOpacity(0.1),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: const Color(0xFF10B981).withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 20,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                  ),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           child,
         ],
       ),
@@ -912,12 +1107,25 @@ class _TrainerProfileEditViewState
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: const Icon(Icons.add),
-        label: Text(text),
+        icon: const Icon(Icons.add, size: 20),
+        label: Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
         style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          side: const BorderSide(color: Color(0xFF2C3E50)),
-          foregroundColor: const Color(0xFF2C3E50),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          side: BorderSide(
+            color: const Color(0xFF10B981).withOpacity(0.7),
+            width: 1.5,
+          ),
+          foregroundColor: const Color(0xFF10B981),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: const Color(0xFF10B981).withOpacity(0.05),
         ),
       ),
     );
@@ -1183,6 +1391,350 @@ class _TrainerProfileEditViewState
     );
   }
 
+  Widget _buildDefaultAvatar(String? name) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF10B981), Color(0xFF34D399)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(38),
+      ),
+      child: Center(
+        child: Text(
+          name?.substring(0, 1).toUpperCase() ?? 'T',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showImagePickerOptions(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                '프로필 사진 변경',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.camera_alt, color: Color(0xFF10B981)),
+                ),
+                title: const Text(
+                  '카메라로 촬영',
+                  style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  // 약간의 딜레이 후 이미지 선택 시작
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  if (mounted) {
+                    _pickImage(ImageSource.camera, ref);
+                  }
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.photo, color: Color(0xFF10B981)),
+                ),
+                title: const Text(
+                  '갤러리에서 선택',
+                  style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  // 약간의 딜레이 후 이미지 선택 시작
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  if (mounted) {
+                    _pickImage(ImageSource.gallery, ref);
+                  }
+                },
+              ),
+              Consumer(
+                builder: (context, ref, child) {
+                  final user = ref.watch(currentUserProvider);
+                  final hasProfileImage = user?.profileImageUrl != null && user!.profileImageUrl!.isNotEmpty;
+                  
+                  if (hasProfileImage) {
+                    return ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.delete, color: Colors.red),
+                      ),
+                      title: const Text(
+                        '프로필 사진 삭제',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        // 약간의 딜레이 후 삭제 다이얼로그 표시
+                        await Future.delayed(const Duration(milliseconds: 100));
+                        if (mounted) {
+                          _showDeletePhotoDialog(context, ref);
+                        }
+                      },
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source, WidgetRef ref) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+
+      if (pickedFile != null && mounted) {
+        final file = XFile(pickedFile.path);
+        
+        // Provider의 상태 변화를 감지하여 로딩 처리
+        ref.read(profileImageProvider.notifier).uploadProfileImage(file).then((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('프로필 사진이 변경되었습니다'),
+                backgroundColor: Color(0xFF10B981),
+              ),
+            );
+          }
+        }).catchError((e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('이미지 업로드 실패: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('이미지 선택 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showDeletePhotoDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: EdgeInsets.zero,
+        content: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.red, Color(0xFFFF6B6B)],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.delete_forever,
+                        size: 32,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '프로필 사진 삭제',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '프로필 사진을 삭제하시겠습니까?\n삭제한 후에는 복구할 수 없습니다.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.grey),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          '취소',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _deleteProfilePhoto(ref);
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          '삭제',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteProfilePhoto(WidgetRef ref) async {
+    try {
+      // Provider를 통한 로딩 상태 관리
+      ref.read(profileImageProvider.notifier).deleteProfileImage().then((_) {
+        // 사용자 정보에서 프로필 이미지 URL 제거
+        ref.read(authStateProvider).updateProfileImageUrl(null);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('프로필 사진이 삭제되었습니다'),
+              backgroundColor: Color(0xFF10B981),
+            ),
+          );
+        }
+      }).catchError((e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('프로필 사진 삭제에 실패했습니다: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('프로필 사진 삭제 중 오류가 발생했습니다: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _deleteAccount() async {
     try {
       // 로딩 표시
@@ -1190,7 +1742,9 @@ class _TrainerProfileEditViewState
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          ),
         ),
       );
 

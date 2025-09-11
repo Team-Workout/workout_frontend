@@ -6,6 +6,20 @@ import '../viewmodel/workout_stats_viewmodel.dart';
 import '../service/workout_api_service.dart';
 import '../service/local_storage_service.dart';
 import '../model/workout_stats_models.dart';
+import '../../../common/widgets/exercise_autocomplete_field.dart';
+import '../../sync/model/sync_models.dart';
+
+// 차트 유형 열거형
+enum ChartType {
+  maxWeight('최대 중량', Icons.trending_up, Color(0xFFEF4444)),
+  oneRM('1RM 추정', Icons.whatshot, Color(0xFF8B5CF6)),
+  volume('볼륨', Icons.fitness_center, Color(0xFF10B981));
+  
+  const ChartType(this.label, this.icon, this.color);
+  final String label;
+  final IconData icon;
+  final Color color;
+}
 
 class TrainerMemberWorkoutStatsTab extends ConsumerStatefulWidget {
   final int memberId;
@@ -28,11 +42,94 @@ class _TrainerMemberWorkoutStatsTabState
   bool _isLoading = false;
   WorkoutStatsResponse? _statsData;
   String? _errorMessage;
+  
+  // 검색 및 필터링 관련 상태
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String? _selectedMuscleGroup;
+  List<ExerciseStats> _filteredExercises = [];
 
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_onSearchChanged);
     _loadMemberWorkoutStats();
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text;
+      _applyFilters();
+    });
+  }
+
+  void _applyFilters() {
+    print('🔍 _applyFilters() 호출됨 - 검색어: "$_searchQuery", 선택된 근육군: $_selectedMuscleGroup');
+    
+    if (_statsData == null) {
+      print('❌ _statsData가 null입니다');
+      _filteredExercises = [];
+      return;
+    }
+
+    List<ExerciseStats> filtered = _statsData!.exercises;
+    print('📊 전체 운동 개수: ${filtered.length}');
+    
+    // 운동 이름들 출력 (디버깅용)
+    for (var exercise in filtered) {
+      print('  - ${exercise.exerciseName}');
+    }
+
+    // 검색어 필터
+    if (_searchQuery.isNotEmpty) {
+      print('🔎 검색어로 필터링 중: "$_searchQuery"');
+      filtered = filtered.where((exercise) {
+        final matches = exercise.exerciseName.toLowerCase().contains(_searchQuery.toLowerCase());
+        print('  ${exercise.exerciseName} - 매치: $matches');
+        return matches;
+      }).toList();
+      print('🎯 검색 후 결과: ${filtered.length}개');
+    }
+
+    // 근육군 필터 (간단한 문자열 매칭으로 구현)
+    if (_selectedMuscleGroup != null && _selectedMuscleGroup!.isNotEmpty) {
+      print('💪 근육군으로 필터링 중: "$_selectedMuscleGroup"');
+      filtered = filtered.where((exercise) {
+        // 운동명에 근육군 키워드가 포함되는지 확인 (간단한 구현)
+        final exerciseName = exercise.exerciseName.toLowerCase();
+        final muscleGroup = _selectedMuscleGroup!.toLowerCase();
+        
+        // 간단한 키워드 매핑
+        bool matches = false;
+        if (muscleGroup == '가슴' && (exerciseName.contains('벤치') || exerciseName.contains('체스트') || exerciseName.contains('푸시업'))) {
+          matches = true;
+        } else if (muscleGroup == '등' && (exerciseName.contains('풀업') || exerciseName.contains('데드') || exerciseName.contains('로우') || exerciseName.contains('랫풀'))) {
+          matches = true;
+        } else if (muscleGroup == '어깨' && (exerciseName.contains('숄더') || exerciseName.contains('프레스') || exerciseName.contains('레이즈'))) {
+          matches = true;
+        } else if (muscleGroup == '팔' && (exerciseName.contains('컬') || exerciseName.contains('트라이셉') || exerciseName.contains('딥스'))) {
+          matches = true;
+        } else if (muscleGroup == '하체' && (exerciseName.contains('스쿼트') || exerciseName.contains('레그') || exerciseName.contains('런지'))) {
+          matches = true;
+        } else if (muscleGroup == '코어' && (exerciseName.contains('플랭크') || exerciseName.contains('크런치') || exerciseName.contains('싯업'))) {
+          matches = true;
+        }
+        
+        print('  ${exercise.exerciseName} - 근육군 매치: $matches');
+        return matches;
+      }).toList();
+      print('🎯 근육군 필터 후 결과: ${filtered.length}개');
+    }
+
+    _filteredExercises = filtered;
+    print('✅ 최종 필터링 결과: ${_filteredExercises.length}개');
   }
 
   Future<void> _loadMemberWorkoutStats() async {
@@ -60,6 +157,7 @@ class _TrainerMemberWorkoutStatsTabState
           _statsData = stats;
           _isLoading = false;
         });
+        _applyFilters();
         print('✅ 서버에서 통계 조회 성공');
         return;
       } catch (e) {
@@ -78,6 +176,7 @@ class _TrainerMemberWorkoutStatsTabState
             _statsData = processedStats;
             _isLoading = false;
           });
+          _applyFilters();
           print('✅ 로컬에서 통계 계산 성공');
           return;
         } catch (localError) {
@@ -232,24 +331,43 @@ class _TrainerMemberWorkoutStatsTabState
   }
 
   List<WorkoutProgress> _generateProgressData(List<ExerciseSetData> setDataList) {
-    Map<String, double> dailyMaxWeights = {};
+    // 날짜별 데이터 그룹화
+    Map<String, List<ExerciseSetData>> dailyData = {};
     
     for (var setData in setDataList) {
       final date = setData.date;
-      if (!dailyMaxWeights.containsKey(date) || 
-          setData.weight > dailyMaxWeights[date]!) {
-        dailyMaxWeights[date] = setData.weight;
+      if (!dailyData.containsKey(date)) {
+        dailyData[date] = [];
       }
+      dailyData[date]!.add(setData);
     }
 
-    var sortedDates = dailyMaxWeights.keys.toList()..sort();
-    return sortedDates.map((date) => WorkoutProgress(
-      date: date,
-      maxWeight: dailyMaxWeights[date]!,
-      avgWeight: dailyMaxWeights[date]!,
-      volume: 0,
-      estimatedOneRM: _calculateOneRM(dailyMaxWeights[date]!, 1),
-    )).toList();
+    var sortedDates = dailyData.keys.toList()..sort();
+    return sortedDates.map((date) {
+      final daySets = dailyData[date]!;
+      
+      // 해당 날짜 지표 계산
+      final maxWeight = daySets.map((s) => s.weight).reduce((a, b) => a > b ? a : b);
+      final avgWeight = daySets.map((s) => s.weight).reduce((a, b) => a + b) / daySets.length;
+      final volume = daySets.fold(0.0, (sum, s) => sum + (s.weight * s.reps));
+      
+      // 1RM 추정 (가장 높은 1RM)
+      double maxOneRM = 0;
+      for (var setData in daySets) {
+        final oneRM = _calculateOneRM(setData.weight, setData.reps);
+        if (oneRM > maxOneRM) {
+          maxOneRM = oneRM;
+        }
+      }
+      
+      return WorkoutProgress(
+        date: date,
+        maxWeight: maxWeight,
+        avgWeight: avgWeight,
+        volume: volume,
+        estimatedOneRM: maxOneRM,
+      );
+    }).toList();
   }
 
   @override
@@ -260,6 +378,8 @@ class _TrainerMemberWorkoutStatsTabState
         children: [
           // 기간 선택
           _buildPeriodSelector(),
+          // 검색 및 필터 UI
+          _buildSearchAndFilter(),
           // 통계 내용
           Expanded(
             child: _buildContent(),
@@ -324,6 +444,103 @@ class _TrainerMemberWorkoutStatsTabState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchAndFilter() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Column(
+        children: [
+          // 검색 필드 - 자동완성 기능 추가
+          ExerciseAutocompleteField(
+            labelText: '운동 검색',
+            hintText: '운동 이름을 입력하세요...',
+            controller: _searchController,
+            onTextChanged: (text) {
+              setState(() {
+                _searchQuery = text;
+                _applyFilters();
+              });
+            },
+            onExerciseSelected: (exercise) {
+              setState(() {
+                _searchQuery = exercise.name;
+                _searchController.text = exercise.name;
+                _applyFilters();
+              });
+            },
+            prefixIcon: const Icon(
+              Icons.search,
+              color: Color(0xFF10B981),
+              size: 20,
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // 근육군 필터 (현재는 간단한 칩들로 구현)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildMuscleGroupChip('전체', null),
+                const SizedBox(width: 8),
+                _buildMuscleGroupChip('가슴', '가슴'),
+                const SizedBox(width: 8),
+                _buildMuscleGroupChip('등', '등'),
+                const SizedBox(width: 8),
+                _buildMuscleGroupChip('어깨', '어깨'),
+                const SizedBox(width: 8),
+                _buildMuscleGroupChip('팔', '팔'),
+                const SizedBox(width: 8),
+                _buildMuscleGroupChip('하체', '하체'),
+                const SizedBox(width: 8),
+                _buildMuscleGroupChip('코어', '코어'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMuscleGroupChip(String label, String? muscleGroup) {
+    final isSelected = _selectedMuscleGroup == muscleGroup;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedMuscleGroup = muscleGroup;
+          _applyFilters();
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? const Color(0xFF10B981).withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected 
+                ? const Color(0xFF10B981)
+                : Colors.grey.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            color: isSelected 
+                ? const Color(0xFF10B981)
+                : Colors.grey[700],
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
       ),
     );
   }
@@ -576,10 +793,10 @@ class _TrainerMemberWorkoutStatsTabState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withValues(alpha: 0.1),
+          color: Colors.grey[200]!,
           width: 1,
         ),
       ),
@@ -590,7 +807,7 @@ class _TrainerMemberWorkoutStatsTabState
             children: [
               Icon(
                 icon,
-                color: color,
+                color: Colors.grey[600],
                 size: 18,
               ),
               const SizedBox(width: 8),
@@ -612,8 +829,8 @@ class _TrainerMemberWorkoutStatsTabState
               children: [
                 TextSpan(
                   text: value,
-                  style: TextStyle(
-                    color: color,
+                  style: const TextStyle(
+                    color: Color(0xFF1F2937),
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'IBMPlexSansKR',
@@ -637,9 +854,55 @@ class _TrainerMemberWorkoutStatsTabState
   }
 
   Widget _buildDetailedExerciseStatsList() {
-    final exercises = _statsData!.exercises;
+    // 검색/필터가 적용된 운동 목록 사용
+    print('🏗️ _buildDetailedExerciseStatsList 호출됨');
+    print('   _filteredExercises 개수: ${_filteredExercises.length}');
+    print('   전체 exercises 개수: ${_statsData?.exercises.length ?? 0}');
+    print('   검색어: "$_searchQuery"');
+    print('   선택된 근육군: $_selectedMuscleGroup');
+    
+    // build 메서드에서 직접 필터링 로직 실행 (setState 없이)
+    List<ExerciseStats> exercises = _statsData?.exercises ?? [];
+    
+    // 검색어 필터 적용
+    if (_searchQuery.isNotEmpty) {
+      exercises = exercises.where((exercise) {
+        return exercise.exerciseName.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+      print('🔎 검색 후 결과: ${exercises.length}개');
+    }
+    
+    // 근육군 필터 적용
+    if (_selectedMuscleGroup != null && _selectedMuscleGroup!.isNotEmpty) {
+      exercises = exercises.where((exercise) {
+        final exerciseName = exercise.exerciseName.toLowerCase();
+        final muscleGroup = _selectedMuscleGroup!.toLowerCase();
+        
+        bool matches = false;
+        if (muscleGroup == '가슴' && (exerciseName.contains('벤치') || exerciseName.contains('체스트') || exerciseName.contains('푸시업'))) {
+          matches = true;
+        } else if (muscleGroup == '등' && (exerciseName.contains('풀업') || exerciseName.contains('데드') || exerciseName.contains('로우') || exerciseName.contains('랫풀'))) {
+          matches = true;
+        } else if (muscleGroup == '어깨' && (exerciseName.contains('숄더') || exerciseName.contains('프레스') || exerciseName.contains('레이즈'))) {
+          matches = true;
+        } else if (muscleGroup == '팔' && (exerciseName.contains('컬') || exerciseName.contains('트라이셉') || exerciseName.contains('딥스'))) {
+          matches = true;
+        } else if (muscleGroup == '하체' && (exerciseName.contains('스쿼트') || exerciseName.contains('레그') || exerciseName.contains('런지'))) {
+          matches = true;
+        } else if (muscleGroup == '코어' && (exerciseName.contains('플랭크') || exerciseName.contains('크런치') || exerciseName.contains('싯업'))) {
+          matches = true;
+        }
+        return matches;
+      }).toList();
+      print('💪 근육군 필터 후 결과: ${exercises.length}개');
+    }
+    
+    print('   최종 사용할 exercises 개수: ${exercises.length}');
     
     if (exercises.isEmpty) {
+      // 검색 결과가 없는 경우와 전체 데이터가 없는 경우 구분
+      final hasSearchOrFilter = _searchQuery.isNotEmpty || _selectedMuscleGroup != null;
+      
       return Container(
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(32),
@@ -654,14 +917,38 @@ class _TrainerMemberWorkoutStatsTabState
             ),
           ],
         ),
-        child: const Center(
-          child: Text(
-            '운동 데이터가 없습니다',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              fontFamily: 'IBMPlexSansKR',
-            ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                hasSearchOrFilter ? Icons.search_off : Icons.fitness_center_outlined,
+                size: 64,
+                color: const Color(0xFF10B981).withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                hasSearchOrFilter 
+                    ? '검색 결과가 없습니다'
+                    : '운동 데이터가 없습니다',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+              if (hasSearchOrFilter) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '다른 검색어나 필터를 시도해보세요',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       );
@@ -820,10 +1107,10 @@ class _TrainerMemberWorkoutStatsTabState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withValues(alpha: 0.1),
+          color: Colors.grey[200]!,
           width: 1,
         ),
       ),
@@ -835,7 +1122,7 @@ class _TrainerMemberWorkoutStatsTabState
               Icon(
                 icon,
                 size: 16,
-                color: color,
+                color: Colors.grey[600],
               ),
               const SizedBox(width: 6),
               Text(
@@ -851,10 +1138,10 @@ class _TrainerMemberWorkoutStatsTabState
           const SizedBox(height: 8),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: color,
+              color: Color(0xFF1F2937),
               fontFamily: 'IBMPlexSansKR',
             ),
           ),
@@ -887,10 +1174,8 @@ class _TrainerMemberWorkoutStatsTabState
           ],
         ),
         const SizedBox(height: 12),
-        Container(
-          height: 60,
-          child: _buildAdvancedMiniChart(exercise),
-        ),
+        // 차트 탭 메뉴
+        _buildChartTabs(exercise),
       ],
     );
   }
@@ -906,17 +1191,131 @@ class _TrainerMemberWorkoutStatsTabState
     return Icons.fitness_center;
   }
   
-  Widget _buildAdvancedMiniChart(ExerciseStats exercise) {
+  ChartType _selectedChartType = ChartType.maxWeight;
+  
+  Widget _buildChartTabs(ExerciseStats exercise) {
+    return Column(
+      children: [
+        // 탭 메뉴
+        Row(
+          children: ChartType.values.map((type) {
+            final isSelected = _selectedChartType == type;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedChartType = type),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: isSelected ? type.color.withOpacity(0.1) : Colors.grey[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected ? type.color : Colors.grey[300]!,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        type.icon,
+                        size: 14,
+                        color: isSelected ? type.color : Colors.grey[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        type.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          color: isSelected ? type.color : Colors.grey[600],
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 12),
+        // 차트
+        Container(
+          height: 120,
+          child: _buildAdvancedChart(exercise, _selectedChartType),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildAdvancedChart(ExerciseStats exercise, ChartType chartType) {
     if (exercise.progressData.isEmpty) {
       return Container(
-        height: 60,
+        height: 120,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                chartType.icon,
+                size: 32,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '데이터 없음',
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 데이터 준비
+    late List<FlSpot> spots;
+    late String unit;
+    
+    switch (chartType) {
+      case ChartType.maxWeight:
+        spots = exercise.progressData.asMap().entries.map((entry) {
+          return FlSpot(entry.key.toDouble(), entry.value.maxWeight);
+        }).toList();
+        unit = 'kg';
+        break;
+      case ChartType.oneRM:
+        spots = exercise.progressData.asMap().entries.map((entry) {
+          return FlSpot(entry.key.toDouble(), entry.value.estimatedOneRM);
+        }).toList();
+        unit = 'kg';
+        break;
+      case ChartType.volume:
+        spots = exercise.progressData.asMap().entries.map((entry) {
+          return FlSpot(entry.key.toDouble(), entry.value.volume / 1000); // K단위로 변환
+        }).toList();
+        unit = 'K';
+        break;
+    }
+    
+    if (spots.isEmpty || spots.every((spot) => spot.y == 0)) {
+      return Container(
+        height: 120,
         decoration: BoxDecoration(
           color: Colors.grey[100],
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
           child: Text(
-            '데이터 없음',
+            '${chartType.label} 데이터 없음',
             style: TextStyle(
               color: Colors.grey[500],
               fontSize: 12,
@@ -927,44 +1326,113 @@ class _TrainerMemberWorkoutStatsTabState
       );
     }
 
-    final spots = exercise.progressData.asMap().entries.map((entry) {
-      return FlSpot(entry.key.toDouble(), entry.value.maxWeight);
-    }).toList();
+    final minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    final maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    final range = maxY - minY;
+    
+    // 패딩 계산 및 음수 방지
+    final padding = range > 0 ? range * 0.1 : 1.0; // 최소 1.0 패딩
+    final calculatedMinY = minY - padding;
+    final safeMinY = calculatedMinY < 0 ? 0.0 : calculatedMinY; // 음수 방지
+    final safeMaxY = maxY + padding;
 
     return Container(
-      height: 60,
-      padding: const EdgeInsets.all(4),
+      height: 120,
+      padding: const EdgeInsets.all(8),
       child: LineChart(
         LineChartData(
-          gridData: const FlGridData(show: false),
-          titlesData: const FlTitlesData(show: false),
-          borderData: FlBorderData(show: false),
+          gridData: FlGridData(
+            show: true,
+            drawHorizontalLine: true,
+            drawVerticalLine: false,
+            horizontalInterval: (safeMaxY - safeMinY) > 0 ? (safeMaxY - safeMinY) / 3 : 1,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: Colors.grey[300]!,
+                strokeWidth: 0.5,
+              );
+            },
+          ),
+          titlesData: FlTitlesData(
+            show: true,
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 35,
+                interval: (safeMaxY - safeMinY) > 0 ? (safeMaxY - safeMinY) / 3 : 1,
+                getTitlesWidget: (value, meta) {
+                  return Text(
+                    '${value.toStringAsFixed(0)}$unit',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey[600],
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          borderData: FlBorderData(
+            show: true,
+            border: Border(
+              left: BorderSide(color: Colors.grey[300]!, width: 1),
+              bottom: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+          ),
           minX: 0,
           maxX: spots.length > 1 ? (spots.length - 1).toDouble() : 1,
-          minY: spots.map((s) => s.y).reduce((a, b) => a < b ? a : b) * 0.95,
-          maxY: spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) * 1.05,
+          minY: safeMinY,
+          maxY: safeMaxY,
           lineBarsData: [
             LineChartBarData(
               spots: spots,
               isCurved: true,
-              color: const Color(0xFF10B981),
-              barWidth: 2,
+              color: chartType.color,
+              barWidth: 2.5,
               isStrokeCapRound: true,
               dotData: FlDotData(
                 show: true,
-                getDotPainter: (spot, percent, barData, index) =>
-                    FlDotCirclePainter(
-                  radius: 3,
-                  color: const Color(0xFF10B981),
-                  strokeWidth: 0,
-                ),
+                getDotPainter: (spot, percent, barData, index) {
+                  return FlDotCirclePainter(
+                    radius: 4,
+                    color: chartType.color,
+                    strokeWidth: 2,
+                    strokeColor: Colors.white,
+                  );
+                },
               ),
               belowBarData: BarAreaData(
                 show: true,
-                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                color: chartType.color.withOpacity(0.1),
               ),
             ),
           ],
+          // 점 위에 값 표시
+          lineTouchData: LineTouchData(
+            enabled: true,
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (touchedSpot) => chartType.color.withOpacity(0.9),
+              tooltipRoundedRadius: 8,
+              tooltipPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                return touchedBarSpots.map((barSpot) {
+                  return LineTooltipItem(
+                    '${barSpot.y.toStringAsFixed(1)}$unit',
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                  );
+                }).toList();
+              },
+            ),
+          ),
         ),
       ),
     );

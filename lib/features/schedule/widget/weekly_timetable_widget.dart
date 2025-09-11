@@ -187,7 +187,9 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
               builder: (context, constraints) {
                 final timeColumnWidth = _isCompactMode ? 50.0 : 60.0;
                 final headerHeight = 50.0;
-                final cellWidth = _isCompactMode ? 90.0 : 120.0;
+                // 화면 너비에서 시간 컬럼을 제외한 나머지를 7일로 나누어 계산
+                final availableWidth = MediaQuery.of(context).size.width - timeColumnWidth - 32; // 패딩 제외
+                final cellWidth = (availableWidth / 7).clamp(80.0, 120.0); // 최소 80, 최대 120
                 final rowHeight = _isCompactMode ? 60.0 : 80.0;
                 
                 return Stack(

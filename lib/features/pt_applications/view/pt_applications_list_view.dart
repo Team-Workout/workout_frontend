@@ -37,7 +37,7 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
     _isTrainer = widget.isTrainerView ?? (user?.userType == UserType.trainer);
     
     return Scaffold(
-      appBar: AppBar(
+      appBar: _isTrainer ? null : AppBar(
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -79,7 +79,9 @@ class _PtApplicationsListViewState extends ConsumerState<PtApplicationsListView>
             Expanded(
               child: applicationsAsync.when(
                 loading: () => const Center(
-                  child: CircularProgressIndicator(),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                  ),
                 ),
                 error: (error, stackTrace) => Center(
                   child: Column(

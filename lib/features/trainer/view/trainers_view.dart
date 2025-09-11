@@ -110,7 +110,9 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
 
           return _buildGridTrainerView(displayTrainers);
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          )),
         error: (error, stack) => Center(
           child: Text('Error: $error'),
         ),
@@ -253,12 +255,12 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                 ),
               ),
 
-              // 하단 정보 (바텀시트 - 이미지 절반 높이)
+              // 하단 정보 (바텀시트 - 높이 증가 및 스크롤 가능)
               Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: 125, // 높이 조금 낮춤
+                height: 120, // 높이 증가
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -277,46 +279,66 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(12)),
                   ),
-                  padding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      // 이름 (전문분야 유무에 따라 크기 조정)
-                      Text(
-                        trainer.name,
-                        style: TextStyle(
-                          fontSize: trainer.specialties.isNotEmpty ? 18 : 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'IBMPlexSansKR',
-                          shadows: const [
-                            Shadow(
-                              offset: Offset(0, 1),
-                              blurRadius: 3,
-                              color: Colors.black54,
-                            ),
-                          ],
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: trainer.specialties.isNotEmpty ? 6 : 8),
-
-                      // 전문 분야 줄글 (해시태그 없이)
-                      if (trainer.specialties.isNotEmpty)
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 이름
                         Text(
-                          trainer.specialties.take(3).join(', '),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.white.withOpacity(0.9),
-                            fontWeight: FontWeight.w500,
+                          trainer.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                             fontFamily: 'IBMPlexSansKR',
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 1),
+                                blurRadius: 3,
+                                color: Colors.black54,
+                              ),
+                            ],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                    ],
+                        const SizedBox(height: 8),
+
+                        // 전문 분야 해시태그
+                        if (trainer.specialties.isNotEmpty)
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: trainer.specialties.take(4).map((specialty) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  '#$specialty',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -498,18 +520,36 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                           ),
                           const SizedBox(height: 8),
 
-                          // 전문 분야 줄글 (해시태그 없이)
+                          // 전문 분야 해시태그
                           if (trainer.specialties.isNotEmpty)
-                            Text(
-                              trainer.specialties.join(', '),
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white.withOpacity(0.9),
-                                fontWeight: FontWeight.w500,
-                                fontFamily: 'IBMPlexSansKR',
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: trainer.specialties.map((specialty) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '#$specialty',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white.withOpacity(0.95),
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           const SizedBox(height: 8),
 

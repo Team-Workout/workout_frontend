@@ -12,6 +12,8 @@ import '../../body_composition/model/body_composition_model.dart';
 import '../../body_composition/viewmodel/body_composition_viewmodel.dart';
 import '../../workout/widget/trainer_member_workout_stats_tab.dart';
 import '../../workout/view/trainer_routine_create_view.dart';
+import '../model/member_routine_models.dart';
+import '../repository/trainer_client_repository.dart';
 
 class TrainerClientDetailView extends ConsumerStatefulWidget {
   final TrainerClient client;
@@ -165,34 +167,42 @@ class _TrainerClientDetailViewState
   }
 
   Widget _buildMemberHeader() {
-    return FutureBuilder<String?>(
-      future: widget.client.profileImageUrl != null &&
-              widget.client.profileImageUrl!.isNotEmpty
-          ? ImageCacheManager().getCachedImage(
-              imageUrl: widget.client.profileImageUrl!,
-              cacheKey: 'member_${widget.client.memberId}',
-              type: ImageType.profile,
-            )
-          : Future.value(null),
-      builder: (context, snapshot) {
-        return Container(
-          color: Colors.white,
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.blue[100],
-                backgroundImage: snapshot.hasData && snapshot.data != null
-                    ? FileImage(File(snapshot.data!))
-                    : null,
-                child: snapshot.hasData && snapshot.data != null
-                    ? null
-                    : Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.blue[600],
-                      ),
+    final hasProfileImage = widget.client.profileImageUrl != null && 
+                            widget.client.profileImageUrl!.isNotEmpty;
+    
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+            child: hasProfileImage
+                ? ClipOval(
+                    child: Image.network(
+                      widget.client.profileImageUrl!.startsWith('/')
+                          ? 'http://211.220.34.173${widget.client.profileImageUrl}'
+                          : widget.client.profileImageUrl!.startsWith('http')
+                          ? widget.client.profileImageUrl!
+                          : 'http://211.220.34.173/images/${widget.client.profileImageUrl}',
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.person,
+                          size: 48,
+                          color: const Color(0xFF10B981).withOpacity(0.7),
+                        );
+                      },
+                    ),
+                  )
+                : Icon(
+                    Icons.person,
+                    size: 48,
+                    color: const Color(0xFF10B981).withOpacity(0.7),
+                  ),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -204,14 +214,6 @@ class _TrainerClientDetailViewState
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.client.email ?? '이메일 정보 없음',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -240,31 +242,14 @@ class _TrainerClientDetailViewState
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          widget.client.gymName,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[500],
-                          ),
-                        ),
                       ],
                     ),
                   ],
                 ),
               ),
-              Text(
-                '$_startDate\n~\n$_endDate',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildBodyCompositionTab() {
@@ -351,7 +336,11 @@ class _TrainerClientDetailViewState
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+        ),
+      ),
       error: (error, stack) => _buildPrivacyErrorView(
         icon: Icons.analytics_outlined,
         title: '체성분 데이터를 확인할 수 없습니다',
@@ -577,7 +566,11 @@ class _TrainerClientDetailViewState
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+        ),
+      ),
       error: (error, stack) => _buildPrivacyErrorView(
         icon: Icons.photo_outlined,
         title: '몸 사진을 확인할 수 없습니다',
@@ -866,53 +859,275 @@ class _TrainerClientDetailViewState
               ),
             ),
           ),
-          // 기존 루틴 목록 (향후 구현 가능)
+          // 회원 루틴 목록
           Expanded(
-            child: Center(
+            child: _buildMemberRoutinesList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemberRoutinesList() {
+    final repository = ref.watch(trainerClientRepositoryProvider);
+    
+    return FutureBuilder<MemberRoutineResponse>(
+      future: repository.getMemberRoutines(memberId: widget.client.memberId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+            ),
+          );
+        }
+        
+        if (snapshot.hasError) {
+          print('❌ 루틴 로드 에러: ${snapshot.error}');
+          return _buildEmptyRoutinesView();
+        }
+        
+        if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
+          return _buildEmptyRoutinesView();
+        }
+        
+        final routines = snapshot.data!.data;
+        
+        return RefreshIndicator(
+          color: const Color(0xFF10B981),
+          onRefresh: () async {
+            setState(() {});
+          },
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: routines.length,
+            itemBuilder: (context, index) {
+              final routine = routines[index];
+              return _buildRoutineCard(routine);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyRoutinesView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.fitness_center_outlined,
+              size: 64,
+              color: Color(0xFF10B981),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            '${widget.client.name}님을 위한 루틴',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '아직 등록된 루틴이 없습니다\n위의 버튼을 눌러 새로운 루틴을 만들어보세요',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              fontFamily: 'IBMPlexSansKR',
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoutineCard(MemberRoutine routine) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 루틴 헤더
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.fitness_center,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        routine.routineName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      if (routine.description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          routine.description,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // 루틴 정보
+            Row(
+              children: [
+                _buildRoutineInfoChip(
+                  Icons.fitness_center_outlined,
+                  '${routine.totalExercises}개 운동',
+                  const Color(0xFF3B82F6),
+                ),
+                const SizedBox(width: 12),
+                _buildRoutineInfoChip(
+                  Icons.format_list_numbered,
+                  '${routine.totalSets}세트',
+                  const Color(0xFF8B5CF6),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+            
+            // 운동 목록 미리보기
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Icon(
-                      Icons.fitness_center_outlined,
-                      size: 64,
-                      color: const Color(0xFF10B981),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
                   Text(
-                    '${widget.client.name}님을 위한 루틴',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      fontFamily: 'IBMPlexSansKR',
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '위의 버튼을 눌러 새로운 루틴을 만들어보세요',
+                    '포함된 운동',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
                       fontFamily: 'IBMPlexSansKR',
                     ),
-                    textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 8),
+                  ...routine.routineExercises.take(3).map((exercise) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '${exercise.order}. ${exercise.exerciseName} (${exercise.routineSets.length}세트)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  )),
+                  if (routine.routineExercises.length > 3)
+                    Text(
+                      '...외 ${routine.routineExercises.length - 3}개 운동',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[500],
+                        fontStyle: FontStyle.italic,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoutineInfoChip(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+              fontFamily: 'IBMPlexSansKR',
             ),
           ),
         ],
       ),
     );
   }
+
 
   void _navigateToCreateRoutine() {
     Navigator.push(

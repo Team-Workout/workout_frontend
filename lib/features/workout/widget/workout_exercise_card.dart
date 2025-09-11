@@ -32,7 +32,7 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -45,7 +45,7 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
         children: [
           // 헤더 부분 (항상 보이는 부분)
           _buildHeader(),
-          
+
           // 펼쳐진 내용
           if (widget.isExpanded) _buildExpandedContent(),
         ],
@@ -88,7 +88,7 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
               ),
             ),
             const SizedBox(width: 8),
-            
+
             // 운동명
             Expanded(
               child: GestureDetector(
@@ -98,7 +98,8 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
@@ -118,13 +119,13 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
                 ),
               ),
             ),
-            
+
             // 펼침/접힘 아이콘
             Icon(
               widget.isExpanded ? Icons.expand_less : Icons.expand_more,
               color: NotionColors.gray600,
             ),
-            
+
             // 삭제 버튼
             const SizedBox(width: 8),
             GestureDetector(
@@ -160,7 +161,8 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
             labelText: '운동 이름',
             hintText: '운동 이름을 입력하세요',
             onExerciseSelected: (selectedExercise) {
-              print('Selected exercise for workout record: ${selectedExercise.name}');
+              print(
+                  'Selected exercise for workout record: ${selectedExercise.name}');
             },
             onTextChanged: (value) {
               setState(() {}); // UI 업데이트
@@ -248,7 +250,8 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -267,12 +270,13 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // 세트 목록
           ...List.generate(
             widget.exercise.sets.length,
             (setIndex) {
-              print('🔧 WorkoutExerciseCard generating WorkoutSetInput for setIndex: $setIndex');
+              print(
+                  '🔧 WorkoutExerciseCard generating WorkoutSetInput for setIndex: $setIndex');
               return WorkoutSetInput(
                 exercise: widget.exercise,
                 setIndex: setIndex,

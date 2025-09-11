@@ -219,7 +219,9 @@ class _TrainerClientsListViewState
                             _searchQuery.isEmpty) {
                           return const Padding(
                             padding: EdgeInsets.all(16),
-                            child: Center(child: CircularProgressIndicator()),
+                            child: Center(child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                            )),
                           );
                         }
                         return const SizedBox.shrink();
@@ -231,7 +233,9 @@ class _TrainerClientsListViewState
                   ),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+              )),
               error: (error, stack) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -276,32 +280,9 @@ class _TrainerClientsListViewState
   }
 
   Widget _buildClientCard(TrainerClient client) {
-    return FutureBuilder<String?>(
-      future:
-          client.profileImageUrl != null && client.profileImageUrl!.isNotEmpty
-              ? ImageCacheManager()
-                  .getCachedImage(
-                  imageUrl: client.profileImageUrl!,
-                  cacheKey: 'member_${client.memberId}',
-                  type: ImageType.profile,
-                )
-                  .catchError((error) {
-                  // 이미지 로딩 실패 시 null 반환
-                  print('프로필 이미지 로딩 실패: $error');
-                  return null;
-                })
-              : Future.value(null),
-      builder: (context, snapshot) {
-        // 이미지 로딩 상태 확인
-        final hasValidImage =
-            snapshot.connectionState == ConnectionState.done &&
-                !snapshot.hasError &&
-                snapshot.hasData &&
-                snapshot.data != null &&
-                File(snapshot.data!).existsSync();
-        final isGenderMale = client.gender == 'MALE';
-        final genderColor =
-            isGenderMale ? const Color(0xFF3B82F6) : const Color(0xFFEC4899);
+    final isGenderMale = client.gender == 'MALE';
+    final genderColor = isGenderMale ? const Color(0xFF3B82F6) : const Color(0xFFEC4899);
+    final hasProfileImage = client.profileImageUrl != null && client.profileImageUrl!.isNotEmpty;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
@@ -342,31 +323,32 @@ class _TrainerClientsListViewState
                             Container(
                               child: CircleAvatar(
                                 radius: 32,
-                                backgroundColor:
-                                    const Color(0xFF10B981).withOpacity(0.1),
-                                backgroundImage: hasValidImage
-                                    ? FileImage(File(snapshot.data!))
-                                    : null,
-                                child: hasValidImage
-                                    ? null
-                                    : snapshot.connectionState ==
-                                            ConnectionState.waiting
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                      Color(0xFF10B981)),
-                                            ),
-                                          )
-                                        : Icon(
-                                            Icons.person,
-                                            size: 36,
-                                            color: const Color(0xFF10B981)
-                                                .withOpacity(0.7),
-                                          ),
+                                backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+                                child: hasProfileImage
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          client.profileImageUrl!.startsWith('/')
+                                              ? 'http://211.220.34.173${client.profileImageUrl}'
+                                              : client.profileImageUrl!.startsWith('http')
+                                              ? client.profileImageUrl!
+                                              : 'http://211.220.34.173/images/${client.profileImageUrl}',
+                                          width: 64,
+                                          height: 64,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Icon(
+                                              Icons.person,
+                                              size: 36,
+                                              color: const Color(0xFF10B981).withOpacity(0.7),
+                                            );
+                                          },
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.person,
+                                        size: 36,
+                                        color: const Color(0xFF10B981).withOpacity(0.7),
+                                      ),
                               ),
                             ),
                           ],
@@ -486,7 +468,5 @@ class _TrainerClientsListViewState
             ),
           ),
         );
-      },
-    );
   }
 }

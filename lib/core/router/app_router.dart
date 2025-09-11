@@ -5,8 +5,12 @@ import 'package:pt_service/screens/splash_screen.dart';
 import 'package:pt_service/features/auth/view/login_view.dart';
 import 'package:pt_service/features/auth/view/signup_view.dart';
 import 'package:pt_service/features/dashboard/view/trainer_main_view.dart';
+import 'package:pt_service/features/dashboard/view/trainer_dashboard_view.dart';
 import 'package:pt_service/features/dashboard/view/member_dashboard_view.dart';
 import 'package:pt_service/features/dashboard/view/manager_dashboard_view.dart';
+import 'package:pt_service/features/pt/view/trainer_pt_main_view.dart';
+import 'package:pt_service/features/reservation/view/trainer_reservation_main_view.dart';
+import 'package:pt_service/features/settings/view/trainer_settings_view.dart';
 import '../../shared/widgets/app_scaffold_with_nav.dart';
 import 'package:pt_service/features/workout/view/workout_record_view.dart';
 import 'package:pt_service/features/report/view/analysis_report_view.dart';
@@ -86,9 +90,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/signup',
         builder: (context, state) => const SignupView(),
       ),
-      GoRoute(
-        path: '/trainer-dashboard',
-        builder: (context, state) => const TrainerMainView(),
+      // Trainer Shell Route with Bottom Navigation
+      ShellRoute(
+        builder: (context, state, child) {
+          return TrainerMainView(child: child);
+        },
+        routes: [
+          GoRoute(
+            path: '/trainer-dashboard',
+            builder: (context, state) => const TrainerDashboardView(),
+          ),
+          GoRoute(
+            path: '/trainer-pt-main',
+            builder: (context, state) => const TrainerPTMainView(),
+          ),
+          GoRoute(
+            path: '/trainer-reservation-main',
+            builder: (context, state) => const TrainerReservationMainView(),
+          ),
+          GoRoute(
+            path: '/trainer-settings',
+            builder: (context, state) => const TrainerSettingsView(),
+          ),
+          GoRoute(
+            path: '/pt-applications',
+            builder: (context, state) => const PtApplicationsListView(
+              isTrainerView: true,
+            ),
+          ),
+          GoRoute(
+            path: '/pt-offerings',
+            builder: (context, state) => const PtOfferingsListView(),
+          ),
+          GoRoute(
+            path: '/pt-schedule',
+            builder: (context, state) => const PTScheduleView(
+              isDirectAccess: false, // ShellRoute 내에서는 직접 접근이 아님
+            ),
+          ),
+          GoRoute(
+            path: '/pt-offerings/create',
+            builder: (context, state) => const PtOfferingCreateView(),
+          ),
+          GoRoute(
+            path: '/trainer-profile-edit',
+            builder: (context, state) => const TrainerProfileEditView(),
+          ),
+        ],
       ),
       // Member Shell Route with Bottom Navigation
       ShellRoute(
@@ -141,10 +189,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/pt-schedule',
         builder: (context, state) => const PTScheduleView(),
-      ),
-      GoRoute(
-        path: '/trainer-profile-edit',
-        builder: (context, state) => const TrainerProfileEditView(),
       ),
       GoRoute(
         path: '/gym-trainers/:gymId',
@@ -270,26 +314,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/my-appointment-requests',
         builder: (context, state) => const MyAppointmentRequestsView(),
-      ),
-      GoRoute(
-        path: '/pt-applications',
-        builder: (context, state) => const PtApplicationsListView(
-          isTrainerView: true, // 트레이너용 뷰로 설정
-        ),
-      ),
-      GoRoute(
-        path: '/pt-offerings',
-        builder: (context, state) => const PtOfferingsListView(),
-      ),
-      GoRoute(
-        path: '/pt-schedule',
-        builder: (context, state) => const PTScheduleView(
-          isDirectAccess: true, // 직접 접근임을 표시
-        ),
-      ),
-      GoRoute(
-        path: '/trainer-settings',
-        builder: (context, state) => const SettingsView(),
       ),
     ],
   );

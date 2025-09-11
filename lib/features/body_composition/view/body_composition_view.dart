@@ -148,7 +148,11 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+            ),
+          ),
           error: (error, _) => Center(
             child: Text('Error: $error'),
           ),
@@ -1655,7 +1659,9 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
             loading: () => const Center(
               child: Padding(
                 padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                ),
               ),
             ),
             error: (error, _) => Container(

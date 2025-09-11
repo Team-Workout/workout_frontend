@@ -92,7 +92,9 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
         ),
         backgroundColor: Colors.grey.shade50,
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+              ))
             : _errorMessage != null
                 ? _buildErrorState()
                 : _routine != null

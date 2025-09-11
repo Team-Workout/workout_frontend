@@ -5,8 +5,8 @@ import '../model/trainer_profile_model.dart';
 import '../repository/trainer_profile_repository.dart';
 
 final trainerProfileRepositoryProvider = Provider<TrainerProfileRepository?>((ref) {
-  final apiService = ref.watch(apiServiceProvider);
-  final currentUser = ref.watch(currentUserProvider);
+  final apiService = ref.watch(apiServiceProvider); 
+  final currentUser = ref.read(currentUserProvider); // 사용자는 read로 유지
   
   // 현재 로그인한 사용자가 없으면 null 반환
   if (currentUser == null) return null;

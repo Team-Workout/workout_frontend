@@ -984,19 +984,19 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ElevatedButton(
+                      child: OutlinedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
                           ref.read(authStateProvider).logout();
                           context.go('/login');
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.grey),
                         ),
                         child: const Text(
                           '로그아웃',
                           style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.w600),
+                              color: Colors.black87, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),

@@ -39,7 +39,11 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF10B981), Color(0xFF34D399), Color(0xFF6EE7B7)],
+                colors: [
+                  Color(0xFF10B981),
+                  Color(0xFF34D399),
+                  Color(0xFF6EE7B7)
+                ],
               ),
             ),
           ),
@@ -58,6 +62,105 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
           centerTitle: true,
         ),
         body: contractsState.when(
+          data: (response) {
+            if (response == null || response.data.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.assignment_outlined,
+                          size: 48,
+                          color:
+                              const Color(0xFF10B981).withValues(alpha: 0.7)),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'PT 계약이 없습니다',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF64748B),
+                        fontFamily: 'IBMPlexSansKR',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'PT를 시작하려면 트레이너를 찾아보세요!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              color: const Color(0xFF10B981),
+              backgroundColor: Colors.white,
+              onRefresh: () async {
+                await ref
+                    .read(ptContractViewModelProvider.notifier)
+                    .loadMyContracts();
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: response.data.length,
+                itemBuilder: (context, index) {
+                  final contract = response.data[index];
+                  return _ContractCard(
+                    contract: contract,
+                    onTap: () => _showContractDetail(contract),
+                  );
+                },
+              ),
+            );
+          },
+          loading: () => const Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFF10B981),
+              strokeWidth: 3,
+            ),
+          ),
+          error: (error, _) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  error.toString(),
+                  style: const TextStyle(fontSize: 16, color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                NotionButton(
+                  onPressed: () {
+                    ref
+                        .read(ptContractViewModelProvider.notifier)
+                        .loadMyContracts();
+                  },
+                  text: '다시 시도',
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 멤버인 경우 Container로 반환 (기존 코드)
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      child: contractsState.when(
         data: (response) {
           if (response == null || response.data.isEmpty) {
             return Center(
@@ -70,11 +173,9 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
                       color: const Color(0xFF10B981).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      Icons.assignment_outlined, 
-                      size: 48, 
-                      color: const Color(0xFF10B981).withValues(alpha: 0.7)
-                    ),
+                    child: Icon(Icons.assignment_outlined,
+                        size: 48,
+                        color: const Color(0xFF10B981).withValues(alpha: 0.7)),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -104,7 +205,9 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
             color: const Color(0xFF10B981),
             backgroundColor: Colors.white,
             onRefresh: () async {
-              await ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
+              await ref
+                  .read(ptContractViewModelProvider.notifier)
+                  .loadMyContracts();
             },
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -139,7 +242,9 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
               const SizedBox(height: 16),
               NotionButton(
                 onPressed: () {
-                  ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
+                  ref
+                      .read(ptContractViewModelProvider.notifier)
+                      .loadMyContracts();
                 },
                 text: '다시 시도',
               ),
@@ -149,102 +254,6 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
       ),
     );
   }
-
-  // 멤버인 경우 Container로 반환 (기존 코드)
-  return Container(
-    color: const Color(0xFFF8F9FA),
-    child: contractsState.when(
-      data: (response) {
-        if (response == null || response.data.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.assignment_outlined, 
-                    size: 48, 
-                    color: const Color(0xFF10B981).withValues(alpha: 0.7)
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'PT 계약이 없습니다',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF64748B),
-                    fontFamily: 'IBMPlexSansKR',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'PT를 시작하려면 트레이너를 찾아보세요!',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          color: const Color(0xFF10B981),
-          backgroundColor: Colors.white,
-          onRefresh: () async {
-            await ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
-          },
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: response.data.length,
-            itemBuilder: (context, index) {
-              final contract = response.data[index];
-              return _ContractCard(
-                contract: contract,
-                onTap: () => _showContractDetail(contract),
-              );
-            },
-          ),
-        );
-      },
-      loading: () => const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF10B981),
-          strokeWidth: 3,
-        ),
-      ),
-      error: (error, _) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(
-              error.toString(),
-              style: const TextStyle(fontSize: 16, color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            NotionButton(
-              onPressed: () {
-                ref.read(ptContractViewModelProvider.notifier).loadMyContracts();
-              },
-              text: '다시 시도',
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
 
   void _showContractDetail(PtContract contract) {
     showModalBottomSheet(
@@ -301,9 +310,12 @@ class _ContractCard extends StatelessWidget {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: isActive 
-                            ? [const Color(0xFF10B981), const Color(0xFF34D399)]
-                            : [Colors.grey[400]!, Colors.grey[500]!],
+                          colors: isActive
+                              ? [
+                                  const Color(0xFF10B981),
+                                  const Color(0xFF34D399)
+                                ]
+                              : [Colors.grey[400]!, Colors.grey[500]!],
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -340,7 +352,8 @@ class _ContractCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -361,9 +374,9 @@ class _ContractCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // 정보 섹션
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -401,7 +414,7 @@ class _ContractCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 if (contract.startDate != null) ...[
                   const SizedBox(height: 12),
                   Row(
@@ -423,15 +436,16 @@ class _ContractCard extends StatelessWidget {
                     ],
                   ),
                 ],
-                
+
                 const SizedBox(height: 16),
-                
+
                 // 액션 섹션
                 Row(
                   children: [
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -469,9 +483,9 @@ class _ContractCard extends StatelessWidget {
 
   String _formatPrice(int price) {
     return price.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 }
 
@@ -551,7 +565,7 @@ class _ContractDetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isActive = contract.status == 'ACTIVE';
     final statusColor = isActive ? const Color(0xFF10B981) : Colors.grey[600]!;
-    
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: const BoxDecoration(
@@ -573,7 +587,7 @@ class _ContractDetailSheet extends ConsumerWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -585,9 +599,9 @@ class _ContractDetailSheet extends ConsumerWidget {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: isActive 
-                          ? [const Color(0xFF10B981), const Color(0xFF34D399)]
-                          : [Colors.grey[400]!, Colors.grey[500]!],
+                        colors: isActive
+                            ? [const Color(0xFF10B981), const Color(0xFF34D399)]
+                            : [Colors.grey[400]!, Colors.grey[500]!],
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -632,7 +646,8 @@ class _ContractDetailSheet extends ConsumerWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
@@ -654,9 +669,9 @@ class _ContractDetailSheet extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // 통계 카드들
                   Row(
                     children: [
@@ -681,7 +696,7 @@ class _ContractDetailSheet extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  
+
                   if (contract.price != null) ...[
                     const SizedBox(height: 16),
                     _StatsCard(
@@ -693,9 +708,9 @@ class _ContractDetailSheet extends ConsumerWidget {
                       isWide: true,
                     ),
                   ],
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // 상세 정보 섹션
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -722,11 +737,6 @@ class _ContractDetailSheet extends ConsumerWidget {
                             title: '시작일',
                             value: contract.startDate!,
                           ),
-                        _InfoRow(
-                          icon: Icons.assignment_outlined,
-                          title: '계약 ID',
-                          value: '#${contract.contractId}',
-                        ),
                       ],
                     ),
                   ),
@@ -739,12 +749,11 @@ class _ContractDetailSheet extends ConsumerWidget {
     );
   }
 
-
   String _formatPrice(int price) {
     return price.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 }
 
@@ -785,7 +794,8 @@ class _StatsCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: isWide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment:
+            isWide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
@@ -887,4 +897,3 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
-

@@ -26,6 +26,7 @@ mixin _$TrainerClient {
   String get name => throw _privateConstructorUsedError;
   String get gender => throw _privateConstructorUsedError;
   String? get email => throw _privateConstructorUsedError;
+  @JsonKey(name: 'profileUri')
   String? get profileImageUrl => throw _privateConstructorUsedError;
 
   /// Serializes this TrainerClient to a JSON map.
@@ -51,7 +52,7 @@ abstract class $TrainerClientCopyWith<$Res> {
       String name,
       String gender,
       String? email,
-      String? profileImageUrl});
+      @JsonKey(name: 'profileUri') String? profileImageUrl});
 }
 
 /// @nodoc
@@ -125,7 +126,7 @@ abstract class _$$TrainerClientImplCopyWith<$Res>
       String name,
       String gender,
       String? email,
-      String? profileImageUrl});
+      @JsonKey(name: 'profileUri') String? profileImageUrl});
 }
 
 /// @nodoc
@@ -192,7 +193,7 @@ class _$TrainerClientImpl extends _TrainerClient {
       required this.name,
       required this.gender,
       this.email,
-      this.profileImageUrl})
+      @JsonKey(name: 'profileUri') this.profileImageUrl})
       : super._();
 
   factory _$TrainerClientImpl.fromJson(Map<String, dynamic> json) =>
@@ -211,6 +212,7 @@ class _$TrainerClientImpl extends _TrainerClient {
   @override
   final String? email;
   @override
+  @JsonKey(name: 'profileUri')
   final String? profileImageUrl;
 
   @override
@@ -256,13 +258,14 @@ class _$TrainerClientImpl extends _TrainerClient {
 
 abstract class _TrainerClient extends TrainerClient {
   const factory _TrainerClient(
-      {required final int id,
-      required final int gymId,
-      required final String gymName,
-      required final String name,
-      required final String gender,
-      final String? email,
-      final String? profileImageUrl}) = _$TrainerClientImpl;
+          {required final int id,
+          required final int gymId,
+          required final String gymName,
+          required final String name,
+          required final String gender,
+          final String? email,
+          @JsonKey(name: 'profileUri') final String? profileImageUrl}) =
+      _$TrainerClientImpl;
   const _TrainerClient._() : super._();
 
   factory _TrainerClient.fromJson(Map<String, dynamic> json) =
@@ -281,6 +284,7 @@ abstract class _TrainerClient extends TrainerClient {
   @override
   String? get email;
   @override
+  @JsonKey(name: 'profileUri')
   String? get profileImageUrl;
 
   /// Create a copy of TrainerClient

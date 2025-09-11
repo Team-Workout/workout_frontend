@@ -227,7 +227,7 @@ class _EverytimeTimetableWidgetState extends State<EverytimeTimetableWidget> {
                             color: Colors.grey[50],
                             border: const Border(
                               right: BorderSide(
-                                  color: Color(0xFFE5E7EB), width: 1),
+                                  color: Color(0xFFD1D5DB), width: 1),
                             ),
                           ),
                           child: SingleChildScrollView(
@@ -240,7 +240,7 @@ class _EverytimeTimetableWidgetState extends State<EverytimeTimetableWidget> {
                                   decoration: const BoxDecoration(
                                     border: Border(
                                       bottom: BorderSide(
-                                          color: Color(0xFFE5E7EB), width: 0.5),
+                                          color: Color(0xFFD1D5DB), width: 0.5),
                                     ),
                                   ),
                                   child: Text(
@@ -278,7 +278,7 @@ class _EverytimeTimetableWidgetState extends State<EverytimeTimetableWidget> {
                                           decoration: const BoxDecoration(
                                             border: Border(
                                               bottom: BorderSide(
-                                                  color: Color(0xFFE5E7EB),
+                                                  color: Color(0xFFD1D5DB),
                                                   width: 0.5),
                                             ),
                                           ),
@@ -291,7 +291,7 @@ class _EverytimeTimetableWidgetState extends State<EverytimeTimetableWidget> {
                                                   border: Border(
                                                     right: BorderSide(
                                                         color:
-                                                            Color(0xFFE5E7EB),
+                                                            Color(0xFFD1D5DB),
                                                         width: 0.5),
                                                   ),
                                                 ),

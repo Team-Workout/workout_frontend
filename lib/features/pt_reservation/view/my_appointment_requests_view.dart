@@ -215,11 +215,15 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
               },
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          )),
           error: (error, stack) => _buildErrorState(error.toString()),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+      )),
       error: (error, stack) => _buildErrorState(error.toString()),
     );
   }
@@ -244,7 +248,9 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+      )),
       error: (error, stack) => _buildErrorState(error.toString()),
     );
   }

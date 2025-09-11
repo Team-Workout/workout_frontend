@@ -232,7 +232,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
             context.push('/workout-routine/${routine.id}');
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -265,19 +265,6 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                               fontFamily: 'IBMPlexSansKR',
                             ),
                           ),
-                          if (routine.description != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              routine.description!,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                                fontFamily: 'IBMPlexSansKR',
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -342,10 +329,10 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: const Color(0x00000000),
                     borderRadius: BorderRadius.circular(12),

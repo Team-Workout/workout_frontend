@@ -142,7 +142,9 @@ class _GymTrainersViewState extends ConsumerState<GymTrainersView> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(),
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                    ),
                     SizedBox(height: 16),
                     Text(
                       'Loading trainers...',

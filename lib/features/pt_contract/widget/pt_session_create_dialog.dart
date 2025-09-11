@@ -247,13 +247,20 @@ class _PtSessionCreateDialogState extends ConsumerState<PtSessionCreateDialog> {
         workoutLogs: _workoutLogs,
       );
 
+      // 1. PT 세션 생성
       await ref.read(ptContractViewModelProvider.notifier).createPtSession(sessionData);
+      
+      // 2. PT 약속 상태를 COMPLETED로 변경
+      await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
+        appointmentId: widget.appointmentId,
+        status: 'COMPLETED',
+      );
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('PT 세션이 성공적으로 기록되었습니다.'),
+            content: Text('PT 세션이 성공적으로 완료되었습니다.'),
             backgroundColor: Colors.green,
           ),
         );

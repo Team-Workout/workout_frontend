@@ -14,7 +14,7 @@ _$TrainerClientImpl _$$TrainerClientImplFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       gender: json['gender'] as String,
       email: json['email'] as String?,
-      profileImageUrl: json['profileImageUrl'] as String?,
+      profileImageUrl: json['profileUri'] as String?,
     );
 
 Map<String, dynamic> _$$TrainerClientImplToJson(_$TrainerClientImpl instance) =>
@@ -25,7 +25,7 @@ Map<String, dynamic> _$$TrainerClientImplToJson(_$TrainerClientImpl instance) =>
       'name': instance.name,
       'gender': instance.gender,
       'email': instance.email,
-      'profileImageUrl': instance.profileImageUrl,
+      'profileUri': instance.profileImageUrl,
     };
 
 _$TrainerClientResponseImpl _$$TrainerClientResponseImplFromJson(
