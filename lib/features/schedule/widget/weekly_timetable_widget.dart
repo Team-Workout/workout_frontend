@@ -28,7 +28,6 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
   late ScrollController _horizontalController;
   late ScrollController _verticalController;
   late ScrollController _headerHorizontalController;
-  late ScrollController _timeVerticalController;
 
   @override
   void initState() {
@@ -36,9 +35,8 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
     _horizontalController = ScrollController();
     _verticalController = ScrollController();
     _headerHorizontalController = ScrollController();
-    _timeVerticalController = ScrollController();
     
-    // 가로 스크롤 동기화
+    // 가로 스크롤 동기화만 유지
     _horizontalController.addListener(() {
       if (_headerHorizontalController.hasClients && 
           _headerHorizontalController.offset != _horizontalController.offset) {
@@ -52,21 +50,6 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
         _horizontalController.jumpTo(_headerHorizontalController.offset);
       }
     });
-    
-    // 세로 스크롤 동기화
-    _verticalController.addListener(() {
-      if (_timeVerticalController.hasClients && 
-          _timeVerticalController.offset != _verticalController.offset) {
-        _timeVerticalController.jumpTo(_verticalController.offset);
-      }
-    });
-    
-    _timeVerticalController.addListener(() {
-      if (_verticalController.hasClients && 
-          _verticalController.offset != _timeVerticalController.offset) {
-        _verticalController.jumpTo(_timeVerticalController.offset);
-      }
-    });
   }
 
   @override
@@ -74,7 +57,6 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
     _horizontalController.dispose();
     _verticalController.dispose();
     _headerHorizontalController.dispose();
-    _timeVerticalController.dispose();
     super.dispose();
   }
 
@@ -342,9 +324,7 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                             right: BorderSide(color: Colors.grey.shade300, width: 2),
                           ),
                         ),
-                        child: SingleChildScrollView(
-                          controller: _timeVerticalController,
-                          child: Column(
+                        child: Column(
                             children: timeSlots.map((hour) {
                               return Container(
                                 height: rowHeight,
@@ -364,7 +344,6 @@ class _WeeklyTimetableWidgetState extends State<WeeklyTimetableWidget> {
                                 ),
                               );
                             }).toList(),
-                          ),
                         ),
                       ),
                     ),

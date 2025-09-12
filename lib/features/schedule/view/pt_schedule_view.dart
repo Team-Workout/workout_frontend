@@ -604,13 +604,8 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
         schedules: schedules,
         onScheduleTap: (schedule) {
           Navigator.pop(context);
-          // PtSchedule를 PtAppointment로 다시 변환
-          final appointment = _appointmentsResponse?.data.firstWhere(
-            (a) => a.appointmentId == schedule.appointmentId,
-          );
-          if (appointment != null) {
-            _showAppointmentDetail(appointment);
-          }
+          // 모든 경로에서 동일한 다이얼로그 사용
+          _showScheduleDetailPopup(schedule);
         },
         onScheduleAction: (schedule, action) {
           Navigator.pop(context);
@@ -773,22 +768,23 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
   }
 
   void _showAppointmentDetail(PtAppointment appointment) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _AppointmentDetailSheet(
-        appointment: appointment,
-        onAction: () {
-          Navigator.pop(context);
-          if (!_isListView) {
-            _loadTimetableAppointments();
-          } else {
-            _loadAppointments();
-          } // 새로고침
-        },
-      ),
+    // PtAppointment를 PtSchedule로 변환해서 시간표 다이얼로그 사용
+    final schedule = PtSchedule(
+      appointmentId: appointment.appointmentId,
+      contractId: appointment.contractId,
+      trainerName: appointment.trainerName,
+      memberName: appointment.memberName,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      status: appointment.status ?? 'SCHEDULED',
+      hasChangeRequest: appointment.changeRequestStartTime != null,
+      changeRequestBy: appointment.changeRequestBy,
+      requestedStartTime: appointment.changeRequestStartTime,
+      requestedEndTime: appointment.changeRequestEndTime,
     );
+
+    // 시간표 뷰와 동일한 다이얼로그 사용
+    _showScheduleDetailPopup(schedule);
   }
 
   String _formatDateTime(String dateTimeStr) {
@@ -1007,7 +1003,7 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     }).toList();
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12), // 상단 여백 제거
+      margin: const EdgeInsets.fromLTRB(12, 20, 12, 12), // 상단 패딩 추가
       child: EverytimeTimetableWidget(
         schedules: schedules,
         selectedWeek: DateTime.now(),

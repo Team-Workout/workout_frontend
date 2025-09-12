@@ -6,8 +6,13 @@ import 'exercise_display_card.dart';
 
 class WorkoutDayCard extends StatelessWidget {
   final WorkoutDayRecord dayRecord;
+  final Function(bool)? onExpansionChanged;
 
-  const WorkoutDayCard({super.key, required this.dayRecord});
+  const WorkoutDayCard({
+    super.key, 
+    required this.dayRecord,
+    this.onExpansionChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +24,7 @@ class WorkoutDayCard extends StatelessWidget {
         border: Border.all(color: NotionColors.border),
       ),
       child: ExpansionTile(
+        onExpansionChanged: onExpansionChanged,
         leading: Container(
           width: 48,
           height: 48,

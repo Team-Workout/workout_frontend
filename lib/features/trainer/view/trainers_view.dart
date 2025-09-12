@@ -72,69 +72,66 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: PreferredSize(
-        preferredSize: Size.zero,
-        child: Container(),
-      ),
-      body: trainersState.when(
-        data: (trainers) {
-          // 카테고리 필터링 적용
-          final displayTrainers =
-              _filterTrainersByCategory(trainers, selectedCategory);
+      body: SafeArea(
+        child: trainersState.when(
+          data: (trainers) {
+            // 카테고리 필터링 적용
+            final displayTrainers =
+                _filterTrainersByCategory(trainers, selectedCategory);
 
-          if (displayTrainers.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    selectedCategory == '전체 트레이너'
-                        ? '트레이너를 찾을 수 없습니다'
-                        : '$selectedCategory 전문 트레이너를 찾을 수 없습니다',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                      fontFamily: 'IBMPlexSansKR',
+            if (displayTrainers.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 64,
+                      color: Colors.grey[400],
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
+                    const SizedBox(height: 16),
+                    Text(
+                      selectedCategory == '전체 트레이너'
+                          ? '트레이너를 찾을 수 없습니다'
+                          : '$selectedCategory 전문 트레이너를 찾을 수 없습니다',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          return _buildGridTrainerView(displayTrainers);
-        },
-        loading: () => const Center(child: CircularProgressIndicator(
+            return _buildGridTrainerView(displayTrainers);
+          },
+          loading: () => const Center(
+              child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
           )),
-        error: (error, stack) => Center(
-          child: Text('Error: $error'),
+          error: (error, stack) => Center(
+            child: Text('Error: $error'),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildGridTrainerView(List<TrainerProfile> trainers) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 2x2 그리드
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.7, // 세로가 긴 비율 (사람 몸사진용)
-        ),
-        itemCount: trainers.length,
-        itemBuilder: (context, index) {
-          return _buildGridTrainerCard(trainers[index]);
-        },
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, // 2x2 그리드
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.65, // 더 세로가 긴 비율로 조정 (PT 상품이 더 잘 보이도록)
       ),
+      itemCount: trainers.length,
+      itemBuilder: (context, index) {
+        return _buildGridTrainerCard(trainers[index]);
+      },
     );
   }
 
@@ -260,7 +257,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: 120, // 높이 증가
+                height: 130, // 더 높이 증가
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -311,7 +308,8 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                           Wrap(
                             spacing: 4,
                             runSpacing: 4,
-                            children: trainer.specialties.take(4).map((specialty) {
+                            children:
+                                trainer.specialties.take(4).map((specialty) {
                               return Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,

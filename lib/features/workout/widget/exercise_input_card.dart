@@ -88,7 +88,8 @@ class ExerciseInputCard extends StatelessWidget {
                 ],
               ),
               // 운동 정보 요약 표시
-              if (exercise.nameController.text.isNotEmpty || exercise.sets.isNotEmpty) ...[
+              if (exercise.nameController.text.isNotEmpty ||
+                  exercise.sets.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -152,7 +153,6 @@ class ExerciseInputCard extends StatelessWidget {
     );
   }
 
-
   void _showEditDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -199,7 +199,7 @@ class ExerciseInputCard extends StatelessWidget {
               TextField(
                 controller: exercise.memoController,
                 decoration: InputDecoration(
-                  labelText: '🏋️ 운동 메모',
+                  labelText: '운동 메모',
                   hintText: '세트별 느낌, 폼 체크 포인트 등',
                   labelStyle: const TextStyle(
                     color: Color(0xFF10B981),

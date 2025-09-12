@@ -235,6 +235,7 @@ class _ExerciseAutocompleteFieldState extends ConsumerState<ExerciseAutocomplete
             controller: _controller,
             focusNode: _focusNode,
             enabled: widget.enabled,
+            cursorColor: Colors.black87, // 커서 색상을 검은색으로
             decoration: InputDecoration(
               labelText: widget.labelText,
               hintText: widget.hintText,
@@ -258,7 +259,7 @@ class _ExerciseAutocompleteFieldState extends ConsumerState<ExerciseAutocomplete
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+                borderSide: const BorderSide(color: Colors.black87, width: 2),
               ),
             ),
           ),

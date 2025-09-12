@@ -11,7 +11,8 @@ class TodayPTScheduleCard extends ConsumerStatefulWidget {
   const TodayPTScheduleCard({super.key});
 
   @override
-  ConsumerState<TodayPTScheduleCard> createState() => _TodayPTScheduleCardState();
+  ConsumerState<TodayPTScheduleCard> createState() =>
+      _TodayPTScheduleCardState();
 }
 
 class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
@@ -28,17 +29,19 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
 
   Future<void> _loadTodayAppointments() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // 오늘 날짜만 조회
       final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      
-      final response = await ref.read(ptContractViewModelProvider.notifier).getMyScheduledAppointments(
-        startDate: today,
-        endDate: today,
-        status: 'SCHEDULED',
-      );
-      
+
+      final response = await ref
+          .read(ptContractViewModelProvider.notifier)
+          .getMyScheduledAppointments(
+            startDate: today,
+            endDate: today,
+            status: 'SCHEDULED',
+          );
+
       setState(() {
         _todayAppointments = response;
         _isLoading = false;
@@ -51,9 +54,9 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
 
   void _onScheduleItemTap(PtAppointment appointment) {
     final user = ref.read(currentUserProvider);
-    
+
     // 트레이너이고 예정된 상태가 아닌 경우에만 일반 상세 정보 표시
-    if (user?.userType == UserType.trainer && 
+    if (user?.userType == UserType.trainer &&
         (appointment.status != 'SCHEDULED' && appointment.status != null)) {
       _showAppointmentDetails(appointment);
     }
@@ -67,33 +70,194 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
   void _showAppointmentDetails(PtAppointment appointment) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('PT 일정 상세'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('회원: ${appointment.memberName}'),
-            Text('트레이너: ${appointment.trainerName}'),
-            Text('시간: ${_formatAppointmentTime(appointment)}'),
-            Text('상태: ${_getStatusText(appointment.status ?? 'SCHEDULED')}'),
-            if (appointment.changeRequestStartTime != null)
-              Text('변경 요청: 있음', style: TextStyle(color: Colors.orange)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+      barrierColor: Colors.black.withValues(alpha: 0.1), // 아주 연한 검은색 오버레이
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+                spreadRadius: 2,
+              ),
+            ],
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.grey[200]!,
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'PT 일정 상세',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailRow('회원', appointment.memberName, Icons.person),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                        '트레이너', appointment.trainerName, Icons.fitness_center),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                        '시간', _formatAppointmentTime(appointment), Icons.schedule),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                        '상태',
+                        _getStatusText(appointment.status ?? 'SCHEDULED'),
+                        Icons.info_outline),
+                    if (appointment.changeRequestStartTime != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.schedule_outlined,
+                                size: 16, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            const Text(
+                              '일정 변경 요청이 있습니다',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.orange,
+                                fontFamily: 'IBMPlexSansKR',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Actions
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    '확인',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontFamily: 'IBMPlexSansKR',
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: const Color(0xFF10B981),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   void _showSessionCreateDialog(PtAppointment appointment) {
     final sessionDate = DateTime.parse(appointment.startTime);
-    
+
     showDialog(
       context: context,
       builder: (context) => PtSessionCreateDialog(
@@ -241,7 +405,8 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
 
     return Column(
       children: [
-        ...sortedAppointments.map((appointment) => _buildScheduleItem(appointment)),
+        ...sortedAppointments
+            .map((appointment) => _buildScheduleItem(appointment)),
         if (sortedAppointments.length > 1) const SizedBox(height: 8),
         if (sortedAppointments.length > 1)
           _buildScheduleSummary(sortedAppointments.length),
@@ -298,7 +463,7 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
     String startTime = '';
     String endTime = '';
     String duration = '';
-    
+
     try {
       final start = DateTime.parse(appointment.startTime);
       final end = DateTime.parse(appointment.endTime);
@@ -312,8 +477,8 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
     }
 
     final user = ref.watch(currentUserProvider);
-    final displayName = user?.userType == UserType.trainer 
-        ? appointment.memberName 
+    final displayName = user?.userType == UserType.trainer
+        ? appointment.memberName
         : appointment.trainerName;
     final roleText = user?.userType == UserType.trainer ? '회원' : '트레이너';
 
@@ -347,7 +512,8 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -364,7 +530,8 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF0FDF4),
                         borderRadius: BorderRadius.circular(6),
@@ -387,7 +554,9 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
             Row(
               children: [
                 Icon(
-                  user?.userType == UserType.trainer ? Icons.person : Icons.fitness_center,
+                  user?.userType == UserType.trainer
+                      ? Icons.person
+                      : Icons.fitness_center,
                   size: 16,
                   color: const Color(0xFF10B981),
                 ),
@@ -404,7 +573,9 @@ class _TodayPTScheduleCardState extends ConsumerState<TodayPTScheduleCard> {
               ],
             ),
             // 트레이너이고 예정된 상태일 때 세션 작성 버튼 표시
-            if (user?.userType == UserType.trainer && (appointment.status == 'SCHEDULED' || appointment.status == null)) ...[
+            if (user?.userType == UserType.trainer &&
+                (appointment.status == 'SCHEDULED' ||
+                    appointment.status == null)) ...[
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,

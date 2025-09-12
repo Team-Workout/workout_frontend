@@ -53,81 +53,10 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     final isOwnOfferings = widget.trainerId == null ||
         (user?.id != null && widget.trainerId == int.parse(user!.id));
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      // 트레이너 관리메뉴에서는 AppBar 제거 (네비게이션바 유지를 위해)
-      appBar: null,
-      body: Column(
-        children: [
-          // 헤더
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 20),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF10B981),
-                  Color(0xFF34D399),
-                  Color(0xFF6EE7B7)
-                ],
-              ),
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => context.go('/trainer-pt-main'),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'PT 상품 관리',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'IBMPlexSansKR',
-                      ),
-                    ),
-                  ),
-                  if (widget.isTrainerView)
-                    Container(
-                      margin: const EdgeInsets.only(left: 12),
-                      child: TextButton(
-                        onPressed: () {
-                          context.push('/pt-offerings/create');
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: const Text(
-                          '추가',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'IBMPlexSansKR',
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          // 내용
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                _loadPtOfferings();
-              },
+    return RefreshIndicator(
+        onRefresh: () async {
+          _loadPtOfferings();
+        },
         child: ptOfferingsAsync.when(
           loading: () => const Center(
             child: CircularProgressIndicator(
@@ -173,29 +102,34 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
               return _buildEmptyState();
             }
 
-            return ListView.separated(
-              padding: const EdgeInsets.all(16),
+            return ListView.builder(
+              shrinkWrap: true, // 부모에 맞게 크기 조절
+              physics: const NeverScrollableScrollPhysics(), // 스크롤 비활성화
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
               itemCount: offerings.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final offering = offerings[index];
-                return _buildOfferingCard(offering);
+                return Column(
+                  children: [
+                    _buildOfferingCard(offerings[index]),
+                    if (index < offerings.length - 1) const SizedBox(height: 12),
+                  ],
+                );
               },
             );
           },
         ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(), // 스크롤 비활성화
+      child: Container(
+        height: 400, // 고정 높이로 중앙 정렬
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
           Container(
             width: 120,
             height: 120,
@@ -245,24 +179,29 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
               text: 'PT 상품 추가',
               icon: Icons.add,
             ),
+            ],
           ],
-        ],
+        ),
       ),
+    ),
     );
   }
 
   Widget _buildOfferingCard(PtOffering offering) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12), // 덜 둥글게
+        border: Border.all(
+          color: Colors.grey.withValues(alpha: 0.15), // 얇은 테두리
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
+            color: Colors.black.withValues(alpha: 0.02), // 훨씬 약한 그림자
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -271,84 +210,60 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with gradient background
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            // Simple header - no gradient background
+            Row(
+              children: [
+                Icon(
+                  Icons.fitness_center,
+                  color: Colors.grey.shade700,
+                  size: 20,
                 ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.fitness_center,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        offering.title,
+                        style: TextStyle(
+                          color: Colors.grey.shade800,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (offering.trainerName != null) ...[
+                        const SizedBox(height: 4),
                         Text(
-                          offering.title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          '${offering.trainerName} 트레이너',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                             fontFamily: 'IBMPlexSansKR',
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        if (offering.trainerName != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '${offering.trainerName} 트레이너',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'IBMPlexSansKR',
-                            ),
-                          ),
-                        ],
                       ],
+                    ],
+                  ),
+                ),
+                if (widget.isTrainerView)
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Colors.grey.shade500,
+                      size: 18,
+                    ),
+                    onPressed: () => _deleteOffering(offering),
+                    tooltip: '삭제',
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
                     ),
                   ),
-                  if (widget.isTrainerView)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        onPressed: () => _deleteOffering(offering),
-                        tooltip: '삭제',
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
 
             const SizedBox(height: 20),
@@ -442,12 +357,12 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.grey.withValues(alpha: 0.03), // 아주 연한 회색
+        borderRadius: BorderRadius.circular(8), // 덜 둥글게
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: Colors.grey.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -456,14 +371,14 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: color),
+              Icon(icon, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: color,
+                  color: Colors.grey.shade600,
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   fontFamily: 'IBMPlexSansKR',
                 ),
               ),
@@ -473,9 +388,9 @@ class _PtOfferingsListViewState extends ConsumerState<PtOfferingsListView> {
           Text(
             value,
             style: TextStyle(
-              color: Colors.black87,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+              fontSize: 16, // 조금 작게
+              fontWeight: FontWeight.w600, // 덜 굵게
               fontFamily: 'IBMPlexSansKR',
             ),
           ),

@@ -61,8 +61,8 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
               // 운동 추가 버튼 (목록 아래)
               _buildAddExerciseSection(),
               const SizedBox(height: 24),
-              // 저장 버튼
-              if (widget.viewModel.exercises.isNotEmpty) _buildSaveButton(),
+              // 저장 버튼 (변경사항이 있을 때만 표시)
+              if (widget.viewModel.exercises.isNotEmpty && widget.viewModel.hasChanges) _buildSaveButton(),
               const SizedBox(height: 50), // 하단 여백
             ],
           ),
@@ -174,11 +174,15 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
               setState(() {
                 ex.removeSet(setIndex);
               });
+              // 변경사항 추적을 위해 ViewModel의 saveCurrentWorkout 호출
+              widget.viewModel.saveCurrentWorkout();
             },
             onAddSet: (ex) {
               setState(() {
                 ex.addSet();
               });
+              // 변경사항 추적을 위해 ViewModel의 saveCurrentWorkout 호출
+              widget.viewModel.saveCurrentWorkout();
             },
           );
         },
@@ -190,18 +194,13 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _isFormExpanded ? const Color(0xFF10B981) : Colors.grey[200]!,
-          width: _isFormExpanded ? 2 : 1,
+          color: _isFormExpanded 
+              ? const Color(0xFF10B981).withOpacity(0.3) 
+              : Colors.grey[300]!,
+          width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         children: [
@@ -251,7 +250,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      _isFormExpanded ? Icons.close : Icons.add,
+                      _isFormExpanded ? Icons.delete : Icons.add,
                       color: _isFormExpanded
                           ? Colors.grey
                           : const Color(0xFF10B981),
@@ -260,7 +259,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    _isFormExpanded ? '취소' : '운동 추가하기',
+                    _isFormExpanded ? '삭제' : '운동 추가하기',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -461,7 +460,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                   fontFamily: 'IBMPlexSansKR',
                 ),
                 decoration: InputDecoration(
-                  hintText: '🏋️ 운동에 대한 메모를 입력하세요',
+                  hintText: '운동에 대한 메모를 입력하세요',
                   hintStyle: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
@@ -510,37 +509,22 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${index + 1}세트',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
+              Text(
+                '${index + 1}세트',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                  fontFamily: 'IBMPlexSansKR',
                 ),
               ),
               if (_currentSets.length > 1)
                 GestureDetector(
                   onTap: () => _removeSet(index),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD32F2F).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Color(0xFFD32F2F),
-                    ),
+                  child: Icon(
+                    Icons.close,
+                    size: 18,
+                    color: Colors.grey[500],
                   ),
                 ),
             ],
@@ -550,9 +534,12 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade300),
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.grey[200]!,
+                width: 0.5,
+              ),
             ),
             child: Row(
               children: [
@@ -685,11 +672,6 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.note_alt_outlined,
-                    size: 16,
-                    color: Colors.grey.shade600,
-                  ),
                   const SizedBox(width: 6),
                   Text(
                     '세트 메모',
@@ -705,9 +687,12 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.shade300),
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.grey[400]!,
+                    width: 1.0,
+                  ),
                 ),
                 child: TextField(
                   controller: set.memoController,
@@ -719,7 +704,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                     color: Colors.black87,
                   ),
                   decoration: InputDecoration(
-                    hintText: '💡 이 세트에 대한 메모를 입력하세요',
+                    hintText: '이 세트에 대한 메모를 입력하세요',
                     hintStyle: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade500,
@@ -798,6 +783,11 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
       newSet.weightController.text = set.weightController.text;
       newSet.repsController.text = set.repsController.text;
       newSet.memoController.text = set.memoController.text;
+      
+      // 새로 추가된 세트에도 변경 리스너 추가
+      newSet.repsController.addListener(() => widget.viewModel.saveCurrentWorkout());
+      newSet.weightController.addListener(() => widget.viewModel.saveCurrentWorkout());
+      newSet.memoController.addListener(() => widget.viewModel.saveCurrentWorkout());
     }
 
     // 입력 폼 초기화 및 닫기
@@ -1025,46 +1015,26 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient
+            // Header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Color(0xFF10B981),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
               ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.playlist_play,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '루틴 선택',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'IBMPlexSansKR',
-                    ),
-                  ),
-                ],
+              child: const Text(
+                '루틴 선택',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
 
@@ -1080,10 +1050,10 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                   itemBuilder: (context, index) {
                     final routine = routines[index];
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
+                      margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
                         color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: const Color(0xFF10B981).withValues(alpha: 0.2),
                           width: 1,
@@ -1101,9 +1071,9 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                           Navigator.of(context).pop();
                           _selectRoutineAsTemplate(routine);
                         },
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(12),
                         child: Padding(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(12),
                           child: Row(
                             children: [
                               const SizedBox(width: 16),
@@ -1114,33 +1084,12 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                                     Text(
                                       routine.name,
                                       style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
                                         color: Colors.black87,
                                         fontFamily: 'IBMPlexSansKR',
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    if (routine.routineExercises != null)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF10B981)
-                                              .withValues(alpha: 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          '${routine.routineExercises!.length}개 운동',
-                                          style: const TextStyle(
-                                            color: Color(0xFF10B981),
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: 'IBMPlexSansKR',
-                                          ),
-                                        ),
-                                      ),
                                   ],
                                 ),
                               ),
@@ -1174,7 +1123,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                     ),
                   ),
                   child: Material(
-                    color: Colors.red.shade600,
+                    color: Colors.grey[200],
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
                       onTap: () =>
@@ -1183,7 +1132,7 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                         child: Text(
                           '취소',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.grey[700],
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             fontFamily: 'IBMPlexSansKR',
@@ -1330,41 +1279,9 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Action buttons
+                      // Action buttons (오른손 잡이용: 긍정 액션을 오른쪽에)
                       Row(
                         children: [
-                          Expanded(
-                            child: Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: Colors.grey[300]!,
-                                ),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(24),
-                                  onTap: () =>
-                                      Navigator.of(dialogContext).pop(false),
-                                  child: Center(
-                                    child: Text(
-                                      '취소',
-                                      style: TextStyle(
-                                        color: Colors.grey[700],
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'IBMPlexSansKR',
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
                           Expanded(
                             flex: 2,
                             child: Container(
@@ -1415,6 +1332,38 @@ class _WorkoutRecordTabState extends ConsumerState<WorkoutRecordTab> {
                                           ),
                                         ),
                                       ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.grey[300]!,
+                                ),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(24),
+                                  onTap: () =>
+                                      Navigator.of(dialogContext).pop(false),
+                                  child: Center(
+                                    child: Text(
+                                      '취소',
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'IBMPlexSansKR',
+                                      ),
                                     ),
                                   ),
                                 ),

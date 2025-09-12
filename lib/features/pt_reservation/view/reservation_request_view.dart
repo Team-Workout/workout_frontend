@@ -177,6 +177,8 @@ class _ContractCard extends StatelessWidget {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -317,6 +319,8 @@ class _ProposeAppointmentSheetState extends ConsumerState<_ProposeAppointmentShe
                     fontSize: 14,
                     color: Colors.grey[600],
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
                 const SizedBox(height: 24),
                 Text(

@@ -116,7 +116,7 @@ class WeightTrendSection extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               SizedBox(
-                height: 160, // 높이 줄임
+                height: 300, // 높이 증가
                 child: WeightChart(
                   compositions: compositions,
                   bodyImages: bodyImages,
@@ -135,8 +135,9 @@ class WeightTrendSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 150, // 높이 줄임
+              Container(
+                height: 300, // 높이 고정
+                clipBehavior: Clip.none, // 툴팁 자르기 방지
                 child: MuscleChart(
                   compositions: compositions,
                   bodyImages: bodyImages,
@@ -155,8 +156,9 @@ class WeightTrendSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 150, // 높이 줄임
+              Container(
+                height: 300, // 높이 고정
+                clipBehavior: Clip.none, // 툴팁 자르기 방지
                 child: FatChart(
                   compositions: compositions,
                   bodyImages: bodyImages,
@@ -194,6 +196,10 @@ class MuscleChart extends StatelessWidget {
         child: Text('이 기간에 데이터가 없습니다'),
       );
     }
+    
+    // 스크롤 가능한 차트를 위한 설정
+    final screenWidth = MediaQuery.of(context).size.width;
+    const pointSpacing = 60.0; // 각 데이터 포인트 간의 간격
 
     final sortedData = List<BodyComposition>.from(compositions)
       ..sort((a, b) => a.measurementDate.compareTo(b.measurementDate));
@@ -220,6 +226,27 @@ class MuscleChart extends StatelessWidget {
       localImagesByDate.keys.forEach(allDates.add);
       localSortedAllDates.addAll(allDates.toList()..sort());
     }
+    
+    // 차트 너비 계산
+    final dataPointCount = localSortedAllDates.length;
+    final calculatedWidth = dataPointCount * pointSpacing;
+    final chartWidth = calculatedWidth < screenWidth ? screenWidth : calculatedWidth;
+    
+    // 스마트한 날짜 간격 계산
+    int calculateDateInterval() {
+      const maxLabels = 8;
+      if (dataPointCount <= maxLabels) return 1;
+      
+      int interval = (dataPointCount / maxLabels).ceil();
+      
+      if (interval <= 3) return 3;
+      else if (interval <= 7) return 7;
+      else if (interval <= 14) return 14;
+      else if (interval <= 30) return 30;
+      else return (interval / 30).ceil() * 30;
+    }
+    
+    final dateInterval = calculateDateInterval();
 
     // Create spots for muscle data only
     final spots = <FlSpot>[];
@@ -266,34 +293,21 @@ class MuscleChart extends StatelessWidget {
       minY = minY < 0 ? 0 : minY;
     }
 
-    return Container(
-      width: MediaQuery.of(context).size.width - 48, // 24 padding * 2
-      height: 180, // 높이 늘림
-      margin: const EdgeInsets.only(left: 8), // 왼쪽 패딩 추가
-      child: LineChart(
+    return SizedBox(
+      height: 300, // 차트 높이 고정 (더 높게)
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none, // 툴팁 자르기 방지
+        physics: chartWidth > screenWidth ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
+        child: Container(
+          width: chartWidth + 80, // 좌우 패딩 공간 추가
+          padding: const EdgeInsets.symmetric(horizontal: 40), // 좌우 40px 패딩
+          child: LineChart(
         LineChartData(
           lineTouchData: LineTouchData(
             enabled: true,
             handleBuiltInTouches: true,
-            touchCallback:
-                (FlTouchEvent event, LineTouchResponse? touchResponse) {
-              if (event is FlTapUpEvent &&
-                  touchResponse != null &&
-                  touchResponse.lineBarSpots != null) {
-                for (var spot in touchResponse.lineBarSpots!) {
-                  if (spot.x.toInt() >= 0 &&
-                      spot.x.toInt() < localSortedAllDates.length) {
-                    final dateString = localSortedAllDates[spot.x.toInt()];
-                    // Show photo dialog if photos exist
-                    if (localImagesByDate.containsKey(dateString)) {
-                      _showPhotoDialog(
-                          context, localImagesByDate[dateString]!, dateString);
-                      break;
-                    }
-                  }
-                }
-              }
-            },
+            touchCallback: null,
             touchTooltipData: LineTouchTooltipData(
               getTooltipColor: (touchedSpot) => const Color(0xFF1A1F36),
               tooltipRoundedRadius: 8,
@@ -334,21 +348,47 @@ class MuscleChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 35,
+                interval: 1,
                 getTitlesWidget: (value, meta) {
-                  // 인바디 스타일: 시작과 끝 날짜만 표시
-                  if (value.toInt() == 0 ||
-                      value.toInt() == localSortedAllDates.length - 1) {
-                    if (value.toInt() >= 0 &&
-                        value.toInt() < localSortedAllDates.length) {
-                      final date =
-                          DateTime.parse(localSortedAllDates[value.toInt()]);
-                      return Text(
-                        DateFormat('MM/dd').format(date),
-                        style: const TextStyle(fontSize: 10),
-                      );
+                  final index = value.toInt();
+                  
+                  if (value != index.toDouble() || index < 0 || index >= localSortedAllDates.length) {
+                    return const SizedBox.shrink();
+                  }
+                  
+                  bool shouldShowDate = false;
+                  
+                  if (dataPointCount <= 8) {
+                    shouldShowDate = true;
+                  } else {
+                    if (index == 0 || index == localSortedAllDates.length - 1) {
+                      shouldShowDate = true;
+                    }
+                    else if (index % dateInterval == 0) {
+                      shouldShowDate = true;
                     }
                   }
-                  return const Text('');
+                  
+                  if (shouldShowDate) {
+                    final date = DateTime.parse(localSortedAllDates[index]);
+                    final dateText = dataPointCount > 30 
+                        ? DateFormat('M/d').format(date)
+                        : DateFormat('MM/dd').format(date);
+                    
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        dateText,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  return const SizedBox.shrink();
                 },
               ),
             ),
@@ -400,8 +440,10 @@ class MuscleChart extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+            ),
+          ),
+        ),
+      );
   }
 
   void _showPhotoDialog(
@@ -619,6 +661,10 @@ class FatChart extends StatelessWidget {
         child: Text('이 기간에 데이터가 없습니다'),
       );
     }
+    
+    // 스크롤 가능한 차트를 위한 설정
+    final screenWidth = MediaQuery.of(context).size.width;
+    const pointSpacing = 60.0;
 
     final sortedData = List<BodyComposition>.from(compositions)
       ..sort((a, b) => a.measurementDate.compareTo(b.measurementDate));
@@ -645,6 +691,27 @@ class FatChart extends StatelessWidget {
       localImagesByDate.keys.forEach(allDates.add);
       localSortedAllDates.addAll(allDates.toList()..sort());
     }
+    
+    // 차트 너비 계산
+    final dataPointCount = localSortedAllDates.length;
+    final calculatedWidth = dataPointCount * pointSpacing;
+    final chartWidth = calculatedWidth < screenWidth ? screenWidth : calculatedWidth;
+    
+    // 스마트한 날짜 간격 계산
+    int calculateDateInterval() {
+      const maxLabels = 8;
+      if (dataPointCount <= maxLabels) return 1;
+      
+      int interval = (dataPointCount / maxLabels).ceil();
+      
+      if (interval <= 3) return 3;
+      else if (interval <= 7) return 7;
+      else if (interval <= 14) return 14;
+      else if (interval <= 30) return 30;
+      else return (interval / 30).ceil() * 30;
+    }
+    
+    final dateInterval = calculateDateInterval();
 
     // Create spots for fat data only
     final spots = <FlSpot>[];
@@ -685,34 +752,21 @@ class FatChart extends StatelessWidget {
       minY = minY < 0 ? 0 : minY;
     }
 
-    return Container(
-        width: MediaQuery.of(context).size.width - 48, // 24 padding * 2
-        height: 120, // 높이 줄임
-        margin: const EdgeInsets.only(left: 8), // 왼쫍 패딩 추가
-        child: LineChart(
+    return SizedBox(
+      height: 300, // 차트 높이 고정 (더 높게)
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none, // 툴팁 자르기 방지
+        physics: chartWidth > screenWidth ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
+        child: Container(
+          width: chartWidth + 80, // 좌우 패딩 공간 추가
+          padding: const EdgeInsets.symmetric(horizontal: 40), // 좌우 40px 패딩
+          child: LineChart(
           LineChartData(
             lineTouchData: LineTouchData(
               enabled: true,
               handleBuiltInTouches: true,
-              touchCallback:
-                  (FlTouchEvent event, LineTouchResponse? touchResponse) {
-                if (event is FlTapUpEvent &&
-                    touchResponse != null &&
-                    touchResponse.lineBarSpots != null) {
-                  for (var spot in touchResponse.lineBarSpots!) {
-                    if (spot.x.toInt() >= 0 &&
-                        spot.x.toInt() < localSortedAllDates.length) {
-                      final dateString = localSortedAllDates[spot.x.toInt()];
-                      // Show photo dialog if photos exist
-                      if (localImagesByDate.containsKey(dateString)) {
-                        _showPhotoDialog(context,
-                            localImagesByDate[dateString]!, dateString);
-                        break;
-                      }
-                    }
-                  }
-                }
-              },
+              touchCallback: null,
               touchTooltipData: LineTouchTooltipData(
                 getTooltipColor: (touchedSpot) => const Color(0xFF1A1F36),
                 tooltipRoundedRadius: 8,
@@ -753,21 +807,47 @@ class FatChart extends StatelessWidget {
                 sideTitles: SideTitles(
                   showTitles: true,
                   reservedSize: 35,
+                  interval: 1,
                   getTitlesWidget: (value, meta) {
-                    // 인바디 스타일: 시작과 끝 날짜만 표시
-                    if (value.toInt() == 0 ||
-                        value.toInt() == localSortedAllDates.length - 1) {
-                      if (value.toInt() >= 0 &&
-                          value.toInt() < localSortedAllDates.length) {
-                        final date =
-                            DateTime.parse(localSortedAllDates[value.toInt()]);
-                        return Text(
-                          DateFormat('MM/dd').format(date),
-                          style: const TextStyle(fontSize: 10),
-                        );
+                    final index = value.toInt();
+                    
+                    if (value != index.toDouble() || index < 0 || index >= localSortedAllDates.length) {
+                      return const SizedBox.shrink();
+                    }
+                    
+                    bool shouldShowDate = false;
+                    
+                    if (dataPointCount <= 8) {
+                      shouldShowDate = true;
+                    } else {
+                      if (index == 0 || index == localSortedAllDates.length - 1) {
+                        shouldShowDate = true;
+                      }
+                      else if (index % dateInterval == 0) {
+                        shouldShowDate = true;
                       }
                     }
-                    return const Text('');
+                    
+                    if (shouldShowDate) {
+                      final date = DateTime.parse(localSortedAllDates[index]);
+                      final dateText = dataPointCount > 30 
+                          ? DateFormat('M/d').format(date)
+                          : DateFormat('MM/dd').format(date);
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          dateText,
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    return const SizedBox.shrink();
                   },
                 ),
               ),
@@ -819,7 +899,10 @@ class FatChart extends StatelessWidget {
               ),
             ],
           ),
-        ));
+            ),
+          ),
+        ),
+      );
   }
 
   void _showPhotoDialog(
@@ -1353,7 +1436,7 @@ class _ValueDotPainter extends FlDotPainter {
       text: value.toStringAsFixed(1),
       style: TextStyle(
         color: textColor,
-        fontSize: 9,
+        fontSize: 11, // 9 → 11로 키움
         fontWeight: FontWeight.w600,
         fontFamily: 'IBMPlexSansKR',
       ),

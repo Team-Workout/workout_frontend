@@ -238,25 +238,58 @@ class PrivacySettingsNotifier extends StateNotifier<AsyncValue<PrivacySettings?>
 
   Future<void> toggleWorkoutRecord(bool value) async {
     final current = state.value;
-    if (current != null) {
-      final updated = current.copyWith(isOpenWorkoutRecord: value);
-      await updatePrivacySettings(updated);
+    if (current == null) return;
+
+    // 낙관적 업데이트: 즉시 UI 업데이트
+    final updated = current.copyWith(isOpenWorkoutRecord: value);
+    state = AsyncValue.data(updated);
+
+    try {
+      // 백그라운드에서 서버 업데이트
+      await _repository.updatePrivacySettings(updated);
+    } catch (e) {
+      // 실패 시 이전 상태로 롤백
+      state = AsyncValue.data(current);
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow; // UI에서 에러를 처리할 수 있도록
     }
   }
 
   Future<void> toggleBodyImg(bool value) async {
     final current = state.value;
-    if (current != null) {
-      final updated = current.copyWith(isOpenBodyImg: value);
-      await updatePrivacySettings(updated);
+    if (current == null) return;
+
+    // 낙관적 업데이트: 즉시 UI 업데이트
+    final updated = current.copyWith(isOpenBodyImg: value);
+    state = AsyncValue.data(updated);
+
+    try {
+      // 백그라운드에서 서버 업데이트
+      await _repository.updatePrivacySettings(updated);
+    } catch (e) {
+      // 실패 시 이전 상태로 롤백
+      state = AsyncValue.data(current);
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
     }
   }
 
   Future<void> toggleBodyComposition(bool value) async {
     final current = state.value;
-    if (current != null) {
-      final updated = current.copyWith(isOpenBodyComposition: value);
-      await updatePrivacySettings(updated);
+    if (current == null) return;
+
+    // 낙관적 업데이트: 즉시 UI 업데이트
+    final updated = current.copyWith(isOpenBodyComposition: value);
+    state = AsyncValue.data(updated);
+
+    try {
+      // 백그라운드에서 서버 업데이트
+      await _repository.updatePrivacySettings(updated);
+    } catch (e) {
+      // 실패 시 이전 상태로 롤백
+      state = AsyncValue.data(current);
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
     }
   }
 }

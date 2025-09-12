@@ -22,9 +22,10 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
   @override
   Widget build(BuildContext context) {
     final set = widget.exercise.sets[widget.setIndex];
-    
-    print('🔧 WorkoutSetInput build - setIndex: ${widget.setIndex}, memoController exists: ${set.memoController != null}');
-    
+
+    print(
+        '🔧 WorkoutSetInput build - setIndex: ${widget.setIndex}, memoController exists: ${set.memoController != null}');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Column(
@@ -35,9 +36,10 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                  color: Colors.grey[100],
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -45,7 +47,7 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF2E7D32),
+                    color: Colors.black87,
                     fontFamily: 'IBMPlexSansKR',
                   ),
                 ),
@@ -69,7 +71,7 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
             ],
           ),
           const SizedBox(height: 8),
-          
+
           // 입력 필드들
           Container(
             padding: const EdgeInsets.all(12),
@@ -111,9 +113,11 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+                            borderSide: const BorderSide(
+                                color: Colors.black54, width: 1.5),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
                           suffixText: 'kg',
                           suffixStyle: TextStyle(
                             color: Colors.grey.shade600,
@@ -121,7 +125,8 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
                             fontFamily: 'IBMPlexSansKR',
                           ),
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 16,
@@ -129,14 +134,15 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
                           fontFamily: 'IBMPlexSansKR',
                         ),
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d*')),
                         ],
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // 횟수 입력
                 Expanded(
                   child: Column(
@@ -168,9 +174,11 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+                            borderSide: const BorderSide(
+                                color: Colors.black54, width: 1.5),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
                           suffixText: '회',
                           suffixStyle: TextStyle(
                             color: Colors.grey.shade600,
@@ -195,17 +203,17 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // 세트별 메모 입력 필드
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF10B981).withValues(alpha: 0.05),
+              color: Colors.grey[50],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                color: Colors.grey[300]!,
                 width: 1,
               ),
             ),
@@ -234,10 +242,11 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.05),
+                    color: Colors.grey[50],
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                      color: Colors.grey[400]!,
+                      width: 1.0,
                     ),
                   ),
                   child: TextField(
@@ -250,10 +259,10 @@ class _WorkoutSetInputState extends State<WorkoutSetInput> {
                       color: Colors.black87,
                     ),
                     decoration: InputDecoration(
-                      hintText: '💡 이 세트에 대한 메모를 입력하세요',
+                      hintText: '이 세트에 대한 메모를 입력하세요',
                       hintStyle: TextStyle(
                         fontSize: 13,
-                        color: const Color(0xFF10B981).withValues(alpha: 0.7),
+                        color: Colors.grey[600],
                         fontFamily: 'IBMPlexSansKR',
                       ),
                       border: InputBorder.none,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -168,6 +169,190 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
     });
   }
 
+  Future<bool> _showExitDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.1),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with gradient
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.exit_to_app,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '앱 종료',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  children: [
+                    Text(
+                      '정말로 앱을 종료하시겠습니까?',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 16,
+                        fontFamily: 'IBMPlexSansKR',
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Action buttons (오른손 잡이용: 종료를 오른쪽에)
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () =>
+                                    Navigator.of(dialogContext).pop(true),
+                                child: const Center(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.check_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        '종료',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'IBMPlexSansKR',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                              ),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () =>
+                                    Navigator.of(dialogContext).pop(false),
+                                child: Center(
+                                  child: Text(
+                                    '취소',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final monthlyPtCountAsync = ref.watch(monthlyPtCountProvider);
@@ -179,493 +364,517 @@ class _TrainerDashboardViewState extends ConsumerState<TrainerDashboardView> {
         ) ??
         0;
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          '${ref.watch(currentUserProvider)?.name ?? '트레이너'} 님',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontFamily: 'IBMPlexSansKR',
-            color: Colors.black87,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: GestureDetector(
-              onTap: () {
-                context.push('/trainer-profile-edit');
-              },
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final user = ref.watch(currentUserProvider);
-                  final profileImageAsync = ref.watch(profileImageProvider);
-                  
-                  return profileImageAsync.maybeWhen(
-                    data: (profileImage) {
-                      final profileUrl = profileImage?.profileImageUrl;
-                      print('🔍 Dashboard profile check: profileUrl=$profileUrl');
+    return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
 
-                      return Container(
-                        width: 45,
-                        height: 45,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(22.5),
-                          border: Border.all(
-                            color: const Color(0xFF10B981).withOpacity(0.3),
-                            width: 2,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20.5),
-                          child: profileUrl != null && profileUrl.isNotEmpty
-                              ? Image.network(
-                                  profileUrl.startsWith('/') 
-                                    ? 'http://211.220.34.173$profileUrl' 
-                                    : profileUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    print('🚫 Image load error for URL: $profileUrl, error: $error');
-                                    return _buildDefaultAvatar(user?.name);
-                                  },
-                                )
-                              : _buildDefaultAvatar(user?.name),
-                        ),
-                      );
-                    },
-                    orElse: () => Container(
-                      width: 45,
-                      height: 45,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22.5),
-                        border: Border.all(
-                          color: const Color(0xFF10B981).withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20.5),
-                        child: _buildDefaultAvatar(user?.name),
-                      ),
-                    ),
-                  );
-                },
+          final shouldExit = await _showExitDialog();
+          if (shouldExit && context.mounted) {
+            SystemNavigator.pop();
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Colors.grey[50],
+          appBar: AppBar(
+            title: Text(
+              '${ref.watch(currentUserProvider)?.name ?? '트레이너'} 님',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'IBMPlexSansKR',
+                color: Colors.black87,
               ),
             ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 📊 이번 주 PT 현황 차트 (맨 위로 이동)
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.bar_chart,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '이번 주 PT 현황',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                  fontFamily: 'IBMPlexSansKR',
-                                ),
-                              ),
-                              Text(
-                                '일별 수업 스케줄 분석',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                  fontFamily: 'IBMPlexSansKR',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      height: 280,
-                      child: weeklyStatsAsync.when(
-                        data: (weeklyStats) {
-                          final maxY = weeklyStats.isEmpty
-                              ? 10.0
-                              : (weeklyStats.reduce((a, b) => a > b ? a : b) +
-                                      2)
-                                  .toDouble();
+            backgroundColor: Colors.white,
+            elevation: 0,
+            centerTitle: false,
+            automaticallyImplyLeading: false,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: GestureDetector(
+                  onTap: () {
+                    context.push('/trainer-profile-edit');
+                  },
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final user = ref.watch(currentUserProvider);
+                      final profileImageAsync = ref.watch(profileImageProvider);
 
-                          return BarChart(
-                            BarChartData(
-                              alignment: BarChartAlignment.spaceAround,
-                              maxY: maxY,
-                              minY: 0,
-                              barTouchData: BarTouchData(
-                                enabled: true,
-                                touchTooltipData: BarTouchTooltipData(
-                                  getTooltipColor: (group) =>
-                                      const Color(0xFF10B981),
-                                  getTooltipItem:
-                                      (group, groupIndex, rod, rodIndex) {
-                                    const days = [
-                                      '월',
-                                      '화',
-                                      '수',
-                                      '목',
-                                      '금',
-                                      '토',
-                                      '일'
-                                    ];
-                                    return BarTooltipItem(
-                                      '${days[groupIndex]}\n${rod.toY.toInt()}건',
-                                      const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'IBMPlexSansKR',
-                                      ),
-                                    );
-                                  },
-                                ),
+                      return profileImageAsync.maybeWhen(
+                        data: (profileImage) {
+                          final profileUrl = profileImage?.profileImageUrl;
+                          print(
+                              '🔍 Dashboard profile check: profileUrl=$profileUrl');
+
+                          return Container(
+                            width: 45,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(22.5),
+                              border: Border.all(
+                                color: const Color(0xFF10B981).withOpacity(0.3),
+                                width: 2,
                               ),
-                              titlesData: FlTitlesData(
-                                show: true,
-                                bottomTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                                leftTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 40,
-                                    interval: maxY > 10
-                                        ? (maxY / 3).ceilToDouble()
-                                        : (maxY > 5 ? 2 : 1),
-                                    getTitlesWidget: (value, meta) {
-                                      // 0도 포함하여 표시
-                                      final intValue = value.toInt();
-                                      if (intValue <= maxY.toInt() && value == intValue) {
-                                        return Padding(
-                                          padding:
-                                              const EdgeInsets.only(right: 8),
-                                          child: Text(
-                                            intValue.toString(),
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: NotionColors.textSecondary,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      return const SizedBox();
-                                    },
-                                  ),
-                                ),
-                                topTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 32,
-                                    getTitlesWidget: (value, meta) {
-                                      const days = [
-                                        '월',
-                                        '화',
-                                        '수',
-                                        '목',
-                                        '금',
-                                        '토',
-                                        '일'
-                                      ];
-                                      if (value.toInt() >= 0 &&
-                                          value.toInt() < days.length) {
-                                        return Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 12),
-                                          child: Text(
-                                            days[value.toInt()],
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      return const Text('');
-                                    },
-                                  ),
-                                ),
-                                rightTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                              ),
-                              gridData: FlGridData(
-                                show: true,
-                                drawVerticalLine: false,
-                                horizontalInterval: maxY > 10
-                                    ? (maxY / 3).ceilToDouble()
-                                    : (maxY > 5 ? 2 : 1),
-                                getDrawingHorizontalLine: (value) {
-                                  return const FlLine(
-                                    color: NotionColors.border,
-                                    strokeWidth: 1,
-                                  );
-                                },
-                              ),
-                              borderData: FlBorderData(show: false),
-                              barGroups:
-                                  weeklyStats.asMap().entries.map((entry) {
-                                return BarChartGroupData(
-                                  x: entry.key,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: entry.value.toDouble(),
-                                      gradient: const LinearGradient(
-                                        begin: Alignment.bottomCenter,
-                                        end: Alignment.topCenter,
-                                        colors: [
-                                          Color(0xFF10B981),
-                                          Color(0xFF34D399)
-                                        ],
-                                      ),
-                                      width: 24,
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(6),
-                                        topRight: Radius.circular(6),
-                                      ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20.5),
+                              child: profileUrl != null && profileUrl.isNotEmpty
+                                  ? Image.network(
+                                      profileUrl.startsWith('/')
+                                          ? 'http://211.220.34.173$profileUrl'
+                                          : profileUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        print(
+                                            '🚫 Image load error for URL: $profileUrl, error: $error');
+                                        return _buildDefaultAvatar(user?.name);
+                                      },
                                     )
-                                  ],
-                                );
-                              }).toList(),
+                                  : _buildDefaultAvatar(user?.name),
                             ),
                           );
                         },
-                        loading: () => const Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                        orElse: () => Container(
+                          width: 45,
+                          height: 45,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(22.5),
+                            border: Border.all(
+                              color: const Color(0xFF10B981).withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20.5),
+                            child: _buildDefaultAvatar(user?.name),
                           ),
                         ),
-                        error: (error, stack) => Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.error_outline,
-                                  color: NotionColors.error, size: 32),
-                              const SizedBox(height: 8),
-                              Text(
-                                '차트를 불러올 수 없습니다',
-                                style: TextStyle(
-                                    color: NotionColors.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-
-            // 📅 이번 주 PT 시간표
-            const SizedBox(height: 32),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 📊 이번 주 PT 현황 차트 (맨 위로 이동)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF10B981),
+                                    Color(0xFF34D399)
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.bar_chart,
+                                color: Colors.white,
+                                size: 24,
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.calendar_view_week,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '이번 주 PT 시간표',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                  fontFamily: 'IBMPlexSansKR',
-                                ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '이번 주 PT 현황',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                  Text(
+                                    '일별 수업 스케줄 분석',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                '예정된 수업과 변경요청 현황',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                  fontFamily: 'IBMPlexSansKR',
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 480,
-                      child: Consumer(
-                        builder: (context, ref, child) {
-                          final timetableAsync =
-                              ref.watch(weeklyTimetableSchedulesProvider);
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          height: 280,
+                          child: weeklyStatsAsync.when(
+                            data: (weeklyStats) {
+                              final maxY = weeklyStats.isEmpty
+                                  ? 10.0
+                                  : (weeklyStats
+                                              .reduce((a, b) => a > b ? a : b) +
+                                          2)
+                                      .toDouble();
 
-                          return timetableAsync.when(
-                            data: (schedules) {
-                              return EverytimeTimetableWidget(
-                                schedules: schedules,
-                                selectedWeek: DateTime.now(),
-                                onScheduleTap: (schedule) {
-                                  // 스케줄 클릭 시 PT 일정 관리 페이지로 이동
-                                  context.push('/pt-schedule');
-                                },
-                                onScheduleAction: (schedule, action) {
-                                  // 액션 처리는 여기서 간단하게 처리하거나 PT 일정 페이지로 이동
-                                  context.push('/pt-schedule');
-                                },
+                              return BarChart(
+                                BarChartData(
+                                  alignment: BarChartAlignment.spaceAround,
+                                  maxY: maxY,
+                                  minY: 0,
+                                  barTouchData: BarTouchData(
+                                    enabled: true,
+                                    touchTooltipData: BarTouchTooltipData(
+                                      getTooltipColor: (group) =>
+                                          const Color(0xFF10B981),
+                                      getTooltipItem:
+                                          (group, groupIndex, rod, rodIndex) {
+                                        const days = [
+                                          '월',
+                                          '화',
+                                          '수',
+                                          '목',
+                                          '금',
+                                          '토',
+                                          '일'
+                                        ];
+                                        return BarTooltipItem(
+                                          '${days[groupIndex]}\n${rod.toY.toInt()}건',
+                                          const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: 'IBMPlexSansKR',
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  titlesData: FlTitlesData(
+                                    show: true,
+                                    bottomTitles: const AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                    leftTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        reservedSize: 40,
+                                        interval: maxY > 10
+                                            ? (maxY / 3).ceilToDouble()
+                                            : (maxY > 5 ? 2 : 1),
+                                        getTitlesWidget: (value, meta) {
+                                          // 0도 포함하여 표시
+                                          final intValue = value.toInt();
+                                          if (intValue <= maxY.toInt() &&
+                                              value == intValue) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  right: 8),
+                                              child: Text(
+                                                intValue.toString(),
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: NotionColors
+                                                      .textSecondary,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                          return const SizedBox();
+                                        },
+                                      ),
+                                    ),
+                                    topTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        reservedSize: 32,
+                                        getTitlesWidget: (value, meta) {
+                                          const days = [
+                                            '월',
+                                            '화',
+                                            '수',
+                                            '목',
+                                            '금',
+                                            '토',
+                                            '일'
+                                          ];
+                                          if (value.toInt() >= 0 &&
+                                              value.toInt() < days.length) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 12),
+                                              child: Text(
+                                                days[value.toInt()],
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                          return const Text('');
+                                        },
+                                      ),
+                                    ),
+                                    rightTitles: const AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                  ),
+                                  gridData: FlGridData(
+                                    show: true,
+                                    drawVerticalLine: false,
+                                    horizontalInterval: maxY > 10
+                                        ? (maxY / 3).ceilToDouble()
+                                        : (maxY > 5 ? 2 : 1),
+                                    getDrawingHorizontalLine: (value) {
+                                      return const FlLine(
+                                        color: NotionColors.border,
+                                        strokeWidth: 1,
+                                      );
+                                    },
+                                  ),
+                                  borderData: FlBorderData(show: false),
+                                  barGroups:
+                                      weeklyStats.asMap().entries.map((entry) {
+                                    return BarChartGroupData(
+                                      x: entry.key,
+                                      barRods: [
+                                        BarChartRodData(
+                                          toY: entry.value.toDouble(),
+                                          gradient: const LinearGradient(
+                                            begin: Alignment.bottomCenter,
+                                            end: Alignment.topCenter,
+                                            colors: [
+                                              Color(0xFF10B981),
+                                              Color(0xFF34D399)
+                                            ],
+                                          ),
+                                          width: 24,
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(6),
+                                            topRight: Radius.circular(6),
+                                          ),
+                                        )
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
                               );
                             },
                             loading: () => const Center(
                               child: CircularProgressIndicator(
-                                color: Color(0xFF10B981),
-                                strokeWidth: 3,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF10B981)),
                               ),
                             ),
                             error: (error, stack) => Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.error_outline,
-                                    color: Colors.grey[400],
-                                    size: 48,
-                                  ),
-                                  const SizedBox(height: 16),
+                                  Icon(Icons.error_outline,
+                                      color: NotionColors.error, size: 32),
+                                  const SizedBox(height: 8),
                                   Text(
-                                    '시간표를 불러올 수 없습니다',
+                                    '차트를 불러올 수 없습니다',
                                     style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 16,
+                                        color: NotionColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // 📅 이번 주 PT 시간표
+                const SizedBox(height: 32),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF10B981),
+                                    Color(0xFF34D399)
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.calendar_view_week,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '이번 주 PT 시간표',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
                                       fontFamily: 'IBMPlexSansKR',
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  GestureDetector(
-                                    onTap: () {
-                                      ref.invalidate(
-                                          weeklyTimetableSchedulesProvider);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF10B981)
-                                            .withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: const Color(0xFF10B981)
-                                              .withOpacity(0.3),
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        '다시 시도',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.black87,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: 'IBMPlexSansKR',
-                                        ),
-                                      ),
+                                  Text(
+                                    '예정된 수업과 변경요청 현황',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                      fontFamily: 'IBMPlexSansKR',
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          height: 480,
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final timetableAsync =
+                                  ref.watch(weeklyTimetableSchedulesProvider);
+
+                              return timetableAsync.when(
+                                data: (schedules) {
+                                  return EverytimeTimetableWidget(
+                                    schedules: schedules,
+                                    selectedWeek: DateTime.now(),
+                                    onScheduleTap: (schedule) {
+                                      // 스케줄 클릭 시 PT 일정 관리 페이지로 이동
+                                      context.push('/pt-schedule');
+                                    },
+                                    onScheduleAction: (schedule, action) {
+                                      // 액션 처리는 여기서 간단하게 처리하거나 PT 일정 페이지로 이동
+                                      context.push('/pt-schedule');
+                                    },
+                                  );
+                                },
+                                loading: () => const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFF10B981),
+                                    strokeWidth: 3,
+                                  ),
+                                ),
+                                error: (error, stack) => Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: Colors.grey[400],
+                                        size: 48,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        '시간표를 불러올 수 없습니다',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 16,
+                                          fontFamily: 'IBMPlexSansKR',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      GestureDetector(
+                                        onTap: () {
+                                          ref.invalidate(
+                                              weeklyTimetableSchedulesProvider);
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF10B981)
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: const Color(0xFF10B981)
+                                                  .withOpacity(0.3),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            '다시 시도',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.black87,
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: 'IBMPlexSansKR',
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+
+                // 📅 오늘의 PT 일정
+                const SizedBox(height: 32),
+                const TodayPTScheduleCard(),
+
+                const SizedBox(height: 100),
+              ],
             ),
-
-            // 📅 오늘의 PT 일정
-            const SizedBox(height: 32),
-            const TodayPTScheduleCard(),
-
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 
   Widget _buildDefaultAvatar(String? name) {

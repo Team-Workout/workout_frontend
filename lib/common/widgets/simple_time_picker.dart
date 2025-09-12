@@ -185,11 +185,10 @@ class _SimpleTimePickerState extends State<SimpleTimePicker> {
                                               : Colors.transparent,
                                           borderRadius:
                                               BorderRadius.circular(4),
-                                          border: isSelected
-                                              ? Border.all(
-                                                  color:
-                                                      const Color(0xFF10B981))
-                                              : null,
+                                          border: Border.all(
+                                            color: Colors.transparent, // 항상 투명하게 해서 움찔거림 방지
+                                            width: 1,
+                                          ),
                                         ),
                                         child: Text(
                                           hour == 0 ? '24시' : '${hour.toString().padLeft(2, '0')}시',
@@ -260,11 +259,10 @@ class _SimpleTimePickerState extends State<SimpleTimePicker> {
                                               : Colors.transparent,
                                           borderRadius:
                                               BorderRadius.circular(4),
-                                          border: isSelected
-                                              ? Border.all(
-                                                  color:
-                                                      const Color(0xFF10B981))
-                                              : null,
+                                          border: Border.all(
+                                            color: Colors.transparent, // 항상 투명하게 해서 움찔거림 방지
+                                            width: 1,
+                                          ),
                                         ),
                                         child: Text(
                                           '${minute.toString().padLeft(2, '0')}분',
@@ -478,7 +476,8 @@ class _QuickTimeButton extends StatelessWidget {
           color: isSelected ? const Color(0xFF10B981) : Colors.grey[100],
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF10B981) : Colors.grey[300]!,
+            color: Colors.transparent, // 항상 투명하게 해서 움찔거림 방지
+            width: 1,
           ),
         ),
         child: Text(

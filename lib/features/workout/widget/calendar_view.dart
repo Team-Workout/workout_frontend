@@ -19,6 +19,7 @@ class CalendarView extends StatefulWidget {
 class _CalendarViewState extends State<CalendarView> {
   List<String> _workoutDates = [];
   Map<String, List<Map<String, dynamic>>> _workoutDataCache = {};
+  bool _isCalendarExpanded = true; // 캘린더 펼침/접힘 상태
 
   @override
   void initState() {
@@ -79,131 +80,224 @@ class _CalendarViewState extends State<CalendarView> {
               fontFamily: 'IBMPlexSansKR',
             ),
       ),
-      child: Column(
-        children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              height: 350,
-              child: TableCalendar<WorkoutDayRecord>(
-                firstDay: DateTime.utc(1900, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                focusedDay: widget.viewModel.focusedDate,
-                selectedDayPredicate: (day) =>
-                    isSameDay(widget.viewModel.selectedDate, day),
-                eventLoader: (day) => _getEventsForDay(day),
-                calendarFormat: CalendarFormat.month,
-                locale: 'ko_KR', // 한국어 설정
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                  titleTextStyle: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                  leftChevronIcon:
-                      Icon(Icons.chevron_left, color: Color(0xFF10B981)),
-                  rightChevronIcon:
-                      Icon(Icons.chevron_right, color: Color(0xFF10B981)),
-                ),
-                daysOfWeekStyle: const DaysOfWeekStyle(
-                  weekendStyle: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'IBMPlexSansKR',
-                    fontSize: 13,
-                  ),
-                  weekdayStyle: TextStyle(
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'IBMPlexSansKR',
-                    fontSize: 13,
-                  ),
-                ),
-                calendarStyle: const CalendarStyle(
-                  cellMargin: EdgeInsets.all(4),
-                  cellPadding: EdgeInsets.all(0),
-                  todayDecoration: BoxDecoration(
-                    color: Colors.orange,
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Color(0xFF10B981),
-                    shape: BoxShape.circle,
-                  ),
-                  markerDecoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF10B981),
-                        Color(0xFF34D399),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            // 캘린더 섹션
+            Container(
+              color: Colors.white,
+              child: Column(
+                children: [
+                  // 캘린더 헤더 (항상 표시)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding: EdgeInsets.only(
+                      top: 16,
+                      left: 16,
+                      right: 16,
+                      bottom: _isCalendarExpanded ? 8 : 16,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // 이전 달 버튼
+                        IconButton(
+                          onPressed: () {
+                            final newDate = DateTime(
+                              widget.viewModel.focusedDate.year,
+                              widget.viewModel.focusedDate.month - 1,
+                            );
+                            widget.viewModel.updateFocusedDate(newDate);
+                            _workoutDataCache.clear();
+                            _loadWorkoutDates();
+                          },
+                          icon: const Icon(
+                            Icons.chevron_left,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                        // 날짜 표시
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isCalendarExpanded = !_isCalendarExpanded;
+                            });
+                          },
+                          child: Row(
+                            children: [
+                              Text(
+                                DateFormat('yyyy년 M월').format(widget.viewModel.focusedDate),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              AnimatedRotation(
+                                turns: _isCalendarExpanded ? 0 : 0.5,
+                                duration: const Duration(milliseconds: 300),
+                                child: const Icon(
+                                  Icons.expand_less,
+                                  color: Color(0xFF10B981),
+                                  size: 20,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // 다음 달 버튼
+                        IconButton(
+                          onPressed: () {
+                            final newDate = DateTime(
+                              widget.viewModel.focusedDate.year,
+                              widget.viewModel.focusedDate.month + 1,
+                            );
+                            widget.viewModel.updateFocusedDate(newDate);
+                            _workoutDataCache.clear();
+                            _loadWorkoutDates();
+                          },
+                          icon: const Icon(
+                            Icons.chevron_right,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
                       ],
                     ),
-                    borderRadius: BorderRadius.all(Radius.circular(3)),
-                    border: Border.fromBorderSide(BorderSide(
-                      color: Colors.white,
-                      width: 1,
-                    )),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFF10B981), // withOpacity(0.4) 대신 16진수로
-                        blurRadius: 3,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
                   ),
-                  weekendTextStyle: TextStyle(
-                    color: Colors.red,
-                    fontFamily: 'IBMPlexSansKR',
+                  // 캘린더 본체
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    child: Container(
+                      height: _isCalendarExpanded ? 350 : 0,
+                      padding: _isCalendarExpanded
+                          ? const EdgeInsets.symmetric(horizontal: 16)
+                          : EdgeInsets.zero,
+                      child: _isCalendarExpanded
+                          ? TableCalendar<WorkoutDayRecord>(
+                              firstDay: DateTime.utc(1900, 1, 1),
+                              lastDay: DateTime.utc(2030, 12, 31),
+                              focusedDay: widget.viewModel.focusedDate,
+                              selectedDayPredicate: (day) =>
+                                  isSameDay(widget.viewModel.selectedDate, day),
+                              eventLoader: (day) => _getEventsForDay(day),
+                              calendarFormat: CalendarFormat.month,
+                              locale: 'ko_KR',
+                              headerStyle: const HeaderStyle(
+                                formatButtonVisible: false,
+                                titleCentered: true,
+                                headerMargin: EdgeInsets.zero,
+                                headerPadding: EdgeInsets.zero,
+                                leftChevronVisible: false,
+                                rightChevronVisible: false,
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                ),
+                                titleTextStyle: TextStyle(
+                                  fontSize: 0, // 텍스트 크기를 0으로 설정하여 숨김
+                                  height: 0,
+                                ),
+                              ),
+                              daysOfWeekStyle: const DaysOfWeekStyle(
+                                weekendStyle: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'IBMPlexSansKR',
+                                  fontSize: 13,
+                                ),
+                                weekdayStyle: TextStyle(
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'IBMPlexSansKR',
+                                  fontSize: 13,
+                                ),
+                              ),
+                              calendarStyle: const CalendarStyle(
+                                cellMargin: EdgeInsets.all(4),
+                                cellPadding: EdgeInsets.all(0),
+                                todayDecoration: BoxDecoration(
+                                  color: Colors.orange,
+                                  shape: BoxShape.circle,
+                                ),
+                                selectedDecoration: BoxDecoration(
+                                  color: Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                ),
+                                markerDecoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFF10B981),
+                                      Color(0xFF34D399),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.all(Radius.circular(3)),
+                                  border: Border.fromBorderSide(BorderSide(
+                                    color: Colors.white,
+                                    width: 1,
+                                  )),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFF10B981),
+                                      blurRadius: 3,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                weekendTextStyle: TextStyle(
+                                  color: Colors.red,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                                defaultTextStyle: TextStyle(
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                                selectedTextStyle: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                                todayTextStyle: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                                markerSize: 10,
+                                markersMaxCount: 1,
+                                markerMargin: EdgeInsets.symmetric(horizontal: 0.5),
+                              ),
+                              onDaySelected: (selectedDay, focusedDay) {
+                                widget.viewModel.updateSelectedDate(selectedDay);
+                                widget.viewModel.updateFocusedDate(focusedDay);
+                                // 선택된 날짜의 운동 기록이 캐시에 없다면 로드
+                                final dateString =
+                                    DateFormat('yyyy-MM-dd').format(selectedDay);
+                                if (!_workoutDataCache.containsKey(dateString)) {
+                                  _loadWorkoutDataForDate(dateString);
+                                }
+                              },
+                              onPageChanged: (focusedDay) {
+                                widget.viewModel.updateFocusedDate(focusedDay);
+                                // 달 변경 시 운동 날짜 새로고침
+                                _workoutDataCache.clear(); // 캐시 클리어
+                                _loadWorkoutDates();
+                              },
+                            )
+                          : null,
+                    ),
                   ),
-                  defaultTextStyle: TextStyle(
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                  selectedTextStyle: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                  todayTextStyle: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                  markerSize: 10,
-                  markersMaxCount: 1,
-                  markerMargin: EdgeInsets.symmetric(horizontal: 0.5),
-                ),
-                onDaySelected: (selectedDay, focusedDay) {
-                  widget.viewModel.updateSelectedDate(selectedDay);
-                  widget.viewModel.updateFocusedDate(focusedDay);
-                  // 선택된 날짜의 운동 기록이 캐시에 없다면 로드
-                  final dateString =
-                      DateFormat('yyyy-MM-dd').format(selectedDay);
-                  if (!_workoutDataCache.containsKey(dateString)) {
-                    _loadWorkoutDataForDate(dateString);
-                  }
-                },
-                onPageChanged: (focusedDay) {
-                  widget.viewModel.updateFocusedDate(focusedDay);
-                  // 달 변경 시 운동 날짜 새로고침
-                  _workoutDataCache.clear(); // 캐시 클리어
-                  _loadWorkoutDates();
-                },
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Container(
+            const SizedBox(height: 16),
+            // 운동 정보 섹션
+            Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SingleChildScrollView(
-                child: _buildSelectedDayWorkouts(),
-              ),
+              child: _buildSelectedDayWorkouts(),
             ),
-          ),
-        ],
+            const SizedBox(height: 100), // 하단 여백
+          ],
+        ),
       ),
     );
   }
@@ -327,16 +421,11 @@ class _CalendarViewState extends State<CalendarView> {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      '이 날에는 운동 기록이 없습니다',
+                      '운동 기록이 없습니다',
                       style: TextStyle(
                           color: NotionColors.textSecondary, fontSize: 16),
                     ),
                     SizedBox(height: 8),
-                    Text(
-                      '운동 기록 탭에서 새로운 기록을 작성해보세요!',
-                      style: TextStyle(
-                          color: NotionColors.textSecondary, fontSize: 14),
-                    ),
                   ],
                 ),
               ),
@@ -344,7 +433,17 @@ class _CalendarViewState extends State<CalendarView> {
           else
             ...events.map((event) => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: WorkoutDayCard(dayRecord: event),
+                  child: WorkoutDayCard(
+                    dayRecord: event,
+                    onExpansionChanged: (isExpanded) {
+                      // 운동 카드가 펼쳐질 때 캘린더 접기
+                      if (isExpanded && _isCalendarExpanded) {
+                        setState(() {
+                          _isCalendarExpanded = false;
+                        });
+                      }
+                    },
+                  ),
                 )),
         ],
       ),

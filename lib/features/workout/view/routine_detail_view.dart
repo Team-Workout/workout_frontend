@@ -70,19 +70,44 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
           actions: [
             if (_routine != null)
               PopupMenuButton<String>(
+                color: Colors.white,
+                icon: Icon(
+                  Icons.more_vert,
+                  color: Colors.grey[600],
+                ),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: Colors.white,
+                    width: 1,
+                  ),
+                ),
                 onSelected: (value) {
                   if (value == 'delete') {
                     _showDeleteConfirmDialog();
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.delete, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('삭제'),
+                        Icon(
+                          Icons.delete_outline,
+                          color: Colors.grey[600],
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '삭제',
+                          style: TextStyle(
+                            fontFamily: 'IBMPlexSansKR',
+                            color: Colors.grey[700],
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -92,7 +117,8 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
         ),
         backgroundColor: Colors.grey.shade50,
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator(
+            ? const Center(
+                child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
               ))
             : _errorMessage != null
@@ -215,9 +241,9 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
             Row(
               children: [
                 _buildStatItem(
-                  icon: Icons.list_alt,
+                  icon: Icons.list_alt, // 사용되지 않음
                   label: '운동 수',
-                  value: _routine!.routineExercises?.length.toString() ?? '0',
+                  value: '${_routine!.routineExercises?.length ?? 0}개',
                 ),
               ],
             ),
@@ -234,25 +260,19 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: Colors.grey[600], size: 18),
-            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 color: Colors.grey[600],
-                fontSize: 12,
+                fontSize: 13,
                 fontFamily: 'IBMPlexSansKR',
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               value,
               style: const TextStyle(
@@ -453,16 +473,68 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
   void _showDeleteConfirmDialog() {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (context) => AlertDialog(
-        title: const Text('루틴 삭제'),
-        content:
-            Text('\'${_routine!.name}\' 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: const Color(0xFF10B981).withOpacity(0.3),
+            width: 1.5,
           ),
-          NotionButton(
+        ),
+        title: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 20,
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              '루틴 삭제',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'IBMPlexSansKR',
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey[700],
+                  fontFamily: 'IBMPlexSansKR',
+                  height: 1.4,
+                ),
+                children: [
+                  const TextSpan(text: '\''),
+                  TextSpan(
+                    text: _routine!.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const TextSpan(
+                      text: '\' 루틴을 삭제하시겠습니까?\n\n삭제된 루틴은 복구할 수 없습니다.'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -471,19 +543,66 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                     .deleteRoutine(_routine!.id);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('루틴이 삭제되었습니다.')),
+                    SnackBar(
+                      content: const Text(
+                        '루틴이 삭제되었습니다.',
+                        style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+                      ),
+                      backgroundColor: const Color(0xFF10B981),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   );
-                  context.pop(); // 루틴 목록으로 돌아가기
+                  context.pop();
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString())),
+                    SnackBar(
+                      content: Text(
+                        e.toString(),
+                        style: const TextStyle(fontFamily: 'IBMPlexSansKR'),
+                      ),
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   );
                 }
               }
             },
-            text: '삭제',
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '삭제',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey[600],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '취소',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

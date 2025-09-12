@@ -1151,378 +1151,478 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
       barrierDismissible: true,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(20),
-            child: SingleChildScrollView( // 스크롤 가능하게 만들어서 키보드 문제 해결
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.9,
-                constraints: const BoxConstraints(maxWidth: 400),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+          return AnimatedPadding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header with gradient background
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
+              duration: const Duration(milliseconds: 100),
+              child: Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    constraints: BoxConstraints(
+                      maxWidth: 400,
+                      maxHeight: MediaQuery.of(context).size.height * 0.85,
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.add_chart,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Text(
-                            '체성분 데이터 추가',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                  ),
-                  // Content section
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF10B981).withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                                color: const Color(0xFF10B981)
-                                    .withValues(alpha: 0.2)),
-                          ),
-                          child: TextField(
-                            controller: weightController,
-                            keyboardType: TextInputType.number,
-                            cursorColor: const Color(0xFF10B981),
-                            decoration: const InputDecoration(
-                              labelText: '체중 (kg)',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(20),
-                              labelStyle: TextStyle(
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.w600),
-                              prefixIcon: Icon(Icons.monitor_weight,
-                                  color: Colors.black54),
-                              hintText: '예: 70.5',
-                              hintStyle: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF10B981).withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                                color: const Color(0xFF10B981)
-                                    .withValues(alpha: 0.2)),
-                          ),
-                          child: TextField(
-                            controller: fatController,
-                            keyboardType: TextInputType.number,
-                            cursorColor: const Color(0xFF10B981),
-                            decoration: const InputDecoration(
-                              labelText: '체지방 (kg)',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(20),
-                              labelStyle: TextStyle(
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.w600),
-                              prefixIcon: Icon(Icons.fitness_center,
-                                  color: Colors.black54),
-                              hintText: '예: 15.2',
-                              hintStyle: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF10B981).withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                                color: const Color(0xFF10B981)
-                                    .withValues(alpha: 0.2)),
-                          ),
-                          child: TextField(
-                            controller: muscleController,
-                            keyboardType: TextInputType.number,
-                            cursorColor: const Color(0xFF10B981),
-                            decoration: const InputDecoration(
-                              labelText: '근육량 (kg)',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(20),
-                              labelStyle: TextStyle(
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.w600),
-                              prefixIcon: Icon(Icons.health_and_safety,
-                                  color: Colors.black54),
-                              hintText: '예: 50.3',
-                              hintStyle: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        GestureDetector(
-                          onTap: () async {
-                            final picked = await showCustomDatePicker(
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: DateTime(1900),
-                              lastDate: DateTime.now(),
-                              restrictFuture: true, // 체성분 데이터는 미래 날짜 제한
-                            );
-                            if (picked != null) {
-                              setState(() {
-                                selectedDate = picked;
-                              });
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981)
-                                  .withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color: const Color(0xFF10B981)
-                                      .withValues(alpha: 0.2)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.calendar_today,
-                                    color: Color(0xFF10B981)),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        '측정 날짜',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        DateFormat('yyyy년 MM월 dd일')
-                                            .format(selectedDate),
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(Icons.chevron_right,
-                                    color: Colors.grey),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        // Save button
-                        SizedBox(
-                          width: double.infinity,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Header with gradient background
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
                                 colors: [Color(0xFF10B981), Color(0xFF34D399)],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF10B981)
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                topRight: Radius.circular(24),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Icon(
+                                    Icons.add_chart,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                const Expanded(
+                                  child: Text(
+                                    '체성분 데이터 추가',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: () async {
-                                  if (weightController.text.isNotEmpty &&
-                                      fatController.text.isNotEmpty &&
-                                      muscleController.text.isNotEmpty) {
-                                    try {
-                                      await ref
-                                          .read(bodyCompositionNotifierProvider
-                                              .notifier)
-                                          .addBodyComposition(
-                                            weightKg: double.parse(
-                                                weightController.text),
-                                            fatKg: double.parse(
-                                                fatController.text),
-                                            muscleMassKg: double.parse(
-                                                muscleController.text),
-                                            measurementDate:
-                                                DateFormat('yyyy-MM-dd')
-                                                    .format(selectedDate),
-                                          );
-
-                                      // Refresh the data with current date range
-                                      final dateRange =
-                                          ref.read(dateRangeProvider);
-                                      await ref
-                                          .read(bodyCompositionNotifierProvider
-                                              .notifier)
-                                          .loadBodyCompositions(
-                                            startDate: dateRange.startDate
-                                                .toIso8601String()
-                                                .split('T')[0],
-                                            endDate: dateRange.endDate
-                                                .toIso8601String()
-                                                .split('T')[0],
-                                          );
-
-                                      // Also invalidate the FutureProvider to refresh the data
-                                      ref.invalidate(
-                                          bodyCompositionListProvider);
-
-                                      if (context.mounted) {
-                                        Navigator.pop(context);
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: const Text(
-                                              '데이터가 성공적으로 추가되었습니다',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            backgroundColor:
-                                                const Color(0xFF10B981),
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            margin: const EdgeInsets.all(16),
-                                          ),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text('오류가 발생했습니다: $e'),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('모든 필드를 입력해주세요'),
-                                        backgroundColor: Colors.orange,
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 18),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.save,
-                                          color: Colors.white, size: 24),
-                                      SizedBox(width: 12),
-                                      Text(
-                                        '데이터 저장',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
+                          ),
+                          // Content section
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981)
+                                        .withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                        color: const Color(0xFF10B981)
+                                            .withValues(alpha: 0.2)),
+                                  ),
+                                  child: TextField(
+                                    controller: weightController,
+                                    keyboardType: TextInputType.number,
+                                    cursorColor: const Color(0xFF10B981),
+                                    decoration: const InputDecoration(
+                                      labelText: '체중 (kg)',
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.all(20),
+                                      labelStyle: TextStyle(
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.w600),
+                                      prefixIcon: Icon(Icons.monitor_weight,
+                                          color: Colors.black54),
+                                      hintText: '예: 70.5',
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(height: 20),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981)
+                                        .withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                        color: const Color(0xFF10B981)
+                                            .withValues(alpha: 0.2)),
+                                  ),
+                                  child: TextField(
+                                    controller: fatController,
+                                    keyboardType: TextInputType.number,
+                                    cursorColor: const Color(0xFF10B981),
+                                    decoration: const InputDecoration(
+                                      labelText: '체지방 (kg)',
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.all(20),
+                                      labelStyle: TextStyle(
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.w600),
+                                      prefixIcon: Icon(Icons.fitness_center,
+                                          color: Colors.black54),
+                                      hintText: '예: 15.2',
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981)
+                                        .withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                        color: const Color(0xFF10B981)
+                                            .withValues(alpha: 0.2)),
+                                  ),
+                                  child: TextField(
+                                    controller: muscleController,
+                                    keyboardType: TextInputType.number,
+                                    cursorColor: const Color(0xFF10B981),
+                                    decoration: const InputDecoration(
+                                      labelText: '근육량 (kg)',
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.all(20),
+                                      labelStyle: TextStyle(
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.w600),
+                                      prefixIcon: Icon(Icons.health_and_safety,
+                                          color: Colors.black54),
+                                      hintText: '예: 50.3',
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                GestureDetector(
+                                  onTap: () async {
+                                    // 모든 텍스트 필드에서 포커스 제거 및 키보드 내리기
+                                    FocusManager.instance.primaryFocus
+                                        ?.unfocus();
+
+                                    final picked = await showCustomDatePicker(
+                                      context: context,
+                                      initialDate: selectedDate,
+                                      firstDate: DateTime(1900),
+                                      lastDate: DateTime.now(),
+                                      restrictFuture: true, // 체성분 데이터는 미래 날짜 제한
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        selectedDate = picked;
+                                      });
+                                      // 날짜 선택 후에도 포커스 제거 유지
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981)
+                                          .withValues(alpha: 0.05),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                          color: const Color(0xFF10B981)
+                                              .withValues(alpha: 0.2)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.calendar_today,
+                                            color: Color(0xFF10B981)),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                '측정 날짜',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                DateFormat('yyyy년 MM월 dd일')
+                                                    .format(selectedDate),
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const Icon(Icons.chevron_right,
+                                            color: Colors.grey),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+                                // Save button
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF10B981),
+                                          Color(0xFF34D399)
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF10B981)
+                                              .withValues(alpha: 0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(16),
+                                        onTap: () async {
+                                          if (weightController
+                                                  .text.isNotEmpty &&
+                                              fatController.text.isNotEmpty &&
+                                              muscleController
+                                                  .text.isNotEmpty) {
+                                            try {
+                                              await ref
+                                                  .read(
+                                                      bodyCompositionNotifierProvider
+                                                          .notifier)
+                                                  .addBodyComposition(
+                                                    weightKg: double.parse(
+                                                        weightController.text),
+                                                    fatKg: double.parse(
+                                                        fatController.text),
+                                                    muscleMassKg: double.parse(
+                                                        muscleController.text),
+                                                    measurementDate: DateFormat(
+                                                            'yyyy-MM-dd')
+                                                        .format(selectedDate),
+                                                  );
+
+                                              // Refresh the data with current date range
+                                              final dateRange =
+                                                  ref.read(dateRangeProvider);
+                                              await ref
+                                                  .read(
+                                                      bodyCompositionNotifierProvider
+                                                          .notifier)
+                                                  .loadBodyCompositions(
+                                                    startDate: dateRange
+                                                        .startDate
+                                                        .toIso8601String()
+                                                        .split('T')[0],
+                                                    endDate: dateRange.endDate
+                                                        .toIso8601String()
+                                                        .split('T')[0],
+                                                  );
+
+                                              // Also invalidate the FutureProvider to refresh the data
+                                              ref.invalidate(
+                                                  bodyCompositionListProvider);
+
+                                              if (context.mounted) {
+                                                Navigator.pop(context);
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: const Text(
+                                                      '데이터가 성공적으로 추가되었습니다',
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                    backgroundColor:
+                                                        const Color(0xFF10B981),
+                                                    behavior: SnackBarBehavior
+                                                        .floating,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                    ),
+                                                    margin:
+                                                        const EdgeInsets.all(
+                                                            16),
+                                                  ),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content:
+                                                        Text('오류가 발생했습니다: $e'),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          } else {
+                                            // 다이얼로그 위에 직접 스낵바 표시
+                                            final overlay = Overlay.of(context);
+                                            final overlayEntry = OverlayEntry(
+                                              builder: (context) => Positioned(
+                                                top: MediaQuery.of(context)
+                                                        .padding
+                                                        .top +
+                                                    20,
+                                                left: 20,
+                                                right: 20,
+                                                child: Material(
+                                                  color: Colors.transparent,
+                                                  child: Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                      horizontal: 24,
+                                                      vertical: 16,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(
+                                                          0xFFEF4444),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black
+                                                              .withValues(
+                                                                  alpha: 0.2),
+                                                          blurRadius: 10,
+                                                          offset: const Offset(
+                                                              0, 4),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.error_outline,
+                                                          color: Colors.white,
+                                                          size: 24,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 12),
+                                                        const Expanded(
+                                                          child: Text(
+                                                            '모든 필드를 입력해주세요',
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+
+                                            overlay.insert(overlayEntry);
+
+                                            // 3초 후 자동으로 사라지게
+                                            Future.delayed(
+                                                const Duration(seconds: 3), () {
+                                              overlayEntry.remove();
+                                            });
+                                          }
+                                        },
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 18),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.save,
+                                                  color: Colors.white,
+                                                  size: 24),
+                                              SizedBox(width: 12),
+                                              Text(
+                                                '데이터 저장',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                              ],
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ), // Container 닫기
-          ), // SingleChildScrollView 닫기
-        );
-      },
-    ),
-  );
+                ),
+              ));
+        },
+      ),
+    );
   }
 
   Widget _buildBodyImagesSection() {
@@ -1580,18 +1680,18 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
                     onTap: () => _showBodyImageUploadDialog(),
                     child: const Padding(
                       padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.camera_alt, size: 18, color: Colors.white),
-                          SizedBox(width: 8),
+                          Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                          SizedBox(width: 6),
                           Text(
                             '사진 추가',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              fontSize: 18,
+                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -1681,113 +1781,211 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     final formattedDate =
         DateFormat('yyyy년 M월 d일').format(DateTime.parse(date));
 
+    // 그리드로 표시할 개수 계산 (최대 3개씩 한 줄에, 총 6개까지만 표시)
+    final visibleImages = images.take(6).toList();
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            formattedDate,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF374151),
-            ),
+          // 날짜 헤더를 더 예쁘게
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.calendar_today,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                formattedDate,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1F36),
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${images.length}장',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: images.length,
-              itemBuilder: (context, index) {
-                return _buildBodyImageItem(images[index]);
-              },
+          const SizedBox(height: 16),
+          // Instagram 스타일 그리드
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.0,
             ),
+            itemCount: visibleImages.length,
+            itemBuilder: (context, index) {
+              return _buildBodyImageItem(visibleImages[index]);
+            },
           ),
+          // 더 많은 사진이 있을 때 "더보기" 표시
+          if (images.length > 6)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Center(
+                child: TextButton(
+                  onPressed: () {
+                    // 전체 사진 보기 로직 추가 가능
+                    _showAllPhotosDialog(date, images);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF10B981),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                  ),
+                  child: Text(
+                    '+${images.length - 6}장 더보기',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
   Widget _buildBodyImageItem(BodyImageResponse image) {
-    return Container(
-      width: 100,
-      height: 100,
-      margin: const EdgeInsets.only(right: 8),
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: FutureBuilder<String?>(
-              future: ImageCacheManager().getCachedImage(
-                imageUrl: image.fileUrl,
-                cacheKey: 'body_${image.fileId}',
-                type: ImageType.body,
-              ),
-              builder: (context, cacheSnapshot) {
-                if (cacheSnapshot.hasData && cacheSnapshot.data != null) {
-                  // 캐시된 이미지가 있으면 파일로 로드
-                  return GestureDetector(
-                    onTap: () {
-                      final cachedFile = File(cacheSnapshot.data!);
-                      cachedFile.readAsBytes().then((bytes) {
-                        _showBodyImageFullScreen(image, bytes);
-                      });
-                    },
-                    child: Image.file(
-                      File(cacheSnapshot.data!),
-                      fit: BoxFit.cover,
-                      width: 100,
-                      height: 100,
-                    ),
-                  );
-                }
-                // 캐시가 없으면 기존 방식으로 로드
-                return FutureBuilder<Uint8List?>(
-                  future: _loadAuthenticatedBodyImage(image.fileUrl),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      );
-                    }
-
-                    if (snapshot.hasData && snapshot.data != null) {
-                      // 이미지를 캐시에 저장
-                      ImageCacheManager().updateCachedImage(
-                        imageUrl: image.fileUrl,
-                        cacheKey: 'body_${image.fileId}',
-                        type: ImageType.body,
-                      );
-                      return GestureDetector(
-                        onTap: () =>
-                            _showBodyImageFullScreen(image, snapshot.data!),
-                        child: Image.memory(
-                          snapshot.data!,
-                          fit: BoxFit.cover,
-                          width: 100,
-                          height: 100,
-                        ),
-                      );
-                    }
-
-                    return Container(
-                      color: Colors.grey[200],
-                      child: Icon(
-                        Icons.image_not_supported,
-                        color: Colors.grey[400],
+    return AspectRatio(
+      aspectRatio: 1.0, // 정사각형 비율 강제
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: FutureBuilder<String?>(
+                future: ImageCacheManager().getCachedImage(
+                  imageUrl: image.fileUrl,
+                  cacheKey: 'body_${image.fileId}',
+                  type: ImageType.body,
+                ),
+                builder: (context, cacheSnapshot) {
+                  if (cacheSnapshot.hasData && cacheSnapshot.data != null) {
+                    // 캐시된 이미지가 있으면 파일로 로드
+                    return GestureDetector(
+                      onTap: () {
+                        final cachedFile = File(cacheSnapshot.data!);
+                        cachedFile.readAsBytes().then((bytes) {
+                          _showBodyImageFullScreen(image, bytes);
+                        });
+                      },
+                      child: Image.file(
+                        File(cacheSnapshot.data!),
+                        fit: BoxFit.cover, // 정사각형으로 크롭
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
                     );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+                  }
+                  // 캐시가 없으면 기존 방식으로 로드
+                  return FutureBuilder<Uint8List?>(
+                    future: _loadAuthenticatedBodyImage(image.fileUrl),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        );
+                      }
+
+                      if (snapshot.hasData && snapshot.data != null) {
+                        // 이미지를 캐시에 저장
+                        ImageCacheManager().updateCachedImage(
+                          imageUrl: image.fileUrl,
+                          cacheKey: 'body_${image.fileId}',
+                          type: ImageType.body,
+                        );
+                        return GestureDetector(
+                          onTap: () =>
+                              _showBodyImageFullScreen(image, snapshot.data!),
+                          child: Image.memory(
+                            snapshot.data!,
+                            fit: BoxFit.cover, // 정사각형으로 크롭
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                        );
+                      }
+
+                      return Container(
+                        color: Colors.grey[200],
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: Colors.grey[400],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -1837,6 +2035,78 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     }
   }
 
+  void _showAllPhotosDialog(String date, List<BodyImageResponse> images) {
+    final formattedDate =
+        DateFormat('yyyy년 M월 d일').format(DateTime.parse(date));
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.photo_library,
+                        color: Colors.white, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '$formattedDate (${images.length}장)',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(20),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemCount: images.length,
+                  itemBuilder: (context, index) {
+                    return _buildBodyImageItem(images[index]);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showBodyImageUploadDialog() {
     showDialog(
       context: context,
@@ -1847,35 +2117,62 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
   void _showBodyImageFullScreen(BodyImageResponse image, Uint8List imageData) {
     showDialog(
       context: context,
+      barrierColor: Colors.black87, // 더 어두운 배경
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(60), // 더 큰 여백으로 X버튼 공간 확보
         child: Stack(
           children: [
             Center(
-              child: InteractiveViewer(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.memory(
-                    imageData,
-                    fit: BoxFit.contain,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9, // 화면 너비의 90%로 제한
+                  maxHeight: MediaQuery.of(context).size.height * 0.8, // 화면 높이의 80%로 제한
+                ),
+                child: InteractiveViewer(
+                  maxScale: 5.0, // 최대 5배 확대
+                  minScale: 0.5, // 최소 50% 축소
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.memory(
+                        imageData,
+                        fit: BoxFit.contain, // 원본 비율 유지
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
             Positioned(
-              top: 40,
+              top: 20, // 더 위로 올림 (40 -> 20)
               right: 20,
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10), // 패딩 늘려서 더 크게
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.7), // 더 진하게
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
                   child: const Icon(
                     Icons.close,
                     color: Colors.white,
+                    size: 24, // 아이콘 크기 명시
                   ),
                 ),
               ),
@@ -2265,7 +2562,8 @@ class _BodyImageUploadDialogState
                                           initialDate: selectedDate,
                                           firstDate: DateTime(1900),
                                           lastDate: DateTime.now(),
-                                          restrictFuture: true, // 체성분 데이터는 미래 날짜 제한
+                                          restrictFuture:
+                                              true, // 체성분 데이터는 미래 날짜 제한
                                         );
                                         if (date != null) {
                                           setState(() {

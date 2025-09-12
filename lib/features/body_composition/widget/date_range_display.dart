@@ -74,43 +74,29 @@ class DateRangeDisplay extends ConsumerWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildQuickDateButton('최근 7일', () {
-                final endDate = DateTime.now();
-                final startDate = endDate.subtract(const Duration(days: 7));
-                _updateDateRange(ref, startDate, endDate, context);
+              _buildQuickDateButton(ref, '최근 7일', DateRangeType.oneWeek, () {
+                ref.read(dateRangeProvider.notifier).setQuickDateRange(DateRangeType.oneWeek);
+                _refreshData(ref);
               }),
               const SizedBox(width: 8),
-              _buildQuickDateButton('최근 30일', () {
-                final endDate = DateTime.now();
-                final startDate = endDate.subtract(const Duration(days: 30));
-                _updateDateRange(ref, startDate, endDate, context);
+              _buildQuickDateButton(ref, '최근 30일', DateRangeType.oneMonth, () {
+                ref.read(dateRangeProvider.notifier).setQuickDateRange(DateRangeType.oneMonth);
+                _refreshData(ref);
               }),
               const SizedBox(width: 8),
-              _buildQuickDateButton('최근 3개월', () {
-                final endDate = DateTime.now();
-                final startDate =
-                    DateTime(endDate.year, endDate.month - 3, endDate.day);
-                _updateDateRange(ref, startDate, endDate, context);
+              _buildQuickDateButton(ref, '최근 3개월', DateRangeType.threeMonths, () {
+                ref.read(dateRangeProvider.notifier).setQuickDateRange(DateRangeType.threeMonths);
+                _refreshData(ref);
               }),
               const SizedBox(width: 8),
-              _buildQuickDateButton('최근 6개월', () {
-                final endDate = DateTime.now();
-                final startDate =
-                    DateTime(endDate.year, endDate.month - 6, endDate.day);
-                _updateDateRange(ref, startDate, endDate, context);
+              _buildQuickDateButton(ref, '최근 6개월', DateRangeType.sixMonths, () {
+                ref.read(dateRangeProvider.notifier).setQuickDateRange(DateRangeType.sixMonths);
+                _refreshData(ref);
               }),
               const SizedBox(width: 8),
-              _buildQuickDateButton('최근 1년', () {
-                final endDate = DateTime.now();
-                final startDate =
-                    DateTime(endDate.year - 1, endDate.month, endDate.day);
-                _updateDateRange(ref, startDate, endDate, context);
-              }),
-              const SizedBox(width: 8),
-              _buildQuickDateButton('전체 기간', () {
-                final endDate = DateTime.now();
-                final startDate = DateTime(2020, 1, 1);
-                _updateDateRange(ref, startDate, endDate, context);
+              _buildQuickDateButton(ref, '최근 1년', DateRangeType.oneYear, () {
+                ref.read(dateRangeProvider.notifier).setQuickDateRange(DateRangeType.oneYear);
+                _refreshData(ref);
               }),
             ],
           ),
@@ -119,19 +105,26 @@ class DateRangeDisplay extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickDateButton(String label, VoidCallback onTap) {
+  Widget _buildQuickDateButton(WidgetRef ref, String label, DateRangeType type, VoidCallback onTap) {
+    final dateRange = ref.watch(dateRangeProvider);
+    final isSelected = dateRange.selectedType == type;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(25),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isSelected ? const Color(0xFF10B981) : Colors.white,
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
+          border: Border.all(
+            color: isSelected 
+              ? const Color(0xFF10B981) 
+              : const Color(0xFF10B981).withValues(alpha: 0.2)
+          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+              color: const Color(0xFF10B981).withValues(alpha: isSelected ? 0.2 : 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -139,14 +132,22 @@ class DateRangeDisplay extends ConsumerWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF10B981),
+            color: isSelected ? Colors.white : const Color(0xFF10B981),
           ),
         ),
       ),
     );
+  }
+
+  void _refreshData(WidgetRef ref) {
+    final dateRange = ref.read(dateRangeProvider);
+    ref.read(bodyCompositionNotifierProvider.notifier).loadBodyCompositions(
+          startDate: dateRange.startDate.toIso8601String().split('T')[0],
+          endDate: dateRange.endDate.toIso8601String().split('T')[0],
+        );
   }
 
   void _updateDateRange(WidgetRef ref, DateTime startDate, DateTime endDate, BuildContext context) {

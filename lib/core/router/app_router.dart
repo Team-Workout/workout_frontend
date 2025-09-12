@@ -31,6 +31,7 @@ import 'package:pt_service/features/workout/view/routine_list_view.dart';
 import 'package:pt_service/features/workout/view/routine_detail_view.dart';
 import 'package:pt_service/features/workout/view/workout_routine_create_view.dart';
 import 'package:pt_service/features/pt_contract/view/pt_contract_list_view.dart';
+import 'package:pt_service/features/pt_session/view/pt_session_list_view.dart';
 import 'package:pt_service/features/pt_reservation/view/reservation_request_view.dart';
 import 'package:pt_service/features/pt_reservation/view/reservation_recommendation_view.dart';
 import 'package:pt_service/features/pt_reservation/view/appointment_confirmation_view.dart';
@@ -293,7 +294,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/pt-contracts',
-        builder: (context, state) => const PtContractListView(),
+        builder: (context, state) {
+          // extra 파라미터로 fromSettings 전달
+          final fromSettings = state.extra as bool? ?? false;
+          return PtContractListView(fromSettings: fromSettings);
+        },
+      ),
+      GoRoute(
+        path: '/pt-sessions',
+        builder: (context, state) => const PtSessionListView(),
       ),
       GoRoute(
         path: '/reservation-requests',

@@ -14,9 +14,9 @@ enum DateRangeType { oneWeek, oneMonth, threeMonths, sixMonths, oneYear }
 
 class DateRangeNotifier extends StateNotifier<DateRange> {
   DateRangeNotifier() : super(DateRange(
-    startDate: DateTime.now().subtract(const Duration(days: 30)),
+    startDate: DateTime.now().subtract(const Duration(days: 365)),
     endDate: DateTime.now(),
-    selectedType: DateRangeType.oneMonth,
+    selectedType: DateRangeType.oneYear,
   ));
 
   void updateDateRange(DateTime startDate, DateTime endDate, {DateRangeType? selectedType}) {
@@ -144,7 +144,7 @@ class BodyCompositionNotifier extends StateNotifier<AsyncValue<List<BodyComposit
     state = const AsyncValue.loading();
     try {
       final defaultEndDate = DateTime.now();
-      final defaultStartDate = defaultEndDate.subtract(const Duration(days: 30));
+      final defaultStartDate = defaultEndDate.subtract(const Duration(days: 365));
       
       final finalStartDate = startDate ?? defaultStartDate.toIso8601String().split('T')[0];
       final finalEndDate = endDate ?? defaultEndDate.toIso8601String().split('T')[0];

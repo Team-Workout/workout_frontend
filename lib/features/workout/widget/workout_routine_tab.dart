@@ -165,6 +165,20 @@ class _WorkoutRoutineTabState extends ConsumerState<WorkoutRoutineTab> {
   }
 
   Future<void> _saveRoutine() async {
+    // 루틴 이름 검증
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '루틴 이름을 입력해주세요',
+            style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (_routineExercises.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('최소 하나의 운동을 추가해주세요')),

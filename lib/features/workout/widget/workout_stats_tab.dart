@@ -286,19 +286,16 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
         children: [
           // 기간 선택 및 필터
           _buildPeriodSelector(),
+          // 전체 요약 통계 카드 (날짜 선택 바로 밑으로 이동)
+          _buildDetailedSummaryCard(),
+          const SizedBox(height: 20),
+          // 부위별 분석 차트 (운동 요약 아래로 이동)
+          _buildMuscleGroupAnalysisChart(),
+          const SizedBox(height: 20),
           // 검색 및 필터 UI
           _buildSearchAndFilter(),
           const SizedBox(height: 16),
-          // 전체 요약 통계 카드 (이미지와 유사한 스타일)
-          _buildDetailedSummaryCard(),
-          const SizedBox(height: 20),
-          // 부위별 분석 차트
-          _buildMuscleGroupAnalysisChart(),
-          const SizedBox(height: 20),
-          // 주간 운동 빈도 차트
-          _buildWeeklyWorkoutFrequencyChart(),
-          const SizedBox(height: 20),
-          // 운동별 상세 통계 리스트
+          // 운동별 상세 통계 리스트 (검색 및 필터 바로 밑에 배치)
           _buildDetailedExerciseStatsList(),
           const SizedBox(height: 100), // 하단 여백
         ],
@@ -557,8 +554,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                     '총 볼륨',
                     '${(summary.totalVolume / 1000).toStringAsFixed(1)}K',
                     'kg',
-                    Icons.fitness_center,
-                    const Color(0xFF10B981),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -567,8 +562,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                     '총 세트',
                     '${summary.totalSets}',
                     '세트',
-                    Icons.format_list_numbered,
-                    const Color(0xFF3B82F6),
                   ),
                 ),
               ],
@@ -581,8 +574,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                     '총 횟수',
                     '$totalReps',
                     '회',
-                    Icons.repeat,
-                    const Color(0xFF8B5CF6),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -591,8 +582,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                     '운동 종류',
                     '${summary.totalExercises}',
                     '가지',
-                    Icons.category,
-                    const Color(0xFFEF4444),
                   ),
                 ),
               ],
@@ -603,7 +592,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     );
   }
   
-  Widget _buildStatCard(String title, String value, String unit, IconData icon, Color color) {
+  Widget _buildStatCard(String title, String value, String unit) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -617,25 +606,13 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                color: const Color(0xFF10B981).withValues(alpha: 0.7),
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontFamily: 'IBMPlexSansKR',
+            ),
           ),
           const SizedBox(height: 8),
           RichText(
@@ -869,8 +846,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                       child: _buildStatInfo(
                         '최대 중량',
                         '${exercise.maxWeight.toStringAsFixed(1)}kg',
-                        Icons.trending_up,
-                        const Color(0xFFEF4444),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -878,8 +853,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                       child: _buildStatInfo(
                         '평균 중량',
                         '${exercise.avgWeight.toStringAsFixed(1)}kg',
-                        Icons.show_chart,
-                        const Color(0xFF3B82F6),
                       ),
                     ),
                   ],
@@ -892,8 +865,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                       child: _buildStatInfo(
                         '총 볼륨',
                         '${(exercise.totalVolume / 1000).toStringAsFixed(1)}K',
-                        Icons.fitness_center,
-                        const Color(0xFF10B981),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -901,8 +872,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                       child: _buildStatInfo(
                         '예상 1RM',
                         '${exercise.estimatedOneRM.toStringAsFixed(1)}kg',
-                        Icons.whatshot,
-                        const Color(0xFF8B5CF6),
                       ),
                     ),
                   ],
@@ -918,7 +887,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     );
   }
   
-  Widget _buildStatInfo(String title, String value, IconData icon, Color color) {
+  Widget _buildStatInfo(String title, String value) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -932,23 +901,13 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 16,
-                color: Colors.grey[600],
-              ),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontFamily: 'IBMPlexSansKR',
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontFamily: 'IBMPlexSansKR',
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -1408,167 +1367,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     );
   }
 
-  Widget _buildWeeklyWorkoutFrequencyChart() {
-    // 주간 운동 빈도 계산 (예시 데이터)
-    final weeklyData = _calculateWeeklyFrequencyData();
-    
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: Border.all(
-          color: const Color(0xFF10B981).withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 헤더
-            Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  '주간 운동 빈도',
-                  style: TextStyle(
-                    color: Color(0xFF1F2937),
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'IBMPlexSansKR',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            
-            // 막대 그래프
-            Container(
-              height: 200,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: weeklyData.entries.map((entry) {
-                  final dayName = entry.key;
-                  final count = entry.value;
-                  final maxCount = weeklyData.values.reduce((a, b) => a > b ? a : b);
-                  final height = maxCount > 0 ? (count / maxCount) * 140 : 0.0;
-                  
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      // 운동 횟수 표시
-                      if (count > 0)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF8B5CF6),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '$count',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              fontFamily: 'IBMPlexSansKR',
-                            ),
-                          ),
-                        ),
-                      
-                      // 막대
-                      Container(
-                        width: 24,
-                        height: height,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              const Color(0xFF8B5CF6),
-                              const Color(0xFF8B5CF6).withValues(alpha: 0.7),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      
-                      // 요일 라벨
-                      Text(
-                        dayName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontFamily: 'IBMPlexSansKR',
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // 주간 요약 - 간단하게 총 운동 횟수만 표시
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF8B5CF6).withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${weeklyData.values.reduce((a, b) => a + b)}회',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF8B5CF6),
-                      fontFamily: 'IBMPlexSansKR',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '주간 총 운동',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontFamily: 'IBMPlexSansKR',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Map<String, Map<String, dynamic>> _calculateMuscleGroupData() {
     if (_viewModel.statsData == null) return {};
@@ -1609,58 +1407,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     return result;
   }
 
-  Map<String, int> _calculateWeeklyFrequencyData() {
-    if (_viewModel.statsData == null) return {};
-    
-    final weekDays = ['월', '화', '수', '목', '금', '토', '일'];
-    final weeklyData = <String, int>{};
-    
-    // 요일별 카운터 초기화
-    for (final day in weekDays) {
-      weeklyData[day] = 0;
-    }
-    
-    // 실제 운동 데이터에서 요일별 운동 횟수 계산
-    final exercises = _viewModel.statsData!.exercises;
-    final workoutDates = <String>{};
-    
-    // 모든 운동의 모든 세트에서 날짜 추출
-    for (final exercise in exercises) {
-      for (final set in exercise.sets) {
-        workoutDates.add(set.date);
-      }
-    }
-    
-    // 각 운동 날짜를 요일로 변환하여 카운트
-    for (final dateString in workoutDates) {
-      try {
-        final date = DateTime.parse(dateString);
-        final weekday = date.weekday; // 1(월) ~ 7(일)
-        
-        // weekday를 한국 요일 이름으로 변환
-        final koreanDay = _getKoreanWeekday(weekday);
-        weeklyData[koreanDay] = (weeklyData[koreanDay] ?? 0) + 1;
-      } catch (e) {
-        // 날짜 파싱 실패시 무시
-        print('날짜 파싱 실패: $dateString');
-      }
-    }
-    
-    return weeklyData;
-  }
-  
-  String _getKoreanWeekday(int weekday) {
-    switch (weekday) {
-      case 1: return '월';
-      case 2: return '화';
-      case 3: return '수';
-      case 4: return '목';
-      case 5: return '금';
-      case 6: return '토';
-      case 7: return '일';
-      default: return '월';
-    }
-  }
 
   String _getMuscleGroupFromExercise(String exerciseName) {
     final name = exerciseName.toLowerCase();

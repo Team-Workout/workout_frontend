@@ -186,7 +186,7 @@ class _LessonRequestContentState extends ConsumerState<_LessonRequestContent> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: const Text(
-                'PT 수업 예약 요청',
+                'PT 수업 예약',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -218,7 +218,8 @@ class _LessonRequestContentState extends ConsumerState<_LessonRequestContent> {
                       _buildContractsList(contractResponse),
                   loading: () => const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
                     ),
                   ),
                   error: (error, stack) => _buildErrorState(),
@@ -460,8 +461,8 @@ class _LessonRequestBottomSheet extends ConsumerStatefulWidget {
 class _LessonRequestBottomSheetState
     extends ConsumerState<_LessonRequestBottomSheet> {
   bool _isRequesting = false;
-  DateTime? _selectedDate;
-  DateTime _focusedDate = DateTime.now().add(const Duration(days: 1));
+  DateTime? _selectedDate = DateTime.now(); // 오늘 날짜로 기본 설정
+  DateTime _focusedDate = DateTime.now(); // 오늘 날짜로 포커스
   TimeOfDay? _selectedStartTime;
   TimeOfDay? _selectedEndTime;
   List<TimeOfDay> _selectedTimeSlots = []; // 연속 선택된 시간들
@@ -734,8 +735,7 @@ class _LessonRequestBottomSheetState
             decoration: BoxDecoration(
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: Colors.grey.shade300),
+              border: Border.all(color: Colors.grey.shade300),
             ),
             child: Row(
               children: [
@@ -746,7 +746,7 @@ class _LessonRequestBottomSheetState
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  _selectedEndTime != null 
+                  _selectedEndTime != null
                       ? '선택된 시간: ${_formatTime(_selectedStartTime!)} - ${_formatTime(_selectedEndTime!)}'
                       : '선택된 시간: ${_formatTime(_selectedStartTime!)}',
                   style: TextStyle(
@@ -768,12 +768,12 @@ class _LessonRequestBottomSheetState
     // 6:00 AM부터 11:30 PM까지 30분 간격으로 시간 생성
     final morningTimes = <TimeOfDay>[];
     final afternoonTimes = <TimeOfDay>[];
-    
+
     for (int hour = 6; hour <= 23; hour++) {
       for (int minute = 0; minute < 60; minute += 30) {
         // 23:30 이후는 제외
         if (hour == 23 && minute > 30) break;
-        
+
         final time = TimeOfDay(hour: hour, minute: minute);
         if (hour < 12) {
           morningTimes.add(time);
@@ -819,19 +819,20 @@ class _LessonRequestBottomSheetState
           runSpacing: 8,
           children: afternoonTimes.map((time) => _buildTimeChip(time)).toList(),
         ),
+        const SizedBox(height: 32), // 바텀 패딩 추가
       ],
     );
   }
 
   Widget _buildTimeChip(TimeOfDay time) {
     final isInSelectedRange = _isTimeInSelectedRange(time);
-    final isStartTime = _selectedStartTime != null && 
-        _selectedStartTime!.hour == time.hour && 
+    final isStartTime = _selectedStartTime != null &&
+        _selectedStartTime!.hour == time.hour &&
         _selectedStartTime!.minute == time.minute;
-    final isEndTime = _selectedEndTime != null && 
-        _selectedEndTime!.hour == time.hour && 
+    final isEndTime = _selectedEndTime != null &&
+        _selectedEndTime!.hour == time.hour &&
         _selectedEndTime!.minute == time.minute;
-    
+
     // 하나만 선택된 경우도 선택된 것으로 표시
     final isSelected = isInSelectedRange || isStartTime;
 
@@ -840,15 +841,11 @@ class _LessonRequestBottomSheetState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? Colors.grey.shade800
-              : Colors.white,
+          color: isSelected ? Colors.grey.shade800 : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected 
-                ? Colors.grey.shade800
-                : Colors.grey.shade300,
-            width: isStartTime || isEndTime ? 2 : 1,
+            color: Colors.transparent, // 투명하게 해서 움찔거림 방지
+            width: 2, // 고정 width로 크기 변화 방지
           ),
         ),
         child: Text(
@@ -868,11 +865,12 @@ class _LessonRequestBottomSheetState
     if (_selectedStartTime == null || _selectedEndTime == null) {
       return false;
     }
-    
+
     final timeMinutes = time.hour * 60 + time.minute;
-    final startMinutes = _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
+    final startMinutes =
+        _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
     final endMinutes = _selectedEndTime!.hour * 60 + _selectedEndTime!.minute;
-    
+
     return timeMinutes >= startMinutes && timeMinutes < endMinutes;
   }
 
@@ -885,8 +883,9 @@ class _LessonRequestBottomSheetState
       } else if (_selectedEndTime == null) {
         // 두 번째 선택: 종료 시간 설정
         final timeMinutes = time.hour * 60 + time.minute;
-        final startMinutes = _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
-        
+        final startMinutes =
+            _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
+
         if (timeMinutes <= startMinutes) {
           // 시작 시간보다 이르거나 같으면 새로운 시작 시간으로 설정
           _selectedStartTime = time;
@@ -896,7 +895,7 @@ class _LessonRequestBottomSheetState
           final endMinutes = timeMinutes + 30;
           final endHour = endMinutes ~/ 60;
           final endMin = endMinutes % 60;
-          
+
           if (endHour <= 23 && !(endHour == 23 && endMin > 30)) {
             _selectedEndTime = TimeOfDay(hour: endHour, minute: endMin);
           } else {
@@ -915,7 +914,7 @@ class _LessonRequestBottomSheetState
     final hour = time.hour;
     final minute = time.minute.toString().padLeft(2, '0');
     final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-    
+
     return '${displayHour}:${minute}';
   }
 
@@ -964,16 +963,12 @@ class _LessonRequestBottomSheetState
   }
 
   Widget _buildRequestButton() {
-    final bool canRequest = _selectedDate != null &&
-        _selectedStartTime != null &&
-        !_isRequesting;
-
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: NotionButton(
         text: _isRequesting ? '요청 중...' : 'PT 수업 요청하기',
-        onPressed: canRequest ? _requestLesson : null,
+        onPressed: _isRequesting ? null : _requestLesson, // 로딩중이 아니면 항상 활성화
         isLoading: _isRequesting,
       ),
     );
@@ -1063,8 +1058,132 @@ class _LessonRequestBottomSheetState
     );
   }
 
+  void _showWarningDialog() {
+    String message = '';
+    if (_selectedDate == null && _selectedStartTime == null) {
+      message = '날짜와 시간을 선택해주세요.';
+    } else if (_selectedDate == null) {
+      message = '날짜를 선택해주세요.';
+    } else if (_selectedStartTime == null) {
+      message = '시간을 선택해주세요.';
+    }
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.warning_rounded,
+                        color: Colors.orange.shade600,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '선택 필요',
+                      style: TextStyle(
+                        color: Colors.orange.shade800,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Text(
+                      message,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 16,
+                        fontFamily: 'IBMPlexSansKR',
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // OK 버튼
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange.shade600,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          '확인',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _requestLesson() async {
+    // 필수 선택사항 확인
     if (_selectedDate == null || _selectedStartTime == null) {
+      _showWarningDialog();
       return;
     }
 
@@ -1082,10 +1201,11 @@ class _LessonRequestBottomSheetState
       );
 
       // 종료 시간이 없으면 시작 시간 + 1시간으로 설정
-      final endTime = _selectedEndTime ?? TimeOfDay(
-        hour: (_selectedStartTime!.hour + 1) % 24,
-        minute: _selectedStartTime!.minute,
-      );
+      final endTime = _selectedEndTime ??
+          TimeOfDay(
+            hour: (_selectedStartTime!.hour + 1) % 24,
+            minute: _selectedStartTime!.minute,
+          );
 
       final endDateTime = DateTime(
         _selectedDate!.year,

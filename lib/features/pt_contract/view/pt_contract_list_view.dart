@@ -8,7 +8,12 @@ import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/auth/model/user_model.dart';
 
 class PtContractListView extends ConsumerStatefulWidget {
-  const PtContractListView({super.key});
+  final bool fromSettings;
+  
+  const PtContractListView({
+    super.key,
+    this.fromSettings = false,
+  });
 
   @override
   ConsumerState<PtContractListView> createState() => _PtContractListViewState();
@@ -157,11 +162,43 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
       );
     }
 
-    // 멤버인 경우 Container로 반환 (기존 코드)
+    // 멤버인 경우 또는 설정에서 접근한 경우
+    if (widget.fromSettings) {
+      // 설정에서 접근한 경우 Scaffold와 플로팅 버튼 추가
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text(
+            '내 PT 계약',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBMPlexSansKR',
+            ),
+          ),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: _buildContractList(contractsState),
+      );
+    }
+    
+    // 기본 Container 반환 (네비게이션 바에서 접근한 경우)
     return Container(
       color: const Color(0xFFF8F9FA),
-      child: contractsState.when(
-        data: (response) {
+      child: _buildContractList(contractsState),
+    );
+  }
+
+  Widget _buildContractList(AsyncValue<PtContractResponse?> contractsState) {
+    return contractsState.when(
+      data: (response) {
           if (response == null || response.data.isEmpty) {
             return Center(
               child: Column(
@@ -251,7 +288,6 @@ class _PtContractListViewState extends ConsumerState<PtContractListView> {
             ],
           ),
         ),
-      ),
     );
   }
 

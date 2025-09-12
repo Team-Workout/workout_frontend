@@ -179,37 +179,38 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
             controller: widget.exercise.memoController,
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: '🏋️ 운동 메모',
+              labelText: '운동 메모',
               hintText: '이 운동에 대한 전체 메모를 입력하세요',
               labelStyle: const TextStyle(
-                color: Color(0xFF10B981),
+                color: Colors.black87,
                 fontWeight: FontWeight.w600,
               ),
               hintStyle: TextStyle(
-                color: const Color(0xFF10B981).withValues(alpha: 0.6),
+                color: Colors.grey[600],
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Color(0xFF10B981),
-                  width: 1.5,
+                borderSide: BorderSide(
+                  color: Colors.grey[300]!,
+                  width: 1,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                  color: Colors.grey[300]!,
+                  width: 1,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(
-                  color: Color(0xFF10B981),
-                  width: 2,
+                  color: Colors.black54,
+                  width: 1.5,
                 ),
               ),
               filled: true,
-              fillColor: const Color(0xFF10B981).withValues(alpha: 0.05),
+              fillColor: Colors.grey[50],
             ),
             style: const TextStyle(
               fontFamily: 'IBMPlexSansKR',
@@ -248,7 +249,7 @@ class _WorkoutExerciseCardState extends State<WorkoutExerciseCard> {
               ElevatedButton.icon(
                 onPressed: () => widget.onAddSet(widget.exercise),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
+                  backgroundColor: const Color(0xFF10B981),
                   foregroundColor: Colors.white,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

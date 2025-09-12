@@ -19,7 +19,8 @@ class PtSessionCreateDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PtSessionCreateDialog> createState() => _PtSessionCreateDialogState();
+  ConsumerState<PtSessionCreateDialog> createState() =>
+      _PtSessionCreateDialogState();
 }
 
 class _PtSessionCreateDialogState extends ConsumerState<PtSessionCreateDialog> {
@@ -82,7 +83,6 @@ class _PtSessionCreateDialogState extends ConsumerState<PtSessionCreateDialog> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
                 const Text(
                   '세션 노트',
                   style: TextStyle(
@@ -107,7 +107,6 @@ class _PtSessionCreateDialogState extends ConsumerState<PtSessionCreateDialog> {
                   },
                 ),
                 const SizedBox(height: 20),
-                
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -125,7 +124,6 @@ class _PtSessionCreateDialogState extends ConsumerState<PtSessionCreateDialog> {
                     ),
                   ],
                 ),
-                
                 if (_workoutLogs.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -248,13 +246,17 @@ class _PtSessionCreateDialogState extends ConsumerState<PtSessionCreateDialog> {
       );
 
       // 1. PT 세션 생성
-      await ref.read(ptContractViewModelProvider.notifier).createPtSession(sessionData);
-      
+      await ref
+          .read(ptContractViewModelProvider.notifier)
+          .createPtSession(sessionData);
+
       // 2. PT 약속 상태를 COMPLETED로 변경
-      await ref.read(ptContractViewModelProvider.notifier).updateAppointmentStatus(
-        appointmentId: widget.appointmentId,
-        status: 'COMPLETED',
-      );
+      await ref
+          .read(ptContractViewModelProvider.notifier)
+          .updateAppointmentStatus(
+            appointmentId: widget.appointmentId,
+            status: 'COMPLETED',
+          );
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success
@@ -335,11 +337,11 @@ class _WorkoutLogDialogState extends State<_WorkoutLogDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('세트', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('세트',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   TextButton.icon(
                     onPressed: _addSet,
                     icon: const Icon(Icons.add, size: 16),
@@ -361,7 +363,8 @@ class _WorkoutLogDialogState extends State<_WorkoutLogDialog> {
                             decoration: const InputDecoration(
                               labelText: '횟수',
                               border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                             ),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
@@ -377,7 +380,8 @@ class _WorkoutLogDialogState extends State<_WorkoutLogDialog> {
                             decoration: const InputDecoration(
                               labelText: '무게(kg)',
                               border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                             ),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
@@ -387,7 +391,8 @@ class _WorkoutLogDialogState extends State<_WorkoutLogDialog> {
                           ),
                         ),
                         IconButton(
-                          onPressed: _sets.length > 1 ? () => _removeSet(index) : null,
+                          onPressed:
+                              _sets.length > 1 ? () => _removeSet(index) : null,
                           icon: const Icon(Icons.close, size: 18),
                         ),
                       ],
@@ -395,12 +400,11 @@ class _WorkoutLogDialogState extends State<_WorkoutLogDialog> {
                   ),
                 );
               }).toList(),
-              
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
                 decoration: const InputDecoration(
-                  labelText: '운동 메모 (선택사항)',
+                  labelText: '운동 메모',
                   hintText: '이 운동에 대한 특별한 기록사항',
                   border: OutlineInputBorder(),
                 ),
@@ -447,7 +451,9 @@ class _WorkoutLogDialogState extends State<_WorkoutLogDialog> {
     }
 
     final exerciseId = int.parse(_exerciseIdController.text);
-    final notes = _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
+    final notes = _notesController.text.trim().isEmpty
+        ? null
+        : _notesController.text.trim();
 
     if (_sets.any((set) => set.reps <= 0 || set.weight < 0)) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -279,6 +279,27 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         ),
         const SizedBox(height: 20),
 
+        // PT 관리
+        _buildSection(
+          context,
+          'PT 관리',
+          [
+            _buildSettingItem(
+              Icons.assignment,
+              '내 PT 계약',
+              'PT 계약 목록을 확인합니다',
+              () => context.push('/pt-contracts', extra: true),
+            ),
+            _buildSettingItem(
+              Icons.event_note,
+              '내 PT 세션',
+              'PT 세션 기록을 확인합니다',
+              () => context.push('/pt-sessions'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
         // 정보
         _buildSection(
           context,
@@ -428,9 +449,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       '운동 기록 공개',
                       '다른 사용자들이 나의 운동 기록을 볼 수 있습니다',
                       settings.isOpenWorkoutRecord,
-                      (value) => ref
+                      (value) => _handleToggle(() => ref
                           .read(privacySettingsProvider.notifier)
-                          .toggleWorkoutRecord(value),
+                          .toggleWorkoutRecord(value)),
                     ),
                     _buildPrivacySwitchItem(
                       context,
@@ -438,9 +459,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       '바디 이미지 공개',
                       '다른 사용자들이 나의 바디 이미지를 볼 수 있습니다',
                       settings.isOpenBodyImg,
-                      (value) => ref
+                      (value) => _handleToggle(() => ref
                           .read(privacySettingsProvider.notifier)
-                          .toggleBodyImg(value),
+                          .toggleBodyImg(value)),
                     ),
                     _buildPrivacySwitchItem(
                       context,
@@ -448,9 +469,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       '인바디 정보 공개',
                       '다른 사용자들이 나의 인바디 정보를 볼 수 있습니다',
                       settings.isOpenBodyComposition,
-                      (value) => ref
+                      (value) => _handleToggle(() => ref
                           .read(privacySettingsProvider.notifier)
-                          .toggleBodyComposition(value),
+                          .toggleBodyComposition(value)),
                     ),
                   ],
                 )
@@ -583,14 +604,94 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ],
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            inactiveTrackColor: const Color(0X000000),
-            activeTrackColor: const Color(0xFF10B981),
-            activeThumbColor: Colors.white,
-          ),
+          _buildAnimatedToggle(value, onChanged),
         ],
+      ),
+    );
+  }
+
+  Future<void> _handleToggle(Future<void> Function() toggleFunction) async {
+    try {
+      await toggleFunction();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '설정 변경에 실패했습니다. 다시 시도해주세요.',
+              style: TextStyle(
+                fontFamily: 'IBMPlexSansKR',
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: Colors.red.shade600,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildAnimatedToggle(bool value, Function(bool) onChanged) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        width: 50,
+        height: 28,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: value ? const Color(0xFF10B981) : Colors.grey.shade300,
+          boxShadow: [
+            BoxShadow(
+              color: (value ? const Color(0xFF10B981) : Colors.grey.shade300)
+                  .withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOutCubic,
+              left: value ? 22 : 2,
+              top: 2,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: AnimatedRotation(
+                  duration: const Duration(milliseconds: 300),
+                  turns: value ? 0.5 : 0,
+                  child: Icon(
+                    value ? Icons.check : Icons.close,
+                    size: 14,
+                    color: value ? const Color(0xFF10B981) : Colors.grey.shade400,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -692,68 +793,285 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   void _showImagePickerOptions(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (BuildContext context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  '프로필 사진 변경',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 상단 핸들 바
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('카메라로 촬영'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera, ref);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('갤러리에서 선택'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery, ref);
-                },
-              ),
-              Consumer(
-                builder: (context, ref, _) {
-                  final profileImageAsync = ref.watch(profileImageProvider);
-                  return profileImageAsync.maybeWhen(
-                    data: (profileImage) {
-                      if (profileImage?.profileImageUrl != null &&
-                          profileImage!.profileImageUrl.isNotEmpty) {
-                        return ListTile(
-                          leading: const Icon(Icons.delete, color: Colors.red),
-                          title: const Text(
-                            '프로필 사진 삭제',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _showDeleteImageDialog(context, ref);
-                          },
-                        );
-                      }
-                      return const SizedBox.shrink();
+                const SizedBox(height: 20),
+                // 타이틀
+                const Text(
+                  '프로필 사진 변경',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '새로운 프로필 사진을 선택해주세요',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontFamily: 'IBMPlexSansKR',
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // 카메라 옵션
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.camera, ref);
                     },
-                    orElse: () => const SizedBox.shrink(),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.cancel, color: Colors.grey),
-                title: const Text('취소', style: TextStyle(color: Colors.grey)),
-                onTap: () => Navigator.pop(context),
-              ),
-            ],
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '카메라로 촬영',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  '지금 바로 사진을 촬영합니다',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 갤러리 옵션
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.gallery, ref);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.photo_library,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '갤러리에서 선택',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  '기기에 저장된 사진을 선택합니다',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 삭제 옵션
+                Consumer(
+                  builder: (context, ref, _) {
+                    final profileImageAsync = ref.watch(profileImageProvider);
+                    return profileImageAsync.maybeWhen(
+                      data: (profileImage) {
+                        if (profileImage?.profileImageUrl != null &&
+                            profileImage!.profileImageUrl.isNotEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                _showDeleteImageDialog(context, ref);
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.red.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    const Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '프로필 사진 삭제',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: 'IBMPlexSansKR',
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                          SizedBox(height: 2),
+                                          Text(
+                                            '현재 프로필 사진을 삭제합니다',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                              fontFamily: 'IBMPlexSansKR',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                      orElse: () => const SizedBox.shrink(),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+                // 취소 버튼
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      '취소',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
         );
       },
@@ -974,17 +1292,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text(
-                          '취소',
-                          style: TextStyle(
-                              color: Colors.red, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
                           ref.read(authStateProvider).logout();
@@ -996,7 +1303,19 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                         child: const Text(
                           '로그아웃',
                           style: TextStyle(
-                              color: Colors.black87, fontWeight: FontWeight.w600),
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          '취소',
+                          style: TextStyle(
+                              color: Colors.red, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -1115,23 +1434,229 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     try {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('캐시 초기화'),
-            content:
-                const Text('모든 마스터 데이터 캐시를 초기화하시겠습니까?\n다음 앱 실행 시 새로 동기화됩니다.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('취소'),
-              ),
-              NotionButton(
-                text: '초기화',
-                onPressed: () => Navigator.of(context).pop(true),
-              ),
-            ],
-          );
-        },
+        barrierDismissible: false,
+        builder: (dialogContext) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with red warning gradient
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFDC2626), Color(0xFFEF4444)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.warning_rounded,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '캐시 초기화 경고',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDC2626).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFFDC2626).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 20,
+                                  color: Colors.red[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '주의사항',
+                                  style: TextStyle(
+                                    color: Colors.red[600],
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '• 모든 마스터 데이터 캐시가 삭제됩니다\n• 다음 앱 실행 시 새로 동기화됩니다\n• 네트워크 사용량이 증가할 수 있습니다',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.red[700],
+                                fontFamily: 'IBMPlexSansKR',
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '정말 모든 캐시 데이터를 초기화하시겠습니까?',
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 16,
+                          fontFamily: 'IBMPlexSansKR',
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Action buttons (오른손 잡이용: 위험 액션을 오른쪽에)
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFDC2626), Color(0xFFEF4444)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFDC2626).withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(24),
+                                  onTap: () => Navigator.of(dialogContext).pop(true),
+                                  child: const Center(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.delete_forever,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          '초기화',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'IBMPlexSansKR',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.grey[300]!,
+                                ),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(24),
+                                  onTap: () => Navigator.of(dialogContext).pop(false),
+                                  child: Center(
+                                    child: Text(
+                                      '취소',
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'IBMPlexSansKR',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
 
       if (confirmed == true) {

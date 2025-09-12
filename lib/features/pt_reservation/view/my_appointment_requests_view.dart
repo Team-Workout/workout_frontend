@@ -12,98 +12,104 @@ class MyAppointmentRequestsView extends ConsumerStatefulWidget {
   const MyAppointmentRequestsView({super.key});
 
   @override
-  ConsumerState<MyAppointmentRequestsView> createState() => _MyAppointmentRequestsViewState();
+  ConsumerState<MyAppointmentRequestsView> createState() =>
+      _MyAppointmentRequestsViewState();
 }
 
-class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequestsView> 
+class _MyAppointmentRequestsViewState
+    extends ConsumerState<MyAppointmentRequestsView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   // 각 탭별 데이터를 저장할 상태 변수들
   AsyncValue<List<PtSchedule>> memberRequestedData = const AsyncValue.loading();
   AsyncValue<List<PtSchedule>> scheduledData = const AsyncValue.loading();
   AsyncValue<List<PtSchedule>> changeRequestedData = const AsyncValue.loading();
-  AsyncValue<List<PtSchedule>> trainerChangeRequestedData = const AsyncValue.loading();
+  AsyncValue<List<PtSchedule>> trainerChangeRequestedData =
+      const AsyncValue.loading();
   AsyncValue<List<PtSchedule>> completedData = const AsyncValue.loading();
-  
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _loadAppointments();
   }
-  
+
   void _loadAppointments() async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
-    
+
     print('🔍 [DEBUG] 데이터 로드 시작 - 사용자 타입: ${user.userType}');
-    
+
     try {
       final repository = ref.read(ptScheduleRepositoryProvider);
       final now = DateTime.now();
-      
+
       // 각 상태별로 데이터 로드
       if (user.userType == UserType.member) {
         print('🔍 [DEBUG] 회원으로 데이터 로드');
-        
+
         final memberRequested = await repository.getMonthlySchedule(
           month: now,
           status: 'MEMBER_REQUESTED',
         );
         print('🔍 [DEBUG] MEMBER_REQUESTED: ${memberRequested.length}개');
-        
+
         final trainerChangeRequested = await repository.getMonthlySchedule(
           month: now,
           status: 'TRAINER_CHANGE_REQUESTED',
         );
-        print('🔍 [DEBUG] TRAINER_CHANGE_REQUESTED: ${trainerChangeRequested.length}개');
-        
+        print(
+            '🔍 [DEBUG] TRAINER_CHANGE_REQUESTED: ${trainerChangeRequested.length}개');
+
         setState(() {
           memberRequestedData = AsyncValue.data(memberRequested);
           trainerChangeRequestedData = AsyncValue.data(trainerChangeRequested);
-          changeRequestedData = const AsyncValue.data([]); // 회원은 CHANGE_REQUESTED 상태가 없음
+          changeRequestedData =
+              const AsyncValue.data([]); // 회원은 CHANGE_REQUESTED 상태가 없음
         });
       } else if (user.userType == UserType.trainer) {
         print('🔍 [DEBUG] 트레이너로 데이터 로드');
-        
+
         final memberRequested = await repository.getMonthlySchedule(
           month: now,
           status: 'MEMBER_REQUESTED',
         );
         print('🔍 [DEBUG] MEMBER_REQUESTED: ${memberRequested.length}개');
-        
+
         final changeRequested = await repository.getMonthlySchedule(
           month: now,
           status: 'CHANGE_REQUESTED',
         );
         print('🔍 [DEBUG] CHANGE_REQUESTED: ${changeRequested.length}개');
-        
+
         setState(() {
           memberRequestedData = AsyncValue.data(memberRequested);
           changeRequestedData = AsyncValue.data(changeRequested);
-          trainerChangeRequestedData = const AsyncValue.data([]); // 트레이너는 TRAINER_CHANGE_REQUESTED 볼 필요 없음
+          trainerChangeRequestedData = const AsyncValue.data(
+              []); // 트레이너는 TRAINER_CHANGE_REQUESTED 볼 필요 없음
         });
       }
-      
+
       // 공통: 확정된 것과 완료된 것
       final scheduled = await repository.getMonthlySchedule(
         month: now,
         status: 'SCHEDULED',
       );
       print('🔍 [DEBUG] SCHEDULED: ${scheduled.length}개');
-      
+
       final completed = await repository.getMonthlySchedule(
         month: now,
         status: 'COMPLETED',
       );
       print('🔍 [DEBUG] COMPLETED: ${completed.length}개');
-      
+
       setState(() {
         scheduledData = AsyncValue.data(scheduled);
         completedData = AsyncValue.data(completed);
       });
-      
+
       print('🔍 [DEBUG] 데이터 로드 완료');
     } catch (error, stackTrace) {
       setState(() {
@@ -116,7 +122,7 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
       print('❌ 데이터 로드 오류: $error');
     }
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -126,7 +132,7 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -191,43 +197,47 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
       ),
     );
   }
-  
+
   Widget _buildChangeRequestList(bool? isMember) {
     return changeRequestedData.when(
       data: (memberChanges) {
         return trainerChangeRequestedData.when(
           data: (trainerChanges) {
             final allChanges = [...memberChanges, ...trainerChanges];
-            
-            print('🔍 [DEBUG] 변경요청 탭 - memberChanges: ${memberChanges.length}, trainerChanges: ${trainerChanges.length}, 총 ${allChanges.length}개');
-            
+
+            print(
+                '🔍 [DEBUG] 변경요청 탭 - memberChanges: ${memberChanges.length}, trainerChanges: ${trainerChanges.length}, 총 ${allChanges.length}개');
+
             if (allChanges.isEmpty) {
               return _buildEmptyState('변경 요청이 없습니다');
             }
-            
+
             return ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: allChanges.length,
               itemBuilder: (context, index) {
                 final appointment = allChanges[index];
-                print('🔍 [DEBUG] 변경요청 항목 ${index + 1}: ${appointment.memberName} - ${appointment.status}');
+                print(
+                    '🔍 [DEBUG] 변경요청 항목 ${index + 1}: ${appointment.memberName} - ${appointment.status}');
                 return _buildAppointmentCard(appointment, isMember ?? false);
               },
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator(
+          loading: () => const Center(
+              child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
           )),
           error: (error, stack) => _buildErrorState(error.toString()),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(
+      loading: () => const Center(
+          child: CircularProgressIndicator(
         valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
       )),
       error: (error, stack) => _buildErrorState(error.toString()),
     );
   }
-  
+
   Widget _buildAppointmentList(
     AsyncValue<List<PtSchedule>> appointmentsAsync,
     String statusType,
@@ -238,7 +248,7 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
         if (appointments.isEmpty) {
           return _buildEmptyState(_getEmptyMessage(statusType));
         }
-        
+
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: appointments.length,
@@ -248,17 +258,18 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(
+      loading: () => const Center(
+          child: CircularProgressIndicator(
         valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
       )),
       error: (error, stack) => _buildErrorState(error.toString()),
     );
   }
-  
+
   Widget _buildAppointmentCard(PtSchedule appointment, bool isMember) {
     final startTime = DateTime.parse(appointment.startTime);
     final endTime = DateTime.parse(appointment.endTime);
-    
+
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 16),
@@ -281,7 +292,9 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isMember ? appointment.trainerName : appointment.memberName,
+                          isMember
+                              ? appointment.trainerName
+                              : appointment.memberName,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -332,7 +345,8 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
               if (appointment.hasChangeRequest == true) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.orange[50],
                     borderRadius: BorderRadius.circular(4),
@@ -343,9 +357,9 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
                       Icon(Icons.schedule, size: 14, color: Colors.orange[700]),
                       const SizedBox(width: 4),
                       Text(
-                        appointment.changeRequestBy == 'member' 
-                          ? '회원 변경 요청'
-                          : '트레이너 변경 요청',
+                        appointment.changeRequestBy == 'member'
+                            ? '회원 변경 요청'
+                            : '트레이너 변경 요청',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.orange[700],
@@ -361,12 +375,12 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
       ),
     );
   }
-  
+
   Widget _buildStatusChip(String status) {
     Color color;
     String text;
     final user = ref.read(currentUserProvider);
-    
+
     switch (status) {
       case 'MEMBER_REQUESTED':
         color = Colors.orange;
@@ -386,17 +400,17 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
         break;
       case 'CHANGE_REQUESTED':
         color = Colors.purple;
-        text = '회원 변경 요청';
+        text = '변경 요청';
         break;
       case 'TRAINER_CHANGE_REQUESTED':
-        color = Colors.indigo;
-        text = '트레이너 변경 요청';
+        color = Colors.purple;
+        text = '변경 요청';
         break;
       default:
         color = Colors.grey;
         text = status;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -413,7 +427,7 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
       ),
     );
   }
-  
+
   Widget _buildEmptyState(String message) {
     return Center(
       child: Column(
@@ -436,7 +450,7 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
       ),
     );
   }
-  
+
   Widget _buildErrorState(String error) {
     return Center(
       child: Column(
@@ -468,7 +482,7 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
       ),
     );
   }
-  
+
   String _getEmptyMessage(String statusType) {
     switch (statusType) {
       case 'MEMBER_REQUESTED':
@@ -481,11 +495,11 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
         return '내역이 없습니다';
     }
   }
-  
+
   void _showAppointmentDetails(PtSchedule appointment) {
     final startTime = DateTime.parse(appointment.startTime);
     final endTime = DateTime.parse(appointment.endTime);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -498,10 +512,13 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
             _buildDetailRow('회원', appointment.memberName),
             _buildDetailRow('약속 ID', appointment.appointmentId.toString()),
             _buildDetailRow('계약 ID', appointment.contractId.toString()),
-            _buildDetailRow('날짜', DateFormat('yyyy년 MM월 dd일').format(startTime)),
-            _buildDetailRow('시간', '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime)}'),
+            _buildDetailRow(
+                '날짜', DateFormat('yyyy년 MM월 dd일').format(startTime)),
+            _buildDetailRow('시간',
+                '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime)}'),
             _buildDetailRow('상태', _getStatusText(appointment.status)),
-            if (appointment.requestedStartTime != null && appointment.requestedEndTime != null) ...[
+            if (appointment.requestedStartTime != null &&
+                appointment.requestedEndTime != null) ...[
               const SizedBox(height: 8),
               const Divider(),
               const SizedBox(height: 8),
@@ -525,7 +542,7 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
       ),
     );
   }
-  
+
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -546,7 +563,7 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
       ),
     );
   }
-  
+
   String _getStatusText(String status) {
     switch (status) {
       case 'MEMBER_REQUESTED':
@@ -566,4 +583,3 @@ class _MyAppointmentRequestsViewState extends ConsumerState<MyAppointmentRequest
     }
   }
 }
-

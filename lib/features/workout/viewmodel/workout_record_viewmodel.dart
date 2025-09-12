@@ -18,6 +18,13 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
 
   // 실시간 운동 기록 관리
   final List<WorkoutExerciseDetail> _exercises = [];
+  
+  // 변경사항 추적
+  bool _hasChanges = false;
+  bool get hasChanges => _hasChanges;
+  
+  // 초기 상태 저장 (변경사항 감지용)
+  String _initialState = '';
 
   // API 서비스
   final WorkoutApiService _apiService;
@@ -138,6 +145,9 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
         _loadWorkoutDataFromLocal(localWorkouts);
       }
       
+      // 로드 완료 후 초기 상태 설정
+      _setInitialState();
+      
       if (!_disposed) {
         notifyListeners();
       }
@@ -150,9 +160,54 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
     // 이 메서드는 이제 UI 업데이트만 담당 (실제 저장은 saveWorkoutToAPI에서)
     if (_disposed) return;
     
+    _checkForChanges();
+    
     if (!_disposed) {
       notifyListeners();
     }
+  }
+  
+  // 변경사항 감지
+  void _checkForChanges() {
+    final currentState = _getCurrentWorkoutState();
+    final hasChanges = currentState != _initialState;
+    
+    if (_hasChanges != hasChanges) {
+      _hasChanges = hasChanges;
+    }
+  }
+  
+  // 현재 운동 상태를 문자열로 변환 (변경사항 감지용)
+  String _getCurrentWorkoutState() {
+    final buffer = StringBuffer();
+    buffer.write(titleController.text);
+    buffer.write('|');
+    buffer.write(diaryMemoController.text);
+    buffer.write('|');
+    
+    for (var exercise in _exercises) {
+      buffer.write(exercise.nameController.text);
+      buffer.write('|');
+      buffer.write(exercise.memoController.text);
+      buffer.write('|');
+      
+      for (var set in exercise.sets) {
+        buffer.write(set.weightController.text);
+        buffer.write('-');
+        buffer.write(set.repsController.text);
+        buffer.write('-');
+        buffer.write(set.memoController.text);
+        buffer.write('|');
+      }
+    }
+    
+    return buffer.toString();
+  }
+  
+  // 초기 상태 설정
+  void _setInitialState() {
+    _initialState = _getCurrentWorkoutState();
+    _hasChanges = false;
   }
 
   void addExercise() {
@@ -163,7 +218,7 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
     _exercises.add(exercise);
 
     if (!_disposed) {
-      notifyListeners();
+      saveCurrentWorkout();
     }
   }
 
@@ -206,6 +261,7 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
     for (var set in exercise.sets) {
       set.repsController.addListener(saveCurrentWorkout);
       set.weightController.addListener(saveCurrentWorkout);
+      set.memoController.addListener(saveCurrentWorkout);
     }
   }
 
@@ -221,10 +277,10 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
     final newSet = exercise.sets.last;
     newSet.repsController.addListener(saveCurrentWorkout);
     newSet.weightController.addListener(saveCurrentWorkout);
+    newSet.memoController.addListener(saveCurrentWorkout);
 
-    if (!_disposed) {
-      notifyListeners();
-    }
+    // 변경사항 추적
+    saveCurrentWorkout();
   }
 
   // API를 통한 운동 기록 저장
@@ -379,6 +435,9 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
         // 나중에 동기화할 수 있도록 unsync 상태로 유지
       }
 
+      // 저장 후 초기 상태 업데이트 (변경사항 리셋)
+      _setInitialState();
+      
       // 로컬 데이터 새로고침
       saveCurrentWorkout();
       
@@ -411,6 +470,7 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
       if (localWorkouts.isNotEmpty) {
         // 로컬 데이터가 있으면 사용
         _loadWorkoutDataFromLocal(localWorkouts);
+        _setInitialState(); // 로드 후 초기 상태 설정
       } else {
         // 로컬에 없으면 서버에서 시도
         try {
@@ -458,9 +518,14 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
           workoutSet.repsController.text = setData['reps']?.toString() ?? '0';
           workoutSet.weightController.text = setData['weight']?.toString() ?? '0';
           workoutSet.memoController.text = setData['memo']?.toString() ?? '';
+          
+          // 각 세트에 리스너 추가 (로드된 데이터에도 변경 감지 필요)
+          workoutSet.repsController.addListener(saveCurrentWorkout);
+          workoutSet.weightController.addListener(saveCurrentWorkout);
+          workoutSet.memoController.addListener(saveCurrentWorkout);
         }
 
-        // 리스너 추가
+        // 운동 레벨 리스너 추가
         _addExerciseListeners(exerciseDetail);
         _exercises.add(exerciseDetail);
       }
@@ -514,14 +579,22 @@ class WorkoutRecordViewmodel extends ChangeNotifier {
           final workoutSet = exerciseDetail.sets.last;
           workoutSet.repsController.text = routineSet.reps.toString();
           workoutSet.weightController.text = routineSet.weight.toString();
+          
+          // 각 세트에 리스너 추가 (루틴에서 로드된 세트도 변경 감지 필요)
+          workoutSet.repsController.addListener(saveCurrentWorkout);
+          workoutSet.weightController.addListener(saveCurrentWorkout);
+          workoutSet.memoController.addListener(saveCurrentWorkout);
         }
 
-        // 리스너 추가
+        // 운동 레벨 리스너 추가
         _addExerciseListeners(exerciseDetail);
         _exercises.add(exerciseDetail);
       }
     }
 
+    // 루틴 로드 완료 후 초기 상태 설정
+    _setInitialState();
+    
     // UI 업데이트
     if (!_disposed) {
       notifyListeners();
