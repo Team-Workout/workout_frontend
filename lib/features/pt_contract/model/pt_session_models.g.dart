@@ -18,7 +18,7 @@ Map<String, dynamic> _$$PtSessionCreateImplToJson(
         _$PtSessionCreateImpl instance) =>
     <String, dynamic>{
       'appointmentId': instance.appointmentId,
-      'workoutLog': instance.workoutLog.toJson(),
+      'workoutLog': instance.workoutLog,
     };
 
 _$WorkoutLogCreateImpl _$$WorkoutLogCreateImplFromJson(
@@ -36,7 +36,7 @@ Map<String, dynamic> _$$WorkoutLogCreateImplToJson(
     <String, dynamic>{
       'workoutDate': instance.workoutDate,
       'logFeedback': instance.logFeedback,
-      'workoutExercises': instance.workoutExercises.map((e) => e.toJson()).toList(),
+      'workoutExercises': instance.workoutExercises,
     };
 
 _$WorkoutExerciseCreateImpl _$$WorkoutExerciseCreateImplFromJson(
@@ -54,7 +54,7 @@ Map<String, dynamic> _$$WorkoutExerciseCreateImplToJson(
     <String, dynamic>{
       'exerciseId': instance.exerciseId,
       'order': instance.order,
-      'workoutSets': instance.workoutSets.map((e) => e.toJson()).toList(),
+      'workoutSets': instance.workoutSets,
     };
 
 _$WorkoutSetCreateImpl _$$WorkoutSetCreateImplFromJson(

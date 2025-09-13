@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../repository/settings_repository.dart';
 import '../model/profile_image_model.dart';
 import '../model/privacy_settings_model.dart';
+import '../../../core/providers/auth_provider.dart';
 
 final workoutLogAccessProvider =
     StateNotifierProvider<WorkoutLogAccessNotifier, AsyncValue<bool>>((ref) {
@@ -33,58 +34,74 @@ final profileImageProvider =
     StateNotifierProvider<ProfileImageNotifier, AsyncValue<ProfileImageInfo?>>(
         (ref) {
   final repository = ref.watch(settingsRepositoryProvider);
-  return ProfileImageNotifier(repository);
+  final authState = ref.watch(authStateProvider);
+  return ProfileImageNotifier(repository, authState);
 });
 
 class ProfileImageNotifier
     extends StateNotifier<AsyncValue<ProfileImageInfo?>> {
   final SettingsRepository _repository;
+  final AuthState _authState;
   static const String _cacheKey = 'profile_image_url';
   static const String _timestampKey = 'profile_image_url_timestamp';
   static const Duration _cacheExpiry = Duration(hours: 1); // 1시간 캐시
 
-  ProfileImageNotifier(this._repository) : super(const AsyncValue.loading()) {
+  ProfileImageNotifier(this._repository, this._authState) : super(const AsyncValue.loading()) {
     // 초기화 시 바로 로드 시작
     _initializeProfileImage();
   }
   
   void _initializeProfileImage() async {
-    await loadProfileImage();
+    if (mounted) {
+      await loadProfileImage();
+    }
   }
 
   Future<void> loadProfileImage() async {
-    // 캐시된 URL이 있고 유효한지 확인
-    final cachedUrl = await _getCachedProfileImageUrl();
-    if (cachedUrl != null) {
-      print('Using cached profile image URL: $cachedUrl');
-      state = AsyncValue.data(ProfileImageInfo(profileImageUrl: cachedUrl));
+    if (!mounted) return;
+    
+    // 현재 로그인된 사용자의 프로필 이미지 URL 확인
+    final currentUser = _authState.value;
+    
+    if (currentUser?.profileImageUrl != null && currentUser!.profileImageUrl!.isNotEmpty) {
+      print('Using profile image from current user: ${currentUser.profileImageUrl}');
+      if (mounted) {
+        state = AsyncValue.data(ProfileImageInfo(profileImageUrl: currentUser.profileImageUrl!));
+      }
       return;
     }
 
-    state = const AsyncValue.loading();
-    try {
-      print('Loading profile image URL from server...');
-      final profileImage = await _repository.getProfileImage();
-
-      // URL을 캐시에 저장
-      if (profileImage?.profileImageUrl != null) {
-        await _cacheProfileImageUrl(profileImage!.profileImageUrl);
+    // 캐시된 URL이 있는지 확인
+    final cachedUrl = await _getCachedProfileImageUrl();
+    if (!mounted) return;
+    
+    if (cachedUrl != null) {
+      print('Using cached profile image URL: $cachedUrl');
+      if (mounted) {
+        state = AsyncValue.data(ProfileImageInfo(profileImageUrl: cachedUrl));
       }
+      return;
+    }
 
-      state = AsyncValue.data(profileImage);
-    } catch (e) {
-      // 프로필 이미지 로드 실패시 default-profile.png로 fallback
-      final defaultProfileImage = ProfileImageInfo(
-        profileImageUrl: '/images/default-profile.png'
-      );
+    // 프로필 이미지가 없으면 기본 이미지 사용
+    print('No profile image found, using default');
+    final defaultProfileImage = ProfileImageInfo(
+      profileImageUrl: '/images/default-profile.png'
+    );
+    if (mounted) {
       state = AsyncValue.data(defaultProfileImage);
     }
   }
 
   Future<void> uploadProfileImage(XFile imageFile) async {
+    if (!mounted) return;
+    
     state = const AsyncValue.loading();
     try {
       final uploadResponse = await _repository.uploadProfileImage(imageFile);
+      
+      if (!mounted) return; // 비동기 작업 후 다시 체크
+      
       // 업로드 성공 후 현재 프로필 이미지 정보 새로고침
       final profileImage =
           ProfileImageInfo(profileImageUrl: uploadResponse.fileUrl);
@@ -92,13 +109,22 @@ class ProfileImageNotifier
       // 새로운 URL을 캐시에 저장
       await _cacheProfileImageUrl(uploadResponse.fileUrl);
 
+      if (!mounted) return; // 캐시 저장 후 다시 체크
+      
+      // AuthState에 새로운 프로필 이미지 URL 업데이트
+      _authState.updateProfileImageUrl(uploadResponse.fileUrl);
+
       state = AsyncValue.data(profileImage);
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      if (mounted) {
+        state = AsyncValue.error(e, stack);
+      }
     }
   }
 
   Future<void> deleteProfileImage() async {
+    if (!mounted) return;
+    
     state = const AsyncValue.loading();
     try {
       // API 호출 대신 바로 default-profile.png로 설정
@@ -107,6 +133,8 @@ class ProfileImageNotifier
       // 캐시 클리어
       await _clearCachedProfileImageUrl();
 
+      if (!mounted) return;
+      
       // default-profile.png로 설정
       final defaultProfileImage =
           ProfileImageInfo(profileImageUrl: '/images/default-profile.png');
@@ -114,9 +142,11 @@ class ProfileImageNotifier
       state = AsyncValue.data(defaultProfileImage);
     } catch (e, stack) {
       // 에러가 발생해도 default로 설정
-      final defaultProfileImage =
-          ProfileImageInfo(profileImageUrl: 'default-profile.png');
-      state = AsyncValue.data(defaultProfileImage);
+      if (mounted) {
+        final defaultProfileImage =
+            ProfileImageInfo(profileImageUrl: 'default-profile.png');
+        state = AsyncValue.data(defaultProfileImage);
+      }
     }
   }
 
@@ -165,15 +195,21 @@ class ProfileImageNotifier
 
   // 캐시 강제 새로고침
   Future<void> refreshProfileImage() async {
+    if (!mounted) return;
+    
     try {
       await _clearCachedProfileImageUrl();
+      if (!mounted) return;
+      
       await loadProfileImage();
     } catch (e) {
       // refresh 실패시에도 default로 fallback
-      final defaultProfileImage = ProfileImageInfo(
-        profileImageUrl: '/images/default-profile.png'
-      );
-      state = AsyncValue.data(defaultProfileImage);
+      if (mounted) {
+        final defaultProfileImage = ProfileImageInfo(
+          profileImageUrl: '/images/default-profile.png'
+        );
+        state = AsyncValue.data(defaultProfileImage);
+      }
     }
   }
 }

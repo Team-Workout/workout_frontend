@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pt_service/core/services/api_service.dart';
 import 'package:pt_service/core/services/session_service.dart';
+import 'package:pt_service/core/providers/auth_provider.dart';
+import 'package:pt_service/features/auth/model/user_model.dart';
 import 'package:image_picker/image_picker.dart';
 import '../model/profile_image_model.dart';
 import '../model/privacy_settings_model.dart';
@@ -9,14 +11,16 @@ import '../model/privacy_settings_model.dart';
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   final dio = ref.watch(dioProvider);
   final sessionService = ref.watch(sessionServiceProvider);
-  return SettingsRepository(dio, sessionService);
+  final currentUser = ref.watch(currentUserProvider);
+  return SettingsRepository(dio, sessionService, currentUser);
 });
 
 class SettingsRepository {
   final Dio _dio;
   final SessionService _sessionService;
+  final User? _currentUser;
 
-  SettingsRepository(this._dio, this._sessionService);
+  SettingsRepository(this._dio, this._sessionService, this._currentUser);
 
   Future<void> updateWorkoutLogAccess({required bool isOpen}) async {
     try {
@@ -71,8 +75,11 @@ class SettingsRepository {
       print('Session Token: ${_sessionService.sessionToken}');
       print('Session headers: ${_sessionService.getSessionHeaders()}');
 
+      // 트레이너 API가 아직 구현되지 않았으므로 모든 사용자는 공통 멤버 API 사용
+      final String endpoint = '/common/members/me/profile-image';
+
       final response = await _dio.post(
-        '/common/members/me/profile-image',
+        endpoint,
         data: formData,
         options: Options(
           headers: {
@@ -119,15 +126,18 @@ class SettingsRepository {
   /// 현재 프로필 이미지 조회
   Future<ProfileImageInfo?> getProfileImage() async {
     try {
+      // 트레이너 API가 아직 구현되지 않았으므로 모든 사용자는 공통 멤버 API 사용
+      final String endpoint = '/common/members/me/profile-image';
+          
       print('=== Profile Image Get Debug ===');
-      print(
-          'Request URL: ${_dio.options.baseUrl}/common/members/me/profile-image');
+      print('User type: ${_currentUser?.userType}');
+      print('Request URL: ${_dio.options.baseUrl}$endpoint');
       print('Request headers: ${_dio.options.headers}');
       print('Session has session: ${_sessionService.hasSession}');
       print('Session ID: ${_sessionService.sessionId}');
       print('Session Token: ${_sessionService.sessionToken}');
 
-      final response = await _dio.post('/common/members/me/profile-image');
+      final response = await _dio.post(endpoint);
       print(
           'Get profile image success: ${response.statusCode} - ${response.data}');
       return ProfileImageInfo.fromJson(response.data);
@@ -162,13 +172,16 @@ class SettingsRepository {
   /// 프로필 이미지 삭제
   Future<void> deleteProfileImage() async {
     try {
+      // 트레이너 API가 아직 구현되지 않았으므로 모든 사용자는 공통 멤버 API 사용
+      final String endpoint = '/common/members/me/profile-image';
+          
       print('=== Profile Image Delete Debug ===');
-      print(
-          'Request URL: ${_dio.options.baseUrl}/common/members/me/profile-image');
+      print('User type: ${_currentUser?.userType}');
+      print('Request URL: ${_dio.options.baseUrl}$endpoint');
       print('Request headers: ${_dio.options.headers}');
       print('Session has session: ${_sessionService.hasSession}');
 
-      final response = await _dio.delete('/common/members/me/profile-image');
+      final response = await _dio.delete(endpoint);
       print(
           'Delete profile image success: ${response.statusCode} - ${response.data}');
     } catch (e) {

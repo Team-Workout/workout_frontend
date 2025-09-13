@@ -546,7 +546,8 @@ class _PtSessionListViewState extends ConsumerState<PtSessionListView> {
   Future<void> _deletePtSession(int sessionId) async {
     try {
       // 기존 provider를 사용하여 삭제
-      await ref.read(ptSessionRepositoryProvider).deletePtSession(sessionId);
+      final repository = ref.read(ptSessionRepositoryProvider);
+      await repository.deletePtSession(sessionId);
       
       // 목록 새로고침
       await ref.read(ptSessionNotifierProvider.notifier).loadSessions(refresh: true);

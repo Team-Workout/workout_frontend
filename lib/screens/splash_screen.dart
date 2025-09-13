@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pt_service/core/providers/auth_provider.dart';
+import 'package:pt_service/features/auth/model/user_model.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -17,13 +19,46 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   _initializeApp() async {
-    // 스플래시 화면 최소 표시 시간
-    await Future.delayed(const Duration(seconds: 2));
+    // AuthState 초기화 대기 및 최소 스플래시 표시 시간
+    final authState = ref.read(authStateProvider);
+    
+    // AuthState 초기화와 최소 시간 대기를 병렬로 실행
+    await Future.wait([
+      authState.initialize(),
+      Future.delayed(const Duration(seconds: 2)),
+    ]);
 
     if (!mounted) return;
 
-    // 항상 로그인 화면으로 이동
-    context.go('/login');
+    // 초기화 완료 후 인증 상태 확인
+    final currentUser = authState.value;
+
+    print('🚀 Splash screen navigation decision:');
+    print('   - User: ${currentUser?.name ?? 'null'}');
+    print('   - UserType: ${currentUser?.userType ?? 'null'}');
+    print('   - IsLoggedIn: ${authState.isLoggedIn}');
+
+    if (currentUser != null && authState.isLoggedIn) {
+      // 이미 로그인되어 있으면 사용자 타입에 따라 적절한 화면으로 이동
+      switch (currentUser.userType) {
+        case UserType.trainer:
+          print('   - Navigating to: /trainer-dashboard');
+          context.go('/trainer-dashboard');
+          break;
+        case UserType.member:
+          print('   - Navigating to: /dashboard');
+          context.go('/dashboard');
+          break;
+        case UserType.manager:
+          print('   - Navigating to: /manager-dashboard');
+          context.go('/manager-dashboard');
+          break;
+      }
+    } else {
+      // 로그인되어 있지 않으면 로그인 화면으로 이동
+      print('   - Navigating to: /login');
+      context.go('/login');
+    }
   }
 
   @override

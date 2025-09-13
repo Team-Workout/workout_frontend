@@ -42,13 +42,13 @@ import 'package:pt_service/features/pt/view/pt_main_view.dart';
 import '../../features/auth/model/user_model.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final authRouterState = ref.watch(authRouterStateProvider);
 
   return GoRouter(
     initialLocation: '/',
-    refreshListenable: authState,
+    refreshListenable: authRouterState,
     redirect: (context, state) {
-      final isAuthenticated = authState.isLoggedIn;
+      final isAuthenticated = authRouterState.isLoggedIn;
       final isSplashRoute = state.matchedLocation == '/';
       final isAuthRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup';
@@ -65,7 +65,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // 인증된 상태에서 로그인/회원가입 페이지에 접근하면 대시보드로
       if (isAuthenticated && isAuthRoute) {
-        final userType = authState.value!.userType;
+        final userType = authRouterState.userType!;
         switch (userType) {
           case UserType.trainer:
             return '/trainer-dashboard';
