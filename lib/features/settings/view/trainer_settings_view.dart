@@ -177,6 +177,54 @@ class TrainerSettingsView extends ConsumerWidget {
 
             const SizedBox(height: 32),
 
+            // PT 관리
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                'PT 관리',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  fontFamily: 'IBMPlexSansKR',
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildSettingItem(
+                    icon: Icons.assignment_outlined,
+                    title: '내 PT 계약',
+                    subtitle: 'PT 계약 목록을 확인합니다',
+                    onTap: () => context.push('/pt-contracts', extra: true),
+                  ),
+                  _buildDivider(),
+                  _buildSettingItem(
+                    icon: Icons.event_note_outlined,
+                    title: '내 PT 세션',
+                    subtitle: 'PT 세션 기록을 확인하고 관리합니다',
+                    onTap: () => context.push('/pt-sessions'),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
             // 지원 및 정보
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 4),
@@ -399,9 +447,17 @@ class TrainerSettingsView extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          ref.read(authStateProvider).logout();
+                          context.go('/login');
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red),
+                          foregroundColor: Colors.red,
+                        ),
                         child: const Text(
-                          '취소',
+                          '로그아웃',
                           style: TextStyle(
                               color: Colors.red, fontWeight: FontWeight.w600),
                         ),
@@ -410,19 +466,14 @@ class TrainerSettingsView extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          ref.read(authStateProvider).logout();
-                          context.go('/login');
-                        },
+                        onPressed: () => Navigator.of(context).pop(),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.grey),
                         ),
                         child: const Text(
-                          '로그아웃',
+                          '취소',
                           style: TextStyle(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w600),
+                              color: Colors.black87, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),

@@ -10,20 +10,69 @@ _$PtSessionCreateImpl _$$PtSessionCreateImplFromJson(
         Map<String, dynamic> json) =>
     _$PtSessionCreateImpl(
       appointmentId: (json['appointmentId'] as num).toInt(),
-      sessionDate: json['sessionDate'] as String,
-      notes: json['notes'] as String,
-      workoutLogs: (json['workoutLogs'] as List<dynamic>)
-          .map((e) => WorkoutLogEntry.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      workoutLog:
+          WorkoutLogCreate.fromJson(json['workoutLog'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$PtSessionCreateImplToJson(
         _$PtSessionCreateImpl instance) =>
     <String, dynamic>{
       'appointmentId': instance.appointmentId,
-      'sessionDate': instance.sessionDate,
-      'notes': instance.notes,
-      'workoutLogs': instance.workoutLogs,
+      'workoutLog': instance.workoutLog.toJson(),
+    };
+
+_$WorkoutLogCreateImpl _$$WorkoutLogCreateImplFromJson(
+        Map<String, dynamic> json) =>
+    _$WorkoutLogCreateImpl(
+      workoutDate: json['workoutDate'] as String,
+      logFeedback: json['logFeedback'] as String,
+      workoutExercises: (json['workoutExercises'] as List<dynamic>)
+          .map((e) => WorkoutExerciseCreate.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$$WorkoutLogCreateImplToJson(
+        _$WorkoutLogCreateImpl instance) =>
+    <String, dynamic>{
+      'workoutDate': instance.workoutDate,
+      'logFeedback': instance.logFeedback,
+      'workoutExercises': instance.workoutExercises.map((e) => e.toJson()).toList(),
+    };
+
+_$WorkoutExerciseCreateImpl _$$WorkoutExerciseCreateImplFromJson(
+        Map<String, dynamic> json) =>
+    _$WorkoutExerciseCreateImpl(
+      exerciseId: (json['exerciseId'] as num).toInt(),
+      order: (json['order'] as num).toInt(),
+      workoutSets: (json['workoutSets'] as List<dynamic>)
+          .map((e) => WorkoutSetCreate.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$$WorkoutExerciseCreateImplToJson(
+        _$WorkoutExerciseCreateImpl instance) =>
+    <String, dynamic>{
+      'exerciseId': instance.exerciseId,
+      'order': instance.order,
+      'workoutSets': instance.workoutSets.map((e) => e.toJson()).toList(),
+    };
+
+_$WorkoutSetCreateImpl _$$WorkoutSetCreateImplFromJson(
+        Map<String, dynamic> json) =>
+    _$WorkoutSetCreateImpl(
+      order: (json['order'] as num).toInt(),
+      weight: (json['weight'] as num).toDouble(),
+      reps: (json['reps'] as num).toInt(),
+      feedback: json['feedback'] as String?,
+    );
+
+Map<String, dynamic> _$$WorkoutSetCreateImplToJson(
+        _$WorkoutSetCreateImpl instance) =>
+    <String, dynamic>{
+      'order': instance.order,
+      'weight': instance.weight,
+      'reps': instance.reps,
+      'feedback': instance.feedback,
     };
 
 _$WorkoutLogEntryImpl _$$WorkoutLogEntryImplFromJson(

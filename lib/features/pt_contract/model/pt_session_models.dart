@@ -7,15 +7,51 @@ part 'pt_session_models.g.dart';
 class PtSessionCreate with _$PtSessionCreate {
   const factory PtSessionCreate({
     required int appointmentId,
-    required String sessionDate,
-    required String notes,
-    required List<WorkoutLogEntry> workoutLogs,
+    required WorkoutLogCreate workoutLog,
   }) = _PtSessionCreate;
 
   factory PtSessionCreate.fromJson(Map<String, dynamic> json) =>
       _$PtSessionCreateFromJson(json);
 }
 
+@freezed
+class WorkoutLogCreate with _$WorkoutLogCreate {
+  const factory WorkoutLogCreate({
+    required String workoutDate,
+    required String logFeedback,
+    required List<WorkoutExerciseCreate> workoutExercises,
+  }) = _WorkoutLogCreate;
+
+  factory WorkoutLogCreate.fromJson(Map<String, dynamic> json) =>
+      _$WorkoutLogCreateFromJson(json);
+}
+
+@freezed
+class WorkoutExerciseCreate with _$WorkoutExerciseCreate {
+  const factory WorkoutExerciseCreate({
+    required int exerciseId,
+    required int order,
+    required List<WorkoutSetCreate> workoutSets,
+  }) = _WorkoutExerciseCreate;
+
+  factory WorkoutExerciseCreate.fromJson(Map<String, dynamic> json) =>
+      _$WorkoutExerciseCreateFromJson(json);
+}
+
+@freezed
+class WorkoutSetCreate with _$WorkoutSetCreate {
+  const factory WorkoutSetCreate({
+    required int order,
+    required double weight,
+    required int reps,
+    String? feedback,
+  }) = _WorkoutSetCreate;
+
+  factory WorkoutSetCreate.fromJson(Map<String, dynamic> json) =>
+      _$WorkoutSetCreateFromJson(json);
+}
+
+// 기존 모델들 (응답 파싱용)
 @freezed
 class WorkoutLogEntry with _$WorkoutLogEntry {
   const factory WorkoutLogEntry({

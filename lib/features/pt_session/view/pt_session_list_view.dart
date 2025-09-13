@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/notion_colors.dart';
 import '../model/pt_session_model.dart';
 import '../provider/pt_session_provider.dart';
+import '../repository/pt_session_repository.dart';
 
 class PtSessionListView extends ConsumerStatefulWidget {
   const PtSessionListView({super.key});
@@ -253,24 +254,36 @@ class _PtSessionListViewState extends ConsumerState<PtSessionListView> {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '운동 ${workoutLog.workoutExercises.length}종목',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'IBMPlexSansKR',
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '운동 ${workoutLog.workoutExercises.length}종목',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () => _showDeleteDialog(session.id),
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      iconSize: 20,
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -465,5 +478,102 @@ class _PtSessionListViewState extends ConsumerState<PtSessionListView> {
         ],
       ),
     );
+  }
+
+  void _showDeleteDialog(int sessionId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'PT 세션 삭제',
+          style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '이 PT 세션 기록을 삭제하시겠습니까?',
+              style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '⚠️ 주의사항',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              '• 연관된 운동일지도 함께 삭제됩니다\n• 차감되었던 PT 횟수가 복구됩니다\n• 삭제된 데이터는 복구할 수 없습니다',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.orange,
+                fontFamily: 'IBMPlexSansKR',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              '취소',
+              style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+            ),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _deletePtSession(sessionId);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text(
+              '삭제',
+              style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deletePtSession(int sessionId) async {
+    try {
+      // 기존 provider를 사용하여 삭제
+      await ref.read(ptSessionRepositoryProvider).deletePtSession(sessionId);
+      
+      // 목록 새로고침
+      await ref.read(ptSessionNotifierProvider.notifier).loadSessions(refresh: true);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'PT 세션이 성공적으로 삭제되었습니다.',
+              style: TextStyle(fontFamily: 'IBMPlexSansKR'),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '삭제 실패: $error',
+              style: const TextStyle(fontFamily: 'IBMPlexSansKR'),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

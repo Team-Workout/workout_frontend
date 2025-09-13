@@ -20,15 +20,22 @@ class PtSessionRepository {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/pt-sessions/me',
+        '/pt-sessions/me',
         queryParameters: {
           'page': page,
           'size': size,
-          if (sort != null) 'sort': sort,
         },
       );
 
       return PtSessionListResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deletePtSession(int ptSessionId) async {
+    try {
+      await _dio.delete('/pt-sessions/$ptSessionId');
     } on DioException catch (e) {
       throw _handleError(e);
     }

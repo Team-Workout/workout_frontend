@@ -625,6 +625,49 @@ class _PTScheduleViewState extends ConsumerState<PTScheduleView> {
     if (appointment == null) return;
 
     switch (action) {
+      case 'approve':
+        // 트레이너가 예약 요청 승인
+        await ref
+            .read(ptContractRepositoryProvider)
+            .confirmAppointment(appointmentId: appointment.appointmentId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('예약을 승인했습니다.',
+                  style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+              backgroundColor: Color(0xFF10B981),
+            ),
+          );
+        }
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          _loadAppointments();
+        }
+        break;
+      case 'reject':
+        // 트레이너가 예약 요청 거절
+        await ref
+            .read(ptContractRepositoryProvider)
+            .updateAppointmentStatus(
+              appointmentId: appointment.appointmentId,
+              status: 'REJECTED',
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('예약을 거절했습니다.',
+                  style: TextStyle(fontFamily: 'IBMPlexSansKR')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        if (!_isListView) {
+          _loadTimetableAppointments();
+        } else {
+          _loadAppointments();
+        }
+        break;
       case 'approve_change':
         // 트레이너가 멤버 변경요청 승인 처리
         await ref.read(ptContractRepositoryProvider).approveAppointmentChange(
@@ -2571,9 +2614,85 @@ class _ScheduleDetailPopupDialog extends ConsumerWidget {
 
   Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
     final List<Widget> buttons = [];
+    final currentUser = ref.read(currentUserProvider);
+    final isTrainer = currentUser?.userType == UserType.trainer;
 
     // 상태에 따른 버튼들
     switch (schedule.status) {
+      case 'MEMBER_REQUESTED':
+        // 트레이너인 경우 승인/거절 버튼 표시
+        if (isTrainer) {
+          buttons.add(
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => onScheduleAction(schedule, 'approve'),
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text('예약 승인'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      textStyle: const TextStyle(
+                        fontFamily: 'IBMPlexSansKR',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => onScheduleAction(schedule, 'reject'),
+                    icon: const Icon(Icons.cancel_outlined, size: 18),
+                    label: const Text('예약 거절'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      textStyle: const TextStyle(
+                        fontFamily: 'IBMPlexSansKR',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          // 회원인 경우 취소 버튼만 표시
+          buttons.add(
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => onScheduleAction(schedule, 'cancel'),
+                icon: const Icon(Icons.cancel_outlined, size: 18),
+                label: const Text('예약 취소'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  textStyle: const TextStyle(
+                    fontFamily: 'IBMPlexSansKR',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        break;
       case 'SCHEDULED':
         buttons.addAll([
           SizedBox(

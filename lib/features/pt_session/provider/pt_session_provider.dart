@@ -12,7 +12,6 @@ final ptSessionListProvider = FutureProvider.family<PtSessionListResponse, int>(
     return await repository.getMyPtSessions(
       page: page,
       size: 20,
-      sort: ['workoutDate,desc'],
     );
   },
 );
@@ -44,7 +43,6 @@ class PtSessionNotifier extends StateNotifier<AsyncValue<PtSessionListResponse>>
       final response = await _repository.getMyPtSessions(
         page: _currentPage,
         size: 20,
-        sort: ['workoutDate,desc'],
       );
 
       if (refresh) {

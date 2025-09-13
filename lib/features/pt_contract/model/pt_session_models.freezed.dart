@@ -21,9 +21,7 @@ PtSessionCreate _$PtSessionCreateFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$PtSessionCreate {
   int get appointmentId => throw _privateConstructorUsedError;
-  String get sessionDate => throw _privateConstructorUsedError;
-  String get notes => throw _privateConstructorUsedError;
-  List<WorkoutLogEntry> get workoutLogs => throw _privateConstructorUsedError;
+  WorkoutLogCreate get workoutLog => throw _privateConstructorUsedError;
 
   /// Serializes this PtSessionCreate to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -41,11 +39,9 @@ abstract class $PtSessionCreateCopyWith<$Res> {
           PtSessionCreate value, $Res Function(PtSessionCreate) then) =
       _$PtSessionCreateCopyWithImpl<$Res, PtSessionCreate>;
   @useResult
-  $Res call(
-      {int appointmentId,
-      String sessionDate,
-      String notes,
-      List<WorkoutLogEntry> workoutLogs});
+  $Res call({int appointmentId, WorkoutLogCreate workoutLog});
+
+  $WorkoutLogCreateCopyWith<$Res> get workoutLog;
 }
 
 /// @nodoc
@@ -64,28 +60,28 @@ class _$PtSessionCreateCopyWithImpl<$Res, $Val extends PtSessionCreate>
   @override
   $Res call({
     Object? appointmentId = null,
-    Object? sessionDate = null,
-    Object? notes = null,
-    Object? workoutLogs = null,
+    Object? workoutLog = null,
   }) {
     return _then(_value.copyWith(
       appointmentId: null == appointmentId
           ? _value.appointmentId
           : appointmentId // ignore: cast_nullable_to_non_nullable
               as int,
-      sessionDate: null == sessionDate
-          ? _value.sessionDate
-          : sessionDate // ignore: cast_nullable_to_non_nullable
-              as String,
-      notes: null == notes
-          ? _value.notes
-          : notes // ignore: cast_nullable_to_non_nullable
-              as String,
-      workoutLogs: null == workoutLogs
-          ? _value.workoutLogs
-          : workoutLogs // ignore: cast_nullable_to_non_nullable
-              as List<WorkoutLogEntry>,
+      workoutLog: null == workoutLog
+          ? _value.workoutLog
+          : workoutLog // ignore: cast_nullable_to_non_nullable
+              as WorkoutLogCreate,
     ) as $Val);
+  }
+
+  /// Create a copy of PtSessionCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $WorkoutLogCreateCopyWith<$Res> get workoutLog {
+    return $WorkoutLogCreateCopyWith<$Res>(_value.workoutLog, (value) {
+      return _then(_value.copyWith(workoutLog: value) as $Val);
+    });
   }
 }
 
@@ -97,11 +93,10 @@ abstract class _$$PtSessionCreateImplCopyWith<$Res>
       __$$PtSessionCreateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int appointmentId,
-      String sessionDate,
-      String notes,
-      List<WorkoutLogEntry> workoutLogs});
+  $Res call({int appointmentId, WorkoutLogCreate workoutLog});
+
+  @override
+  $WorkoutLogCreateCopyWith<$Res> get workoutLog;
 }
 
 /// @nodoc
@@ -118,27 +113,17 @@ class __$$PtSessionCreateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? appointmentId = null,
-    Object? sessionDate = null,
-    Object? notes = null,
-    Object? workoutLogs = null,
+    Object? workoutLog = null,
   }) {
     return _then(_$PtSessionCreateImpl(
       appointmentId: null == appointmentId
           ? _value.appointmentId
           : appointmentId // ignore: cast_nullable_to_non_nullable
               as int,
-      sessionDate: null == sessionDate
-          ? _value.sessionDate
-          : sessionDate // ignore: cast_nullable_to_non_nullable
-              as String,
-      notes: null == notes
-          ? _value.notes
-          : notes // ignore: cast_nullable_to_non_nullable
-              as String,
-      workoutLogs: null == workoutLogs
-          ? _value._workoutLogs
-          : workoutLogs // ignore: cast_nullable_to_non_nullable
-              as List<WorkoutLogEntry>,
+      workoutLog: null == workoutLog
+          ? _value.workoutLog
+          : workoutLog // ignore: cast_nullable_to_non_nullable
+              as WorkoutLogCreate,
     ));
   }
 }
@@ -147,11 +132,7 @@ class __$$PtSessionCreateImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PtSessionCreateImpl implements _PtSessionCreate {
   const _$PtSessionCreateImpl(
-      {required this.appointmentId,
-      required this.sessionDate,
-      required this.notes,
-      required final List<WorkoutLogEntry> workoutLogs})
-      : _workoutLogs = workoutLogs;
+      {required this.appointmentId, required this.workoutLog});
 
   factory _$PtSessionCreateImpl.fromJson(Map<String, dynamic> json) =>
       _$$PtSessionCreateImplFromJson(json);
@@ -159,20 +140,11 @@ class _$PtSessionCreateImpl implements _PtSessionCreate {
   @override
   final int appointmentId;
   @override
-  final String sessionDate;
-  @override
-  final String notes;
-  final List<WorkoutLogEntry> _workoutLogs;
-  @override
-  List<WorkoutLogEntry> get workoutLogs {
-    if (_workoutLogs is EqualUnmodifiableListView) return _workoutLogs;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_workoutLogs);
-  }
+  final WorkoutLogCreate workoutLog;
 
   @override
   String toString() {
-    return 'PtSessionCreate(appointmentId: $appointmentId, sessionDate: $sessionDate, notes: $notes, workoutLogs: $workoutLogs)';
+    return 'PtSessionCreate(appointmentId: $appointmentId, workoutLog: $workoutLog)';
   }
 
   @override
@@ -182,17 +154,13 @@ class _$PtSessionCreateImpl implements _PtSessionCreate {
             other is _$PtSessionCreateImpl &&
             (identical(other.appointmentId, appointmentId) ||
                 other.appointmentId == appointmentId) &&
-            (identical(other.sessionDate, sessionDate) ||
-                other.sessionDate == sessionDate) &&
-            (identical(other.notes, notes) || other.notes == notes) &&
-            const DeepCollectionEquality()
-                .equals(other._workoutLogs, _workoutLogs));
+            (identical(other.workoutLog, workoutLog) ||
+                other.workoutLog == workoutLog));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, appointmentId, sessionDate,
-      notes, const DeepCollectionEquality().hash(_workoutLogs));
+  int get hashCode => Object.hash(runtimeType, appointmentId, workoutLog);
 
   /// Create a copy of PtSessionCreate
   /// with the given fields replaced by the non-null parameter values.
@@ -213,11 +181,8 @@ class _$PtSessionCreateImpl implements _PtSessionCreate {
 
 abstract class _PtSessionCreate implements PtSessionCreate {
   const factory _PtSessionCreate(
-          {required final int appointmentId,
-          required final String sessionDate,
-          required final String notes,
-          required final List<WorkoutLogEntry> workoutLogs}) =
-      _$PtSessionCreateImpl;
+      {required final int appointmentId,
+      required final WorkoutLogCreate workoutLog}) = _$PtSessionCreateImpl;
 
   factory _PtSessionCreate.fromJson(Map<String, dynamic> json) =
       _$PtSessionCreateImpl.fromJson;
@@ -225,17 +190,629 @@ abstract class _PtSessionCreate implements PtSessionCreate {
   @override
   int get appointmentId;
   @override
-  String get sessionDate;
-  @override
-  String get notes;
-  @override
-  List<WorkoutLogEntry> get workoutLogs;
+  WorkoutLogCreate get workoutLog;
 
   /// Create a copy of PtSessionCreate
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PtSessionCreateImplCopyWith<_$PtSessionCreateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+WorkoutLogCreate _$WorkoutLogCreateFromJson(Map<String, dynamic> json) {
+  return _WorkoutLogCreate.fromJson(json);
+}
+
+/// @nodoc
+mixin _$WorkoutLogCreate {
+  String get workoutDate => throw _privateConstructorUsedError;
+  String get logFeedback => throw _privateConstructorUsedError;
+  List<WorkoutExerciseCreate> get workoutExercises =>
+      throw _privateConstructorUsedError;
+
+  /// Serializes this WorkoutLogCreate to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of WorkoutLogCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $WorkoutLogCreateCopyWith<WorkoutLogCreate> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $WorkoutLogCreateCopyWith<$Res> {
+  factory $WorkoutLogCreateCopyWith(
+          WorkoutLogCreate value, $Res Function(WorkoutLogCreate) then) =
+      _$WorkoutLogCreateCopyWithImpl<$Res, WorkoutLogCreate>;
+  @useResult
+  $Res call(
+      {String workoutDate,
+      String logFeedback,
+      List<WorkoutExerciseCreate> workoutExercises});
+}
+
+/// @nodoc
+class _$WorkoutLogCreateCopyWithImpl<$Res, $Val extends WorkoutLogCreate>
+    implements $WorkoutLogCreateCopyWith<$Res> {
+  _$WorkoutLogCreateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of WorkoutLogCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? workoutDate = null,
+    Object? logFeedback = null,
+    Object? workoutExercises = null,
+  }) {
+    return _then(_value.copyWith(
+      workoutDate: null == workoutDate
+          ? _value.workoutDate
+          : workoutDate // ignore: cast_nullable_to_non_nullable
+              as String,
+      logFeedback: null == logFeedback
+          ? _value.logFeedback
+          : logFeedback // ignore: cast_nullable_to_non_nullable
+              as String,
+      workoutExercises: null == workoutExercises
+          ? _value.workoutExercises
+          : workoutExercises // ignore: cast_nullable_to_non_nullable
+              as List<WorkoutExerciseCreate>,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$WorkoutLogCreateImplCopyWith<$Res>
+    implements $WorkoutLogCreateCopyWith<$Res> {
+  factory _$$WorkoutLogCreateImplCopyWith(_$WorkoutLogCreateImpl value,
+          $Res Function(_$WorkoutLogCreateImpl) then) =
+      __$$WorkoutLogCreateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String workoutDate,
+      String logFeedback,
+      List<WorkoutExerciseCreate> workoutExercises});
+}
+
+/// @nodoc
+class __$$WorkoutLogCreateImplCopyWithImpl<$Res>
+    extends _$WorkoutLogCreateCopyWithImpl<$Res, _$WorkoutLogCreateImpl>
+    implements _$$WorkoutLogCreateImplCopyWith<$Res> {
+  __$$WorkoutLogCreateImplCopyWithImpl(_$WorkoutLogCreateImpl _value,
+      $Res Function(_$WorkoutLogCreateImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of WorkoutLogCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? workoutDate = null,
+    Object? logFeedback = null,
+    Object? workoutExercises = null,
+  }) {
+    return _then(_$WorkoutLogCreateImpl(
+      workoutDate: null == workoutDate
+          ? _value.workoutDate
+          : workoutDate // ignore: cast_nullable_to_non_nullable
+              as String,
+      logFeedback: null == logFeedback
+          ? _value.logFeedback
+          : logFeedback // ignore: cast_nullable_to_non_nullable
+              as String,
+      workoutExercises: null == workoutExercises
+          ? _value._workoutExercises
+          : workoutExercises // ignore: cast_nullable_to_non_nullable
+              as List<WorkoutExerciseCreate>,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$WorkoutLogCreateImpl implements _WorkoutLogCreate {
+  const _$WorkoutLogCreateImpl(
+      {required this.workoutDate,
+      required this.logFeedback,
+      required final List<WorkoutExerciseCreate> workoutExercises})
+      : _workoutExercises = workoutExercises;
+
+  factory _$WorkoutLogCreateImpl.fromJson(Map<String, dynamic> json) =>
+      _$$WorkoutLogCreateImplFromJson(json);
+
+  @override
+  final String workoutDate;
+  @override
+  final String logFeedback;
+  final List<WorkoutExerciseCreate> _workoutExercises;
+  @override
+  List<WorkoutExerciseCreate> get workoutExercises {
+    if (_workoutExercises is EqualUnmodifiableListView)
+      return _workoutExercises;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_workoutExercises);
+  }
+
+  @override
+  String toString() {
+    return 'WorkoutLogCreate(workoutDate: $workoutDate, logFeedback: $logFeedback, workoutExercises: $workoutExercises)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$WorkoutLogCreateImpl &&
+            (identical(other.workoutDate, workoutDate) ||
+                other.workoutDate == workoutDate) &&
+            (identical(other.logFeedback, logFeedback) ||
+                other.logFeedback == logFeedback) &&
+            const DeepCollectionEquality()
+                .equals(other._workoutExercises, _workoutExercises));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, workoutDate, logFeedback,
+      const DeepCollectionEquality().hash(_workoutExercises));
+
+  /// Create a copy of WorkoutLogCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$WorkoutLogCreateImplCopyWith<_$WorkoutLogCreateImpl> get copyWith =>
+      __$$WorkoutLogCreateImplCopyWithImpl<_$WorkoutLogCreateImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$WorkoutLogCreateImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _WorkoutLogCreate implements WorkoutLogCreate {
+  const factory _WorkoutLogCreate(
+          {required final String workoutDate,
+          required final String logFeedback,
+          required final List<WorkoutExerciseCreate> workoutExercises}) =
+      _$WorkoutLogCreateImpl;
+
+  factory _WorkoutLogCreate.fromJson(Map<String, dynamic> json) =
+      _$WorkoutLogCreateImpl.fromJson;
+
+  @override
+  String get workoutDate;
+  @override
+  String get logFeedback;
+  @override
+  List<WorkoutExerciseCreate> get workoutExercises;
+
+  /// Create a copy of WorkoutLogCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$WorkoutLogCreateImplCopyWith<_$WorkoutLogCreateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+WorkoutExerciseCreate _$WorkoutExerciseCreateFromJson(
+    Map<String, dynamic> json) {
+  return _WorkoutExerciseCreate.fromJson(json);
+}
+
+/// @nodoc
+mixin _$WorkoutExerciseCreate {
+  int get exerciseId => throw _privateConstructorUsedError;
+  int get order => throw _privateConstructorUsedError;
+  List<WorkoutSetCreate> get workoutSets => throw _privateConstructorUsedError;
+
+  /// Serializes this WorkoutExerciseCreate to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of WorkoutExerciseCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $WorkoutExerciseCreateCopyWith<WorkoutExerciseCreate> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $WorkoutExerciseCreateCopyWith<$Res> {
+  factory $WorkoutExerciseCreateCopyWith(WorkoutExerciseCreate value,
+          $Res Function(WorkoutExerciseCreate) then) =
+      _$WorkoutExerciseCreateCopyWithImpl<$Res, WorkoutExerciseCreate>;
+  @useResult
+  $Res call({int exerciseId, int order, List<WorkoutSetCreate> workoutSets});
+}
+
+/// @nodoc
+class _$WorkoutExerciseCreateCopyWithImpl<$Res,
+        $Val extends WorkoutExerciseCreate>
+    implements $WorkoutExerciseCreateCopyWith<$Res> {
+  _$WorkoutExerciseCreateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of WorkoutExerciseCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? exerciseId = null,
+    Object? order = null,
+    Object? workoutSets = null,
+  }) {
+    return _then(_value.copyWith(
+      exerciseId: null == exerciseId
+          ? _value.exerciseId
+          : exerciseId // ignore: cast_nullable_to_non_nullable
+              as int,
+      order: null == order
+          ? _value.order
+          : order // ignore: cast_nullable_to_non_nullable
+              as int,
+      workoutSets: null == workoutSets
+          ? _value.workoutSets
+          : workoutSets // ignore: cast_nullable_to_non_nullable
+              as List<WorkoutSetCreate>,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$WorkoutExerciseCreateImplCopyWith<$Res>
+    implements $WorkoutExerciseCreateCopyWith<$Res> {
+  factory _$$WorkoutExerciseCreateImplCopyWith(
+          _$WorkoutExerciseCreateImpl value,
+          $Res Function(_$WorkoutExerciseCreateImpl) then) =
+      __$$WorkoutExerciseCreateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int exerciseId, int order, List<WorkoutSetCreate> workoutSets});
+}
+
+/// @nodoc
+class __$$WorkoutExerciseCreateImplCopyWithImpl<$Res>
+    extends _$WorkoutExerciseCreateCopyWithImpl<$Res,
+        _$WorkoutExerciseCreateImpl>
+    implements _$$WorkoutExerciseCreateImplCopyWith<$Res> {
+  __$$WorkoutExerciseCreateImplCopyWithImpl(_$WorkoutExerciseCreateImpl _value,
+      $Res Function(_$WorkoutExerciseCreateImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of WorkoutExerciseCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? exerciseId = null,
+    Object? order = null,
+    Object? workoutSets = null,
+  }) {
+    return _then(_$WorkoutExerciseCreateImpl(
+      exerciseId: null == exerciseId
+          ? _value.exerciseId
+          : exerciseId // ignore: cast_nullable_to_non_nullable
+              as int,
+      order: null == order
+          ? _value.order
+          : order // ignore: cast_nullable_to_non_nullable
+              as int,
+      workoutSets: null == workoutSets
+          ? _value._workoutSets
+          : workoutSets // ignore: cast_nullable_to_non_nullable
+              as List<WorkoutSetCreate>,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$WorkoutExerciseCreateImpl implements _WorkoutExerciseCreate {
+  const _$WorkoutExerciseCreateImpl(
+      {required this.exerciseId,
+      required this.order,
+      required final List<WorkoutSetCreate> workoutSets})
+      : _workoutSets = workoutSets;
+
+  factory _$WorkoutExerciseCreateImpl.fromJson(Map<String, dynamic> json) =>
+      _$$WorkoutExerciseCreateImplFromJson(json);
+
+  @override
+  final int exerciseId;
+  @override
+  final int order;
+  final List<WorkoutSetCreate> _workoutSets;
+  @override
+  List<WorkoutSetCreate> get workoutSets {
+    if (_workoutSets is EqualUnmodifiableListView) return _workoutSets;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_workoutSets);
+  }
+
+  @override
+  String toString() {
+    return 'WorkoutExerciseCreate(exerciseId: $exerciseId, order: $order, workoutSets: $workoutSets)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$WorkoutExerciseCreateImpl &&
+            (identical(other.exerciseId, exerciseId) ||
+                other.exerciseId == exerciseId) &&
+            (identical(other.order, order) || other.order == order) &&
+            const DeepCollectionEquality()
+                .equals(other._workoutSets, _workoutSets));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, exerciseId, order,
+      const DeepCollectionEquality().hash(_workoutSets));
+
+  /// Create a copy of WorkoutExerciseCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$WorkoutExerciseCreateImplCopyWith<_$WorkoutExerciseCreateImpl>
+      get copyWith => __$$WorkoutExerciseCreateImplCopyWithImpl<
+          _$WorkoutExerciseCreateImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$WorkoutExerciseCreateImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _WorkoutExerciseCreate implements WorkoutExerciseCreate {
+  const factory _WorkoutExerciseCreate(
+          {required final int exerciseId,
+          required final int order,
+          required final List<WorkoutSetCreate> workoutSets}) =
+      _$WorkoutExerciseCreateImpl;
+
+  factory _WorkoutExerciseCreate.fromJson(Map<String, dynamic> json) =
+      _$WorkoutExerciseCreateImpl.fromJson;
+
+  @override
+  int get exerciseId;
+  @override
+  int get order;
+  @override
+  List<WorkoutSetCreate> get workoutSets;
+
+  /// Create a copy of WorkoutExerciseCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$WorkoutExerciseCreateImplCopyWith<_$WorkoutExerciseCreateImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+WorkoutSetCreate _$WorkoutSetCreateFromJson(Map<String, dynamic> json) {
+  return _WorkoutSetCreate.fromJson(json);
+}
+
+/// @nodoc
+mixin _$WorkoutSetCreate {
+  int get order => throw _privateConstructorUsedError;
+  double get weight => throw _privateConstructorUsedError;
+  int get reps => throw _privateConstructorUsedError;
+  String? get feedback => throw _privateConstructorUsedError;
+
+  /// Serializes this WorkoutSetCreate to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of WorkoutSetCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $WorkoutSetCreateCopyWith<WorkoutSetCreate> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $WorkoutSetCreateCopyWith<$Res> {
+  factory $WorkoutSetCreateCopyWith(
+          WorkoutSetCreate value, $Res Function(WorkoutSetCreate) then) =
+      _$WorkoutSetCreateCopyWithImpl<$Res, WorkoutSetCreate>;
+  @useResult
+  $Res call({int order, double weight, int reps, String? feedback});
+}
+
+/// @nodoc
+class _$WorkoutSetCreateCopyWithImpl<$Res, $Val extends WorkoutSetCreate>
+    implements $WorkoutSetCreateCopyWith<$Res> {
+  _$WorkoutSetCreateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of WorkoutSetCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? order = null,
+    Object? weight = null,
+    Object? reps = null,
+    Object? feedback = freezed,
+  }) {
+    return _then(_value.copyWith(
+      order: null == order
+          ? _value.order
+          : order // ignore: cast_nullable_to_non_nullable
+              as int,
+      weight: null == weight
+          ? _value.weight
+          : weight // ignore: cast_nullable_to_non_nullable
+              as double,
+      reps: null == reps
+          ? _value.reps
+          : reps // ignore: cast_nullable_to_non_nullable
+              as int,
+      feedback: freezed == feedback
+          ? _value.feedback
+          : feedback // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$WorkoutSetCreateImplCopyWith<$Res>
+    implements $WorkoutSetCreateCopyWith<$Res> {
+  factory _$$WorkoutSetCreateImplCopyWith(_$WorkoutSetCreateImpl value,
+          $Res Function(_$WorkoutSetCreateImpl) then) =
+      __$$WorkoutSetCreateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int order, double weight, int reps, String? feedback});
+}
+
+/// @nodoc
+class __$$WorkoutSetCreateImplCopyWithImpl<$Res>
+    extends _$WorkoutSetCreateCopyWithImpl<$Res, _$WorkoutSetCreateImpl>
+    implements _$$WorkoutSetCreateImplCopyWith<$Res> {
+  __$$WorkoutSetCreateImplCopyWithImpl(_$WorkoutSetCreateImpl _value,
+      $Res Function(_$WorkoutSetCreateImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of WorkoutSetCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? order = null,
+    Object? weight = null,
+    Object? reps = null,
+    Object? feedback = freezed,
+  }) {
+    return _then(_$WorkoutSetCreateImpl(
+      order: null == order
+          ? _value.order
+          : order // ignore: cast_nullable_to_non_nullable
+              as int,
+      weight: null == weight
+          ? _value.weight
+          : weight // ignore: cast_nullable_to_non_nullable
+              as double,
+      reps: null == reps
+          ? _value.reps
+          : reps // ignore: cast_nullable_to_non_nullable
+              as int,
+      feedback: freezed == feedback
+          ? _value.feedback
+          : feedback // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$WorkoutSetCreateImpl implements _WorkoutSetCreate {
+  const _$WorkoutSetCreateImpl(
+      {required this.order,
+      required this.weight,
+      required this.reps,
+      this.feedback});
+
+  factory _$WorkoutSetCreateImpl.fromJson(Map<String, dynamic> json) =>
+      _$$WorkoutSetCreateImplFromJson(json);
+
+  @override
+  final int order;
+  @override
+  final double weight;
+  @override
+  final int reps;
+  @override
+  final String? feedback;
+
+  @override
+  String toString() {
+    return 'WorkoutSetCreate(order: $order, weight: $weight, reps: $reps, feedback: $feedback)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$WorkoutSetCreateImpl &&
+            (identical(other.order, order) || other.order == order) &&
+            (identical(other.weight, weight) || other.weight == weight) &&
+            (identical(other.reps, reps) || other.reps == reps) &&
+            (identical(other.feedback, feedback) ||
+                other.feedback == feedback));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, order, weight, reps, feedback);
+
+  /// Create a copy of WorkoutSetCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$WorkoutSetCreateImplCopyWith<_$WorkoutSetCreateImpl> get copyWith =>
+      __$$WorkoutSetCreateImplCopyWithImpl<_$WorkoutSetCreateImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$WorkoutSetCreateImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _WorkoutSetCreate implements WorkoutSetCreate {
+  const factory _WorkoutSetCreate(
+      {required final int order,
+      required final double weight,
+      required final int reps,
+      final String? feedback}) = _$WorkoutSetCreateImpl;
+
+  factory _WorkoutSetCreate.fromJson(Map<String, dynamic> json) =
+      _$WorkoutSetCreateImpl.fromJson;
+
+  @override
+  int get order;
+  @override
+  double get weight;
+  @override
+  int get reps;
+  @override
+  String? get feedback;
+
+  /// Create a copy of WorkoutSetCreate
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$WorkoutSetCreateImplCopyWith<_$WorkoutSetCreateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

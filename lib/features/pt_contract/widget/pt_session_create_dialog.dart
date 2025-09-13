@@ -238,11 +238,37 @@ class _PtSessionCreateDialogState extends ConsumerState<PtSessionCreateDialog> {
     });
 
     try {
+      // Transform WorkoutLogEntry to WorkoutExerciseCreate
+      final workoutExercises = _workoutLogs.asMap().entries.map((entry) {
+        final index = entry.key;
+        final workout = entry.value;
+        
+        return WorkoutExerciseCreate(
+          exerciseId: workout.exerciseId,
+          order: index + 1,
+          workoutSets: workout.sets.asMap().entries.map((setEntry) {
+            final setIndex = setEntry.key;
+            final set = setEntry.value;
+            
+            return WorkoutSetCreate(
+              order: setIndex + 1,
+              weight: set.weight,
+              reps: set.reps,
+              feedback: set.duration != null ? 'Duration: ${set.duration}s' : null,
+            );
+          }).toList(),
+        );
+      }).toList();
+
+      final workoutLog = WorkoutLogCreate(
+        workoutDate: DateFormat('yyyy-MM-dd').format(widget.sessionDate),
+        logFeedback: _notesController.text.trim(),
+        workoutExercises: workoutExercises,
+      );
+
       final sessionData = PtSessionCreate(
         appointmentId: widget.appointmentId,
-        sessionDate: DateFormat('yyyy-MM-dd').format(widget.sessionDate),
-        notes: _notesController.text.trim(),
-        workoutLogs: _workoutLogs,
+        workoutLog: workoutLog,
       );
 
       // 1. PT 세션 생성
