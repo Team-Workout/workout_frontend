@@ -96,7 +96,7 @@ class _RoutineDetailViewState extends ConsumerState<RoutineDetailView> {
                       children: [
                         Icon(
                           Icons.delete_outline,
-                          color: Colors.grey[600],
+                          color: Colors.red[600],
                           size: 18,
                         ),
                         const SizedBox(width: 8),

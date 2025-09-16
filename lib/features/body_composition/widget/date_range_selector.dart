@@ -54,15 +54,9 @@ class DateRangeSelector extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildQuickDateButton('1주일', DateRangeType.oneWeek, state.selectedType == DateRangeType.oneWeek, () => viewModel.setQuickDateRange(DateRangeType.oneWeek)),
+                _buildQuickDateButton('최근', DateRangeType.oneMonth, state.selectedType == DateRangeType.oneMonth, () => viewModel.setQuickDateRange(DateRangeType.oneMonth)),
                 const SizedBox(width: 8),
-                _buildQuickDateButton('1개월', DateRangeType.oneMonth, state.selectedType == DateRangeType.oneMonth, () => viewModel.setQuickDateRange(DateRangeType.oneMonth)),
-                const SizedBox(width: 8),
-                _buildQuickDateButton('3개월', DateRangeType.threeMonths, state.selectedType == DateRangeType.threeMonths, () => viewModel.setQuickDateRange(DateRangeType.threeMonths)),
-                const SizedBox(width: 8),
-                _buildQuickDateButton('6개월', DateRangeType.sixMonths, state.selectedType == DateRangeType.sixMonths, () => viewModel.setQuickDateRange(DateRangeType.sixMonths)),
-                const SizedBox(width: 8),
-                _buildQuickDateButton('1년', DateRangeType.oneYear, state.selectedType == DateRangeType.oneYear, () => viewModel.setQuickDateRange(DateRangeType.oneYear)),
+                _buildQuickDateButton('전체', DateRangeType.oneYear, state.selectedType == DateRangeType.oneYear, () => viewModel.setQuickDateRange(DateRangeType.oneYear)),
               ],
             ),
           ),

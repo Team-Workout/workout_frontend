@@ -39,7 +39,7 @@ class AppScaffoldWithNav extends StatelessWidget {
                   context.go('/workout-record');
                   break;
                 case 2:
-                  context.go('/body-composition');
+                  context.go('/social');
                   break;
                 case 3:
                   context.go('/pt-main');
@@ -66,9 +66,9 @@ class AppScaffoldWithNav extends StatelessWidget {
                 label: '운동',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.analytics_outlined),
-                activeIcon: Icon(Icons.analytics),
-                label: '체성분',
+                icon: Icon(Icons.people_outline),
+                activeIcon: Icon(Icons.people),
+                label: '소셜',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_add_outlined),

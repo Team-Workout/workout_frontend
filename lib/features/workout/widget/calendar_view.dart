@@ -126,7 +126,8 @@ class _CalendarViewState extends State<CalendarView> {
                           child: Row(
                             children: [
                               Text(
-                                DateFormat('yyyy년 M월').format(widget.viewModel.focusedDate),
+                                DateFormat('yyyy년 M월')
+                                    .format(widget.viewModel.focusedDate),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -232,7 +233,8 @@ class _CalendarViewState extends State<CalendarView> {
                                       Color(0xFF34D399),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.all(Radius.circular(3)),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(3)),
                                   border: Border.fromBorderSide(BorderSide(
                                     color: Colors.white,
                                     width: 1,
@@ -264,15 +266,18 @@ class _CalendarViewState extends State<CalendarView> {
                                 ),
                                 markerSize: 10,
                                 markersMaxCount: 1,
-                                markerMargin: EdgeInsets.symmetric(horizontal: 0.5),
+                                markerMargin:
+                                    EdgeInsets.symmetric(horizontal: 0.5),
                               ),
                               onDaySelected: (selectedDay, focusedDay) {
-                                widget.viewModel.updateSelectedDate(selectedDay);
+                                widget.viewModel
+                                    .updateSelectedDate(selectedDay);
                                 widget.viewModel.updateFocusedDate(focusedDay);
                                 // 선택된 날짜의 운동 기록이 캐시에 없다면 로드
-                                final dateString =
-                                    DateFormat('yyyy-MM-dd').format(selectedDay);
-                                if (!_workoutDataCache.containsKey(dateString)) {
+                                final dateString = DateFormat('yyyy-MM-dd')
+                                    .format(selectedDay);
+                                if (!_workoutDataCache
+                                    .containsKey(dateString)) {
                                   _loadWorkoutDataForDate(dateString);
                                 }
                               },

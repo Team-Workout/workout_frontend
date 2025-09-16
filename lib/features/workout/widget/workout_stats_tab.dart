@@ -9,13 +9,14 @@ import '../model/workout_stats_models.dart';
 import '../../dashboard/widgets/notion_button.dart';
 import '../../../common/widgets/exercise_autocomplete_field.dart';
 import '../../sync/model/sync_models.dart';
+import '../view/exercise_analysis_detail_view.dart';
 
 // 차트 유형 열거형
 enum ChartType {
   maxWeight('최대 중량', Icons.trending_up, Color(0xFFEF4444)),
   oneRM('1RM 추정', Icons.whatshot, Color(0xFF8B5CF6)),
   volume('볼륨', Icons.fitness_center, Color(0xFF10B981));
-  
+
   const ChartType(this.label, this.icon, this.color);
   final String label;
   final IconData icon;
@@ -32,7 +33,7 @@ class WorkoutStatsTab extends ConsumerStatefulWidget {
 class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
   late WorkoutStatsViewmodel _viewModel;
   bool _isInitialized = false;
-  
+
   // 검색 및 필터링 관련 상태
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -46,7 +47,8 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final workoutApiService = ref.read(workoutApiServiceProvider);
       final localStorageService = ref.read(localStorageServiceProvider);
-      _viewModel = WorkoutStatsViewmodel(workoutApiService, localStorageService);
+      _viewModel =
+          WorkoutStatsViewmodel(workoutApiService, localStorageService);
       _initializeViewModel();
     });
   }
@@ -74,8 +76,9 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
   }
 
   void _applyFilters() {
-    print('🔍 [Member] _applyFilters() 호출됨 - 검색어: "$_searchQuery", 선택된 근육군: $_selectedMuscleGroup');
-    
+    print(
+        '🔍 [Member] _applyFilters() 호출됨 - 검색어: "$_searchQuery", 선택된 근육군: $_selectedMuscleGroup');
+
     if (_viewModel.statsData == null) {
       print('❌ [Member] _viewModel.statsData가 null입니다');
       _filteredExercises = [];
@@ -84,7 +87,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
 
     List<ExerciseStats> filtered = _viewModel.statsData!.exercises;
     print('📊 [Member] 전체 운동 개수: ${filtered.length}');
-    
+
     // 운동 이름들 출력 (디버깅용)
     for (var exercise in filtered) {
       print('  - ${exercise.exerciseName}');
@@ -94,7 +97,9 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     if (_searchQuery.isNotEmpty) {
       print('🔎 [Member] 검색어로 필터링 중: "$_searchQuery"');
       filtered = filtered.where((exercise) {
-        final matches = exercise.exerciseName.toLowerCase().contains(_searchQuery.toLowerCase());
+        final matches = exercise.exerciseName
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase());
         print('  ${exercise.exerciseName} - 매치: $matches');
         return matches;
       }).toList();
@@ -108,23 +113,42 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
         // 운동명에 근육군 키워드가 포함되는지 확인 (간단한 구현)
         final exerciseName = exercise.exerciseName.toLowerCase();
         final muscleGroup = _selectedMuscleGroup!.toLowerCase();
-        
+
         // 간단한 키워드 매핑
         bool matches = false;
-        if (muscleGroup == '가슴' && (exerciseName.contains('벤치') || exerciseName.contains('체스트') || exerciseName.contains('푸시업'))) {
+        if (muscleGroup == '가슴' &&
+            (exerciseName.contains('벤치') ||
+                exerciseName.contains('체스트') ||
+                exerciseName.contains('푸시업'))) {
           matches = true;
-        } else if (muscleGroup == '등' && (exerciseName.contains('풀업') || exerciseName.contains('데드') || exerciseName.contains('로우') || exerciseName.contains('랫풀'))) {
+        } else if (muscleGroup == '등' &&
+            (exerciseName.contains('풀업') ||
+                exerciseName.contains('데드') ||
+                exerciseName.contains('로우') ||
+                exerciseName.contains('랫풀'))) {
           matches = true;
-        } else if (muscleGroup == '어깨' && (exerciseName.contains('숄더') || exerciseName.contains('프레스') || exerciseName.contains('레이즈'))) {
+        } else if (muscleGroup == '어깨' &&
+            (exerciseName.contains('숄더') ||
+                exerciseName.contains('프레스') ||
+                exerciseName.contains('레이즈'))) {
           matches = true;
-        } else if (muscleGroup == '팔' && (exerciseName.contains('컬') || exerciseName.contains('트라이셉') || exerciseName.contains('딥스'))) {
+        } else if (muscleGroup == '팔' &&
+            (exerciseName.contains('컬') ||
+                exerciseName.contains('트라이셉') ||
+                exerciseName.contains('딥스'))) {
           matches = true;
-        } else if (muscleGroup == '하체' && (exerciseName.contains('스쿼트') || exerciseName.contains('레그') || exerciseName.contains('런지'))) {
+        } else if (muscleGroup == '하체' &&
+            (exerciseName.contains('스쿼트') ||
+                exerciseName.contains('레그') ||
+                exerciseName.contains('런지'))) {
           matches = true;
-        } else if (muscleGroup == '코어' && (exerciseName.contains('플랭크') || exerciseName.contains('크런치') || exerciseName.contains('싯업'))) {
+        } else if (muscleGroup == '코어' &&
+            (exerciseName.contains('플랭크') ||
+                exerciseName.contains('크런치') ||
+                exerciseName.contains('싯업'))) {
           matches = true;
         }
-        
+
         print('  ${exercise.exerciseName} - 근육군 매치: $matches');
         return matches;
       }).toList();
@@ -333,9 +357,9 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
               size: 20,
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // 근육군 필터 (현재는 간단한 칩들로 구현)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -374,12 +398,12 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? const Color(0xFF10B981).withOpacity(0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? const Color(0xFF10B981)
                 : Colors.grey.withOpacity(0.3),
             width: 1,
@@ -390,9 +414,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected 
-                ? const Color(0xFF10B981)
-                : Colors.grey[700],
+            color: isSelected ? const Color(0xFF10B981) : Colors.grey[700],
             fontFamily: 'IBMPlexSansKR',
           ),
         ),
@@ -437,7 +459,8 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                   child: GestureDetector(
                     onTap: () => _viewModel.selectPeriod(period),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 4),
                       decoration: BoxDecoration(
                         gradient: isSelected
                             ? const LinearGradient(
@@ -447,7 +470,9 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                         color: isSelected ? null : Colors.grey[100],
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isSelected ? Colors.transparent : Colors.grey[300]!,
+                          color: isSelected
+                              ? Colors.transparent
+                              : Colors.grey[300]!,
                           width: 1,
                         ),
                       ),
@@ -456,7 +481,8 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
                           color: isSelected ? Colors.white : Colors.grey[700],
                           fontFamily: 'IBMPlexSansKR',
                         ),
@@ -474,8 +500,9 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
 
   Widget _buildDetailedSummaryCard() {
     final summary = _viewModel.statsData!.summary;
-    final totalReps = _viewModel.statsData!.exercises.fold(0, (sum, ex) => sum + ex.totalReps);
-    
+    final totalReps = _viewModel.statsData!.exercises
+        .fold(0, (sum, ex) => sum + ex.totalReps);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -531,8 +558,11 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                     Padding(
                       padding: const EdgeInsets.only(left: 12),
                       child: Text(
-                        DateFormat('yyyy.MM.dd').format(DateTime.now().subtract(Duration(days: _viewModel.selectedPeriod.days))) + 
-                        ' - ' + DateFormat('yyyy.MM.dd').format(DateTime.now()),
+                        DateFormat('yyyy.MM.dd').format(DateTime.now().subtract(
+                                Duration(
+                                    days: _viewModel.selectedPeriod.days))) +
+                            ' - ' +
+                            DateFormat('yyyy.MM.dd').format(DateTime.now()),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14,
@@ -545,7 +575,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // 메인 통계 그리드 (2x2)
             Row(
               children: [
@@ -591,7 +621,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       ),
     );
   }
-  
+
   Widget _buildStatCard(String title, String value, String unit) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -643,8 +673,6 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       ),
     );
   }
-  
-
 
   Widget _buildDetailedExerciseStatsList() {
     // 검색/필터가 적용된 운동 목록 사용
@@ -652,49 +680,71 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     print('   전체 exercises 개수: ${_viewModel.statsData?.exercises.length ?? 0}');
     print('   검색어: "$_searchQuery"');
     print('   선택된 근육군: $_selectedMuscleGroup');
-    
+
     // build 메서드에서 직접 필터링 로직 실행 (setState 없이)
     List<ExerciseStats> exercises = _viewModel.statsData?.exercises ?? [];
-    
+
     // 검색어 필터 적용
     if (_searchQuery.isNotEmpty) {
       exercises = exercises.where((exercise) {
-        return exercise.exerciseName.toLowerCase().contains(_searchQuery.toLowerCase());
+        return exercise.exerciseName
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase());
       }).toList();
       print('🔎 [Member] 검색 후 결과: ${exercises.length}개');
     }
-    
+
     // 근육군 필터 적용
     if (_selectedMuscleGroup != null && _selectedMuscleGroup!.isNotEmpty) {
       exercises = exercises.where((exercise) {
         final exerciseName = exercise.exerciseName.toLowerCase();
         final muscleGroup = _selectedMuscleGroup!.toLowerCase();
-        
+
         bool matches = false;
-        if (muscleGroup == '가슴' && (exerciseName.contains('벤치') || exerciseName.contains('체스트') || exerciseName.contains('푸시업'))) {
+        if (muscleGroup == '가슴' &&
+            (exerciseName.contains('벤치') ||
+                exerciseName.contains('체스트') ||
+                exerciseName.contains('푸시업'))) {
           matches = true;
-        } else if (muscleGroup == '등' && (exerciseName.contains('풀업') || exerciseName.contains('데드') || exerciseName.contains('로우') || exerciseName.contains('랫풀'))) {
+        } else if (muscleGroup == '등' &&
+            (exerciseName.contains('풀업') ||
+                exerciseName.contains('데드') ||
+                exerciseName.contains('로우') ||
+                exerciseName.contains('랫풀'))) {
           matches = true;
-        } else if (muscleGroup == '어깨' && (exerciseName.contains('숄더') || exerciseName.contains('프레스') || exerciseName.contains('레이즈'))) {
+        } else if (muscleGroup == '어깨' &&
+            (exerciseName.contains('숄더') ||
+                exerciseName.contains('프레스') ||
+                exerciseName.contains('레이즈'))) {
           matches = true;
-        } else if (muscleGroup == '팔' && (exerciseName.contains('컬') || exerciseName.contains('트라이셉') || exerciseName.contains('딥스'))) {
+        } else if (muscleGroup == '팔' &&
+            (exerciseName.contains('컬') ||
+                exerciseName.contains('트라이셉') ||
+                exerciseName.contains('딥스'))) {
           matches = true;
-        } else if (muscleGroup == '하체' && (exerciseName.contains('스쿼트') || exerciseName.contains('레그') || exerciseName.contains('런지'))) {
+        } else if (muscleGroup == '하체' &&
+            (exerciseName.contains('스쿼트') ||
+                exerciseName.contains('레그') ||
+                exerciseName.contains('런지'))) {
           matches = true;
-        } else if (muscleGroup == '코어' && (exerciseName.contains('플랭크') || exerciseName.contains('크런치') || exerciseName.contains('싯업'))) {
+        } else if (muscleGroup == '코어' &&
+            (exerciseName.contains('플랭크') ||
+                exerciseName.contains('크런치') ||
+                exerciseName.contains('싯업'))) {
           matches = true;
         }
         return matches;
       }).toList();
       print('💪 [Member] 근육군 필터 후 결과: ${exercises.length}개');
     }
-    
+
     print('   최종 사용할 exercises 개수: ${exercises.length}');
-    
+
     if (exercises.isEmpty) {
       // 검색 결과가 없는 경우와 전체 데이터가 없는 경우 구분
-      final hasSearchOrFilter = _searchQuery.isNotEmpty || _selectedMuscleGroup != null;
-      
+      final hasSearchOrFilter =
+          _searchQuery.isNotEmpty || _selectedMuscleGroup != null;
+
       return Container(
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(32),
@@ -713,15 +763,15 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
           child: Column(
             children: [
               Icon(
-                hasSearchOrFilter ? Icons.search_off : Icons.fitness_center_outlined,
+                hasSearchOrFilter
+                    ? Icons.search_off
+                    : Icons.fitness_center_outlined,
                 size: 64,
                 color: const Color(0xFF10B981).withOpacity(0.5),
               ),
               const SizedBox(height: 16),
               Text(
-                hasSearchOrFilter 
-                    ? '검색 결과가 없습니다'
-                    : '운동 데이터가 없습니다',
+                hasSearchOrFilter ? '검색 결과가 없습니다' : '운동 데이터가 없습니다',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -747,7 +797,9 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     }
 
     return Column(
-      children: exercises.map((exercise) => _buildDetailedExerciseCard(exercise)).toList(),
+      children: exercises
+          .map((exercise) => _buildSimpleExerciseListItem(exercise))
+          .toList(),
     );
   }
 
@@ -772,7 +824,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 헤더 섹션 
+          // 헤더 섹션
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -833,7 +885,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
               ],
             ),
           ),
-          
+
           // 통계 정보 섹션
           Padding(
             padding: const EdgeInsets.all(20),
@@ -886,7 +938,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       ),
     );
   }
-  
+
   Widget _buildStatInfo(String title, String value) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -923,7 +975,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       ),
     );
   }
-  
+
   Widget _buildProgressSection(ExerciseStats exercise) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -955,22 +1007,25 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       ],
     );
   }
-  
-  
+
   IconData _getExerciseIcon(String exerciseName) {
     final name = exerciseName.toLowerCase();
-    if (name.contains('bench') || name.contains('벤치')) return Icons.fitness_center;
-    if (name.contains('squat') || name.contains('스쿼트')) return Icons.keyboard_arrow_down;
-    if (name.contains('deadlift') || name.contains('데드')) return Icons.keyboard_arrow_up;
-    if (name.contains('press') || name.contains('프레스')) return Icons.trending_up;
-    if (name.contains('curl') || name.contains('컬')) return Icons.radio_button_unchecked;
+    if (name.contains('bench') || name.contains('벤치'))
+      return Icons.fitness_center;
+    if (name.contains('squat') || name.contains('스쿼트'))
+      return Icons.keyboard_arrow_down;
+    if (name.contains('deadlift') || name.contains('데드'))
+      return Icons.keyboard_arrow_up;
+    if (name.contains('press') || name.contains('프레스'))
+      return Icons.trending_up;
+    if (name.contains('curl') || name.contains('컬'))
+      return Icons.radio_button_unchecked;
     if (name.contains('fly') || name.contains('플라이')) return Icons.open_in_full;
     return Icons.fitness_center;
   }
-  
-  
+
   ChartType _selectedChartType = ChartType.maxWeight;
-  
+
   Widget _buildChartTabs(ExerciseStats exercise) {
     return Column(
       children: [
@@ -983,9 +1038,12 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                 onTap: () => setState(() => _selectedChartType = type),
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                   decoration: BoxDecoration(
-                    color: isSelected ? type.color.withOpacity(0.1) : Colors.grey[50],
+                    color: isSelected
+                        ? type.color.withOpacity(0.1)
+                        : Colors.grey[50],
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected ? type.color : Colors.grey[300]!,
@@ -1005,7 +1063,8 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                         type.label,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w400,
                           color: isSelected ? type.color : Colors.grey[600],
                           fontFamily: 'IBMPlexSansKR',
                         ),
@@ -1026,7 +1085,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       ],
     );
   }
-  
+
   Widget _buildAdvancedChart(ExerciseStats exercise, ChartType chartType) {
     if (exercise.progressData.isEmpty) {
       return Container(
@@ -1062,7 +1121,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     // 데이터 준비
     late List<FlSpot> spots;
     late String unit;
-    
+
     switch (chartType) {
       case ChartType.maxWeight:
         spots = exercise.progressData.asMap().entries.map((entry) {
@@ -1078,12 +1137,13 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
         break;
       case ChartType.volume:
         spots = exercise.progressData.asMap().entries.map((entry) {
-          return FlSpot(entry.key.toDouble(), entry.value.volume / 1000); // K단위로 변환
+          return FlSpot(
+              entry.key.toDouble(), entry.value.volume / 1000); // K단위로 변환
         }).toList();
         unit = 'K';
         break;
     }
-    
+
     if (spots.isEmpty || spots.every((spot) => spot.y == 0)) {
       return Container(
         height: 120,
@@ -1107,7 +1167,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     final minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
     final maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
     final range = maxY - minY;
-    
+
     // 패딩 계산 및 음수 방지
     final padding = range > 0 ? range * 0.1 : 1.0; // 최소 1.0 패딩
     final calculatedMinY = minY - padding;
@@ -1133,9 +1193,12 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
           ),
           titlesData: FlTitlesData(
             show: true,
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -1195,9 +1258,11 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
           lineTouchData: LineTouchData(
             enabled: true,
             touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (touchedSpot) => chartType.color.withOpacity(0.9),
+              getTooltipColor: (touchedSpot) =>
+                  chartType.color.withOpacity(0.9),
               tooltipRoundedRadius: 8,
-              tooltipPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              tooltipPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                 return touchedBarSpots.map((barSpot) {
                   return LineTooltipItem(
@@ -1221,7 +1286,7 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
   Widget _buildMuscleGroupAnalysisChart() {
     // 부위별 볼륨 계산 (예시 데이터)
     final muscleGroupData = _calculateMuscleGroupData();
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -1267,7 +1332,8 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -1289,13 +1355,13 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // 부위별 진행률 바 차트
             ...muscleGroupData.entries.map((entry) {
               final percentage = entry.value['percentage'] as double;
               final volume = entry.value['volume'] as double;
               final color = entry.value['color'] as Color;
-              
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Column(
@@ -1367,20 +1433,21 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
     );
   }
 
-
   Map<String, Map<String, dynamic>> _calculateMuscleGroupData() {
     if (_viewModel.statsData == null) return {};
-    
+
     // 부위별 볼륨 계산 (예시 - 실제로는 운동 이름을 바탕으로 부위를 매핑해야 함)
     final exercises = _viewModel.statsData!.exercises;
     final muscleGroups = <String, double>{};
-    
+
     for (final exercise in exercises) {
       final muscleGroup = _getMuscleGroupFromExercise(exercise.exerciseName);
-      muscleGroups[muscleGroup] = (muscleGroups[muscleGroup] ?? 0) + exercise.totalVolume;
+      muscleGroups[muscleGroup] =
+          (muscleGroups[muscleGroup] ?? 0) + exercise.totalVolume;
     }
-    
-    final totalVolume = muscleGroups.values.fold(0.0, (sum, volume) => sum + volume);
+
+    final totalVolume =
+        muscleGroups.values.fold(0.0, (sum, volume) => sum + volume);
     final colors = [
       const Color(0xFF10B981), // 가슴
       const Color(0xFF3B82F6), // 등
@@ -1389,51 +1456,204 @@ class _WorkoutStatsTabState extends ConsumerState<WorkoutStatsTab> {
       const Color(0xFF8B5CF6), // 하체
       const Color(0xFF06B6D4), // 기타
     ];
-    
+
     final result = <String, Map<String, dynamic>>{};
     final sortedEntries = muscleGroups.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    
+
     for (int i = 0; i < sortedEntries.length; i++) {
       final entry = sortedEntries[i];
-      final percentage = totalVolume > 0 ? (entry.value / totalVolume) * 100 : 0.0;
+      final percentage =
+          totalVolume > 0 ? (entry.value / totalVolume) * 100 : 0.0;
       result[entry.key] = {
         'volume': entry.value,
         'percentage': percentage,
         'color': colors[i % colors.length],
       };
     }
-    
+
     return result;
   }
 
-
   String _getMuscleGroupFromExercise(String exerciseName) {
     final name = exerciseName.toLowerCase();
-    
-    if (name.contains('bench') || name.contains('벤치') || 
-        name.contains('chest') || name.contains('가슴') ||
-        name.contains('push up') || name.contains('푸시업')) {
+
+    if (name.contains('bench') ||
+        name.contains('벤치') ||
+        name.contains('chest') ||
+        name.contains('가슴') ||
+        name.contains('push up') ||
+        name.contains('푸시업')) {
       return '가슴';
-    } else if (name.contains('squat') || name.contains('스쿼트') ||
-               name.contains('leg') || name.contains('다리') ||
-               name.contains('deadlift') || name.contains('데드')) {
+    } else if (name.contains('squat') ||
+        name.contains('스쿼트') ||
+        name.contains('leg') ||
+        name.contains('다리') ||
+        name.contains('deadlift') ||
+        name.contains('데드')) {
       return '하체';
-    } else if (name.contains('pull') || name.contains('row') ||
-               name.contains('lat') || name.contains('등') ||
-               name.contains('back') || name.contains('풀업')) {
+    } else if (name.contains('pull') ||
+        name.contains('row') ||
+        name.contains('lat') ||
+        name.contains('등') ||
+        name.contains('back') ||
+        name.contains('풀업')) {
       return '등';
-    } else if (name.contains('shoulder') || name.contains('press') ||
-               name.contains('어깨') || name.contains('프레스')) {
+    } else if (name.contains('shoulder') ||
+        name.contains('press') ||
+        name.contains('어깨') ||
+        name.contains('프레스')) {
       return '어깨';
-    } else if (name.contains('curl') || name.contains('컬') ||
-               name.contains('arm') || name.contains('팔') ||
-               name.contains('tricep') || name.contains('bicep')) {
+    } else if (name.contains('curl') ||
+        name.contains('컬') ||
+        name.contains('arm') ||
+        name.contains('팔') ||
+        name.contains('tricep') ||
+        name.contains('bicep')) {
       return '팔';
     } else {
       return '기타';
     }
   }
 
+  Widget _buildSimpleExerciseListItem(ExerciseStats exercise) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>
+                    ExerciseAnalysisDetailView(exercise: exercise),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                // 운동 아이콘
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _getExerciseIcon(exercise.exerciseName),
+                    size: 24,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 16),
 
+                // 운동 정보
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        exercise.exerciseName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
+                          fontFamily: 'IBMPlexSansKR',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _buildQuickInfo(
+                            '최대: ${exercise.maxWeight.toStringAsFixed(1)}kg',
+                            const Color(0xFF374151),
+                          ),
+                          const SizedBox(width: 16),
+                          _buildQuickInfo(
+                            '1RM: ${exercise.estimatedOneRM.toStringAsFixed(1)}kg',
+                            const Color(0xFF4B5563),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          _buildQuickInfo(
+                            '${exercise.totalSets}세트',
+                            const Color(0xFF6B7280),
+                          ),
+                          const SizedBox(width: 16),
+                          _buildQuickInfo(
+                            '${(exercise.totalVolume / 1000).toStringAsFixed(1)}K 볼륨',
+                            const Color(0xFF9CA3AF),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 화살표 아이콘
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey[400],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickInfo(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+          fontFamily: 'IBMPlexSansKR',
+        ),
+      ),
+    );
+  }
 }

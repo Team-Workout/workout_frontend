@@ -74,9 +74,9 @@ class DashboardWeightChart extends StatelessWidget {
           horizontalInterval:
               (maxWeight - minWeight) <= 0 ? 1.0 : (maxWeight - minWeight) / 2,
           getDrawingHorizontalLine: (value) {
-            return const FlLine(
-              color: Colors.grey,
-              strokeWidth: 0.3,
+            return FlLine(
+              color: Colors.grey[400]!,
+              strokeWidth: 1,
             );
           },
         ),

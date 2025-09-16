@@ -401,6 +401,7 @@ class _MemberDashboardViewState extends ConsumerState<MemberDashboardView> {
 
         return Container(
           padding: const EdgeInsets.all(20),
+          clipBehavior: Clip.hardEdge, // overflow 전파 차단
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),

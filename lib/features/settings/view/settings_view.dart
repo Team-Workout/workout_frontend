@@ -279,6 +279,21 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         ),
         const SizedBox(height: 20),
 
+        // 건강 관리
+        _buildSection(
+          context,
+          '건강 관리',
+          [
+            _buildSettingItem(
+              Icons.analytics_outlined,
+              '체성분 분석',
+              '체중, 체지방, 근육량 기록을 관리합니다',
+              () => context.push('/body-composition'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
         // PT 관리
         _buildSection(
           context,

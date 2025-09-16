@@ -257,7 +257,7 @@ class _TrainersViewState extends ConsumerState<TrainersView> {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: 130, // 더 높이 증가
+                height: 110, // 더 높이 증가
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(

@@ -216,7 +216,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF10B981).withOpacity(0.2),
+          color: Colors.grey,
           width: 1,
         ),
       ),
@@ -266,7 +266,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      color: Colors.grey,
                       width: 1,
                     ),
                   ),
@@ -284,7 +284,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
                         children: [
                           Icon(
                             Icons.delete_outline,
-                            color: Colors.grey[600],
+                            color: Colors.red[600],
                             size: 18,
                           ),
                           const SizedBox(width: 8),
@@ -373,7 +373,7 @@ class _RoutineListViewState extends ConsumerState<RoutineListView> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: const Color(0xFF10B981).withOpacity(0.3),
+            color: Colors.grey,
             width: 1.5,
           ),
         ),

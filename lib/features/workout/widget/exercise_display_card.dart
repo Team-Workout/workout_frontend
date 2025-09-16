@@ -34,7 +34,7 @@ class ExerciseDisplayCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
+                  color: Colors.grey,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -131,7 +131,8 @@ class ExerciseDisplayCard extends StatelessWidget {
                 final set = entry.value;
                 return Container(
                   margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

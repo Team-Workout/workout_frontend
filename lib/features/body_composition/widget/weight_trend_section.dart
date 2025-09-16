@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/body_composition_model.dart';
 import '../model/body_image_model.dart';
 import 'weight_chart.dart';
 import '../../../core/config/api_config.dart';
+import '../viewmodel/body_composition_viewmodel.dart';
 
-class WeightTrendSection extends StatelessWidget {
+class WeightTrendSection extends ConsumerWidget {
   final List<BodyComposition> compositions;
   final List<BodyImageResponse>? bodyImages;
 
@@ -18,7 +20,9 @@ class WeightTrendSection extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dateRangeState = ref.watch(dateRangeProvider);
+    final isOverviewMode = dateRangeState.selectedType == DateRangeType.oneYear;
     // Create unified date timeline for all charts
     final sortedData = List<BodyComposition>.from(compositions)
       ..sort((a, b) => a.measurementDate.compareTo(b.measurementDate));
@@ -47,6 +51,7 @@ class WeightTrendSection extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(24),
+      clipBehavior: Clip.hardEdge, // overflow 전파 차단
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -122,6 +127,7 @@ class WeightTrendSection extends StatelessWidget {
                   bodyImages: bodyImages,
                   sortedAllDates: localSortedAllDates,
                   imagesByDate: localImagesByDate,
+                  isOverviewMode: isOverviewMode,
                 ),
               ),
               const SizedBox(height: 30), // 간격 늘림
@@ -135,14 +141,14 @@ class WeightTrendSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Container(
+              SizedBox(
                 height: 300, // 높이 고정
-                clipBehavior: Clip.none, // 툴팁 자르기 방지
                 child: MuscleChart(
                   compositions: compositions,
                   bodyImages: bodyImages,
                   sortedAllDates: localSortedAllDates,
                   imagesByDate: localImagesByDate,
+                  isOverviewMode: isOverviewMode,
                 ),
               ),
               const SizedBox(height: 30), // 간격 늘림
@@ -156,14 +162,14 @@ class WeightTrendSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Container(
+              SizedBox(
                 height: 300, // 높이 고정
-                clipBehavior: Clip.none, // 툴팁 자르기 방지
                 child: FatChart(
                   compositions: compositions,
                   bodyImages: bodyImages,
                   sortedAllDates: localSortedAllDates,
                   imagesByDate: localImagesByDate,
+                  isOverviewMode: isOverviewMode,
                 ),
               ),
             ],
@@ -180,6 +186,7 @@ class MuscleChart extends StatelessWidget {
   final List<BodyImageResponse>? bodyImages;
   final List<String>? sortedAllDates;
   final Map<String, List<BodyImageResponse>>? imagesByDate;
+  final bool isOverviewMode;
 
   const MuscleChart({
     Key? key,
@@ -187,6 +194,7 @@ class MuscleChart extends StatelessWidget {
     this.bodyImages,
     this.sortedAllDates,
     this.imagesByDate,
+    this.isOverviewMode = false,
   }) : super(key: key);
 
   @override
@@ -199,7 +207,7 @@ class MuscleChart extends StatelessWidget {
     
     // 스크롤 가능한 차트를 위한 설정
     final screenWidth = MediaQuery.of(context).size.width;
-    const pointSpacing = 60.0; // 각 데이터 포인트 간의 간격
+    final pointSpacing = isOverviewMode ? 30.0 : 60.0; // 전체 모드에서는 더 좁게
 
     final sortedData = List<BodyComposition>.from(compositions)
       ..sort((a, b) => a.measurementDate.compareTo(b.measurementDate));
@@ -230,7 +238,7 @@ class MuscleChart extends StatelessWidget {
     // 차트 너비 계산
     final dataPointCount = localSortedAllDates.length;
     final calculatedWidth = dataPointCount * pointSpacing;
-    final chartWidth = calculatedWidth < screenWidth ? screenWidth : calculatedWidth;
+    final chartWidth = isOverviewMode ? screenWidth - 80 : (calculatedWidth < screenWidth ? screenWidth : calculatedWidth);
     
     // 스마트한 날짜 간격 계산
     int calculateDateInterval() {
@@ -298,10 +306,10 @@ class MuscleChart extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none, // 툴팁 자르기 방지
-        physics: chartWidth > screenWidth ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
+        physics: isOverviewMode ? const NeverScrollableScrollPhysics() : (chartWidth > screenWidth ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics()),
         child: Container(
-          width: chartWidth + 80, // 좌우 패딩 공간 추가
-          padding: const EdgeInsets.symmetric(horizontal: 40), // 좌우 40px 패딩
+          width: isOverviewMode ? chartWidth : chartWidth + 80, // 전체 모드에서는 패딩 없이
+          padding: isOverviewMode ? const EdgeInsets.symmetric(horizontal: 10) : const EdgeInsets.symmetric(horizontal: 40), // 전체 모드에서는 패딩 최소화
           child: LineChart(
         LineChartData(
           lineTouchData: LineTouchData(
@@ -334,9 +342,9 @@ class MuscleChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: (maxY - minY) / 3, // 정확히 3개 간격 = 4개 라벨
             getDrawingHorizontalLine: (value) {
-              return const FlLine(
-                color: Color(0xFFE5E7EB),
-                strokeWidth: 0.5,
+              return FlLine(
+                color: Colors.grey[400]!,
+                strokeWidth: 1.0,
               );
             },
           ),
@@ -645,6 +653,7 @@ class FatChart extends StatelessWidget {
   final List<BodyImageResponse>? bodyImages;
   final List<String>? sortedAllDates;
   final Map<String, List<BodyImageResponse>>? imagesByDate;
+  final bool isOverviewMode;
 
   const FatChart({
     Key? key,
@@ -652,6 +661,7 @@ class FatChart extends StatelessWidget {
     this.bodyImages,
     this.sortedAllDates,
     this.imagesByDate,
+    this.isOverviewMode = false,
   }) : super(key: key);
 
   @override
@@ -664,7 +674,7 @@ class FatChart extends StatelessWidget {
     
     // 스크롤 가능한 차트를 위한 설정
     final screenWidth = MediaQuery.of(context).size.width;
-    const pointSpacing = 60.0;
+    final pointSpacing = isOverviewMode ? 30.0 : 60.0; // 전체 모드에서는 더 좁게
 
     final sortedData = List<BodyComposition>.from(compositions)
       ..sort((a, b) => a.measurementDate.compareTo(b.measurementDate));
@@ -695,7 +705,7 @@ class FatChart extends StatelessWidget {
     // 차트 너비 계산
     final dataPointCount = localSortedAllDates.length;
     final calculatedWidth = dataPointCount * pointSpacing;
-    final chartWidth = calculatedWidth < screenWidth ? screenWidth : calculatedWidth;
+    final chartWidth = isOverviewMode ? screenWidth - 80 : (calculatedWidth < screenWidth ? screenWidth : calculatedWidth);
     
     // 스마트한 날짜 간격 계산
     int calculateDateInterval() {
@@ -757,10 +767,10 @@ class FatChart extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none, // 툴팁 자르기 방지
-        physics: chartWidth > screenWidth ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
+        physics: isOverviewMode ? const NeverScrollableScrollPhysics() : (chartWidth > screenWidth ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics()),
         child: Container(
-          width: chartWidth + 80, // 좌우 패딩 공간 추가
-          padding: const EdgeInsets.symmetric(horizontal: 40), // 좌우 40px 패딩
+          width: isOverviewMode ? chartWidth : chartWidth + 80, // 전체 모드에서는 패딩 없이
+          padding: isOverviewMode ? const EdgeInsets.symmetric(horizontal: 10) : const EdgeInsets.symmetric(horizontal: 40), // 전체 모드에서는 패딩 최소화
           child: LineChart(
           LineChartData(
             lineTouchData: LineTouchData(
@@ -793,9 +803,9 @@ class FatChart extends StatelessWidget {
               drawVerticalLine: false,
               horizontalInterval: (maxY - minY) / 4, // 정확히 4개 간격 = 5개 라벨
               getDrawingHorizontalLine: (value) {
-                return const FlLine(
-                  color: Color(0xFFE5E7EB),
-                  strokeWidth: 0.5,
+                return FlLine(
+                  color: Colors.grey[400]!,
+                  strokeWidth: 1.0,
                 );
               },
             ),

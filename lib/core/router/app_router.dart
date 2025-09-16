@@ -23,6 +23,7 @@ import 'package:pt_service/features/trainer/view/trainers_view.dart';
 import 'package:pt_service/features/trainer/model/trainer_model.dart';
 import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/body_composition/view/body_composition_view.dart';
+import 'package:pt_service/features/social/view/social_view.dart';
 import 'package:pt_service/features/pt_offerings/view/pt_offering_create_view.dart';
 import 'package:pt_service/features/pt_offerings/view/pt_offerings_list_view.dart';
 import 'package:pt_service/features/pt_offerings/view/trainer_pt_offerings_view.dart';
@@ -147,7 +148,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           
           if (currentPath == '/dashboard') currentIndex = 0;
           else if (currentPath == '/workout-record') currentIndex = 1;
-          else if (currentPath == '/body-composition') currentIndex = 2;
+          else if (currentPath == '/social') currentIndex = 2;
           else if (currentPath == '/pt-main') currentIndex = 3;
           else if (currentPath == '/settings') currentIndex = 4;
           
@@ -166,8 +167,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const WorkoutRecordView(),
           ),
           GoRoute(
-            path: '/body-composition',
-            builder: (context, state) => const BodyCompositionView(),
+            path: '/social',
+            builder: (context, state) => const SocialView(),
           ),
           GoRoute(
             path: '/pt-main',
@@ -182,6 +183,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/manager-dashboard',
         builder: (context, state) => const ManagerDashboardView(),
+      ),
+      GoRoute(
+        path: '/body-composition',
+        builder: (context, state) => const BodyCompositionView(),
       ),
       GoRoute(
         path: '/analysis-report',

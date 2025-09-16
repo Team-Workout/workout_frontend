@@ -85,6 +85,29 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
 
     return Scaffold(
       backgroundColor: NotionColors.gray50,
+      appBar: AppBar(
+        title: const Text(
+          '체성분 분석',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: Colors.grey[200],
+            height: 1,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: bodyCompositions.when(
           data: (compositions) {
@@ -644,9 +667,13 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
     // Ensure minY is not negative (weights can't be negative)
     minY = minY < 0 ? 0 : minY;
 
-    return Stack(
-      children: [
-        LineChart(
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: double.infinity),
+      child: ClipRect(
+        child: Stack(
+        children: [
+          LineChart(
           LineChartData(
             lineTouchData: LineTouchData(enabled: false), // 터치 비활성화
             gridData: FlGridData(
@@ -655,7 +682,7 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
               horizontalInterval: (maxY - minY) / 5 > 0 ? (maxY - minY) / 5 : 1,
               getDrawingHorizontalLine: (value) {
                 return FlLine(
-                  color: Colors.grey[300]!,
+                  color: Colors.grey[600]!,
                   strokeWidth: 1,
                 );
               },
@@ -752,10 +779,10 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
           final spot = entry.value;
 
           // 차트 영역 내에서의 위치 계산
-          final chartWidth = MediaQuery.of(context).size.width - 32; // 패딩 제외
+          final chartWidth = MediaQuery.of(context).size.width - 80; // 패딩과 여백 더 크게 제외
           final chartHeight = 250.0; // 차트 높이
 
-          final x = (spot.x / (spots.length - 1)) * chartWidth;
+          final x = 35 + (spot.x / (spots.length - 1)) * chartWidth; // leftTitles reservedSize(35) 만큼 오프셋
           final normalizedY = (spot.y - minY) / (maxY - minY);
           final y = chartHeight - (normalizedY * chartHeight) - 30; // 점 위쪽에 배치
 
@@ -780,7 +807,9 @@ class _BodyCompositionViewState extends ConsumerState<BodyCompositionView> {
             ),
           );
         }).toList(),
-      ],
+        ],
+        ),
+      ),
     );
   }
 

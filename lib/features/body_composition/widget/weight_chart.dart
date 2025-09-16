@@ -11,6 +11,7 @@ class WeightChart extends StatelessWidget {
   final List<BodyImageResponse>? bodyImages;
   final List<String>? sortedAllDates;
   final Map<String, List<BodyImageResponse>>? imagesByDate;
+  final bool isOverviewMode;
 
   const WeightChart({
     Key? key,
@@ -18,6 +19,7 @@ class WeightChart extends StatelessWidget {
     this.bodyImages,
     this.sortedAllDates,
     this.imagesByDate,
+    this.isOverviewMode = false,
   }) : super(key: key);
 
   @override
@@ -30,7 +32,7 @@ class WeightChart extends StatelessWidget {
 
     // 스크롤 가능한 차트 설정
     final screenWidth = MediaQuery.of(context).size.width;
-    const pointSpacing = 60.0;
+    final pointSpacing = isOverviewMode ? 30.0 : 60.0; // 전체 모드에서는 더 좁게
 
     final sortedData = List<BodyComposition>.from(compositions)
       ..sort((a, b) => a.measurementDate.compareTo(b.measurementDate));
@@ -92,8 +94,7 @@ class WeightChart extends StatelessWidget {
     // 차트 너비 계산
     final dataPointCount = finalSortedAllDates.length;
     final calculatedWidth = dataPointCount * pointSpacing;
-    final chartWidth =
-        calculatedWidth < screenWidth ? screenWidth : calculatedWidth;
+    final chartWidth = isOverviewMode ? screenWidth - 80 : (calculatedWidth < screenWidth ? screenWidth : calculatedWidth);
 
     // 스마트한 날짜 간격 계산
     int calculateDateInterval() {
@@ -147,12 +148,10 @@ class WeightChart extends StatelessWidget {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none, // 툴팁 자르기 방지
-          physics: chartWidth > screenWidth
-              ? const BouncingScrollPhysics()
-              : const NeverScrollableScrollPhysics(),
+          physics: isOverviewMode ? const NeverScrollableScrollPhysics() : (chartWidth > screenWidth ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics()),
           child: Container(
-            width: chartWidth + 80, // 좌우 패딩 공간 추가
-            padding: const EdgeInsets.symmetric(horizontal: 40), // 좌우 40px 패딩
+            width: isOverviewMode ? chartWidth : chartWidth + 80, // 전체 모드에서는 패딩 없이
+            padding: isOverviewMode ? const EdgeInsets.symmetric(horizontal: 10) : const EdgeInsets.symmetric(horizontal: 40), // 전체 모드에서는 패딩 최소화
             clipBehavior: Clip.none, // 툴팁 자르기 방지
             child: Column(
               children: [
@@ -274,7 +273,7 @@ class WeightChart extends StatelessWidget {
                             (maxY - minY) / 4, // 정확히 4개 간격 = 5개 라벨
                         getDrawingHorizontalLine: (value) {
                           return FlLine(
-                            color: Colors.grey[300]!,
+                            color: Colors.grey[400]!,
                             strokeWidth: 1,
                           );
                         },
