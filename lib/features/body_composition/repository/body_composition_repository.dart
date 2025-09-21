@@ -11,22 +11,36 @@ class BodyCompositionRepository {
   Future<List<BodyComposition>> getBodyCompositionInfo({
     required String startDate,
     required String endDate,
+    int page = 0,
+    int size = 20,
+    List<String> sort = const ['measurementDate,desc'],
   }) async {
     try {
+      print('=== Body Composition API Call ===');
+      print('URL: /body/info');
+      print('Parameters: startDate=$startDate, endDate=$endDate, page=$page, size=$size, sort=$sort');
+
       final response = await _dio.get(
         '/body/info',
         queryParameters: {
           'startDate': startDate,
           'endDate': endDate,
+          'page': page,
+          'size': size,
+          'sort': sort,
         },
       );
+
+      print('Response status: ${response.statusCode}');
+      print('Response data type: ${response.data.runtimeType}');
+      print('Response data: ${response.data}');
 
       // Response format: {"data": [...], "pageInfo": {...}}
       if (response.data == null) {
         return [];
       }
 
-      // Handle Map response with 'data' key
+      // Handle Map response with 'data' key (paginated response)
       if (response.data is Map<String, dynamic>) {
         final Map<String, dynamic> responseMap =
             response.data as Map<String, dynamic>;
@@ -35,18 +49,40 @@ class BodyCompositionRepository {
         if (responseMap['data'] != null && responseMap['data'] is List) {
           final List<dynamic> dataList = responseMap['data'] as List<dynamic>;
 
+          // Log pagination info for debugging
+          if (responseMap['pageInfo'] != null) {
+            final pageInfo = responseMap['pageInfo'];
+            print('Page info: ${pageInfo}');
+          }
+
           // Safely map each item to BodyComposition
           final List<BodyComposition> compositions = [];
           for (final item in dataList) {
             if (item != null && item is Map<String, dynamic>) {
               try {
                 // Transform the data to match the model
+                String measurementDate;
+                if (item['measurementDate'] is List) {
+                  // Convert [2025, 9, 21] to "2025-09-21"
+                  final dateList = item['measurementDate'] as List;
+                  if (dateList.length >= 3) {
+                    final year = dateList[0];
+                    final month = dateList[1].toString().padLeft(2, '0');
+                    final day = dateList[2].toString().padLeft(2, '0');
+                    measurementDate = '$year-$month-$day';
+                  } else {
+                    measurementDate = DateTime.now().toIso8601String().split('T')[0];
+                  }
+                } else {
+                  measurementDate = item['measurementDate']?.toString() ?? DateTime.now().toIso8601String().split('T')[0];
+                }
+
                 final Map<String, dynamic> transformedItem = {
                   'id': item['id'],
                   'member': {
                     'id': item['memberId']
                   }, // Transform memberId to member object
-                  'measurementDate': item['measurementDate'],
+                  'measurementDate': measurementDate,
                   'weightKg': item['weightKg']?.toDouble() ?? 0.0,
                   'fatKg': item['fatKg']?.toDouble() ?? 0.0,
                   'muscleMassKg': item['muscleMassKg']?.toDouble() ?? 0.0,
@@ -74,10 +110,26 @@ class BodyCompositionRepository {
               // Check if item needs transformation
               if (item.containsKey('memberId')) {
                 // Transform the data to match the model
+                String measurementDate;
+                if (item['measurementDate'] is List) {
+                  // Convert [2025, 9, 21] to "2025-09-21"
+                  final dateList = item['measurementDate'] as List;
+                  if (dateList.length >= 3) {
+                    final year = dateList[0];
+                    final month = dateList[1].toString().padLeft(2, '0');
+                    final day = dateList[2].toString().padLeft(2, '0');
+                    measurementDate = '$year-$month-$day';
+                  } else {
+                    measurementDate = DateTime.now().toIso8601String().split('T')[0];
+                  }
+                } else {
+                  measurementDate = item['measurementDate']?.toString() ?? DateTime.now().toIso8601String().split('T')[0];
+                }
+
                 final Map<String, dynamic> transformedItem = {
                   'id': item['id'],
                   'member': {'id': item['memberId']},
-                  'measurementDate': item['measurementDate'],
+                  'measurementDate': measurementDate,
                   'weightKg': item['weightKg']?.toDouble() ?? 0.0,
                   'fatKg': item['fatKg']?.toDouble() ?? 0.0,
                   'muscleMassKg': item['muscleMassKg']?.toDouble() ?? 0.0,
@@ -304,17 +356,59 @@ class BodyCompositionRepository {
         final responseMap = response.data as Map<String, dynamic>;
         if (responseMap['data'] is List) {
           final imageList = responseMap['data'] as List;
-          return imageList
-              .map((item) => BodyImageResponse.fromJson(item as Map<String, dynamic>))
-              .toList();
+          return imageList.map((item) {
+            final imageItem = item as Map<String, dynamic>;
+
+            // recordDate가 배열 형태로 오는 경우 변환
+            String recordDate;
+            if (imageItem['recordDate'] is List) {
+              final dateList = imageItem['recordDate'] as List;
+              if (dateList.length >= 3) {
+                final year = dateList[0];
+                final month = dateList[1].toString().padLeft(2, '0');
+                final day = dateList[2].toString().padLeft(2, '0');
+                recordDate = '$year-$month-$day';
+              } else {
+                recordDate = DateTime.now().toIso8601String().split('T')[0];
+              }
+            } else {
+              recordDate = imageItem['recordDate']?.toString() ?? DateTime.now().toIso8601String().split('T')[0];
+            }
+
+            final transformedItem = Map<String, dynamic>.from(imageItem);
+            transformedItem['recordDate'] = recordDate;
+
+            return BodyImageResponse.fromJson(transformedItem);
+          }).toList();
         }
       }
-      
+
       // 직접 List로 오는 경우 (fallback)
       if (response.data is List) {
-        return (response.data as List)
-            .map((item) => BodyImageResponse.fromJson(item as Map<String, dynamic>))
-            .toList();
+        return (response.data as List).map((item) {
+          final imageItem = item as Map<String, dynamic>;
+
+          // recordDate가 배열 형태로 오는 경우 변환
+          String recordDate;
+          if (imageItem['recordDate'] is List) {
+            final dateList = imageItem['recordDate'] as List;
+            if (dateList.length >= 3) {
+              final year = dateList[0];
+              final month = dateList[1].toString().padLeft(2, '0');
+              final day = dateList[2].toString().padLeft(2, '0');
+              recordDate = '$year-$month-$day';
+            } else {
+              recordDate = DateTime.now().toIso8601String().split('T')[0];
+            }
+          } else {
+            recordDate = imageItem['recordDate']?.toString() ?? DateTime.now().toIso8601String().split('T')[0];
+          }
+
+          final transformedItem = Map<String, dynamic>.from(imageItem);
+          transformedItem['recordDate'] = recordDate;
+
+          return BodyImageResponse.fromJson(transformedItem);
+        }).toList();
       }
 
       return [];

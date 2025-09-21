@@ -37,10 +37,22 @@ class PageInfo {
 class Feed {
   final int feedId;
   final String imageUrl;
+  final String? authorUsername;
+  final String? authorProfileImageUrl;
+  final int? likeCount;
+  final int? commentCount;
+  final bool? isLiked;
+  final String? createdAt;
 
   const Feed({
     required this.feedId,
     required this.imageUrl,
+    this.authorUsername,
+    this.authorProfileImageUrl,
+    this.likeCount,
+    this.commentCount,
+    this.isLiked,
+    this.createdAt,
   });
 
   // 완전한 이미지 URL 반환
@@ -53,14 +65,37 @@ class Feed {
         : '${ApiConfig.imageBaseUrl}/images/$imageUrl';
   }
 
+  // 완전한 프로필 이미지 URL 반환
+  String get fullAuthorProfileImageUrl {
+    if (authorProfileImageUrl == null || authorProfileImageUrl!.isEmpty) return '';
+    if (authorProfileImageUrl!.startsWith('http')) {
+      return authorProfileImageUrl!;
+    }
+    return authorProfileImageUrl!.startsWith('/')
+        ? '${ApiConfig.imageBaseUrl}$authorProfileImageUrl'
+        : '${ApiConfig.imageBaseUrl}/images/$authorProfileImageUrl';
+  }
+
   factory Feed.fromJson(Map<String, dynamic> json) => Feed(
         feedId: json['feedId'] as int,
         imageUrl: json['imageUrl'] as String,
+        authorUsername: json['authorUsername'] as String?,
+        authorProfileImageUrl: json['authorProfileImageUrl'] as String?,
+        likeCount: json['likeCount'] as int?,
+        commentCount: json['commentCount'] as int?,
+        isLiked: json['isLiked'] as bool?,
+        createdAt: json['createdAt'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
         'feedId': feedId,
         'imageUrl': imageUrl,
+        if (authorUsername != null) 'authorUsername': authorUsername,
+        if (authorProfileImageUrl != null) 'authorProfileImageUrl': authorProfileImageUrl,
+        if (likeCount != null) 'likeCount': likeCount,
+        if (commentCount != null) 'commentCount': commentCount,
+        if (isLiked != null) 'isLiked': isLiked,
+        if (createdAt != null) 'createdAt': createdAt,
       };
 }
 
@@ -129,7 +164,7 @@ class Comment {
   final String authorUsername;
   final String authorProfileImageUrl;
   final DateTime createdAt;
-  final List<Comment>? replies;
+  final int? parentId;
 
   const Comment({
     required this.commentId,
@@ -137,7 +172,7 @@ class Comment {
     required this.authorUsername,
     required this.authorProfileImageUrl,
     required this.createdAt,
-    this.replies,
+    this.parentId,
   });
 
   // 완전한 프로필 이미지 URL 반환
@@ -156,12 +191,10 @@ class Comment {
         content: json['content'] as String,
         authorUsername: json['authorUsername'] as String,
         authorProfileImageUrl: json['authorProfileImageUrl'] as String,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        replies: json['replies'] != null
-            ? (json['replies'] as List)
-                .map((r) => Comment.fromJson(r as Map<String, dynamic>))
-                .toList()
-            : null,
+        createdAt: json['createdAt'] is String
+            ? DateTime.parse(json['createdAt'] as String)
+            : DateTime.fromMillisecondsSinceEpoch((json['createdAt'] as num).toInt() * 1000),
+        parentId: json['parentId'] as int?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -170,7 +203,7 @@ class Comment {
         'authorUsername': authorUsername,
         'authorProfileImageUrl': authorProfileImageUrl,
         'createdAt': createdAt.toIso8601String(),
-        if (replies != null) 'replies': replies!.map((r) => r.toJson()).toList(),
+        if (parentId != null) 'parentId': parentId,
       };
 }
 
@@ -195,18 +228,28 @@ class CommentRequest {
   final int targetId;
   final String targetType; // "FEED" or "COMMENT"
   final String content;
+  final int? parentId;  // 대댓글인 경우 부모 댓글 ID
 
   const CommentRequest({
     required this.targetId,
     required this.targetType,
     required this.content,
+    this.parentId,
   });
 
-  Map<String, dynamic> toJson() => {
-        'targetId': targetId,
-        'targetType': targetType,
-        'content': content,
-      };
+  Map<String, dynamic> toJson() {
+    final json = {
+      'targetId': targetId,
+      'targetType': targetType,
+      'content': content,
+    };
+    
+    if (parentId != null) {
+      json['parentId'] = parentId!;
+    }
+    
+    return json;
+  }
 }
 
 // API 응답 래퍼

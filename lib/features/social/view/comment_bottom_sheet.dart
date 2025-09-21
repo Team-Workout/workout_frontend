@@ -27,6 +27,7 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
   final FocusNode _focusNode = FocusNode();
   
   List<Comment> _comments = [];
+  Map<int, List<Comment>> _replies = {};  // 댓글ID별 대댓글 리스트
   bool _isLoading = true;
   bool _isSubmitting = false;
   Comment? _replyingTo;
@@ -56,11 +57,29 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
         feedId: widget.feedId,
         page: 0,
         size: 50,
-        sort: ['createdAt,desc'],
+        sort: ['createdAt,asc'],  // 시간순으로 정렬하여 대댓글이 부모 댓글 아래 나오도록
       );
       
+      // 평면 구조의 댓글을 부모-자식 구조로 변환
+      List<Comment> parentComments = [];
+      Map<int, List<Comment>> repliesMap = {};
+      
+      for (var comment in response.data) {
+        if (comment.parentId == null) {
+          // 부모 댓글
+          parentComments.add(comment);
+        } else {
+          // 대댓글
+          if (!repliesMap.containsKey(comment.parentId)) {
+            repliesMap[comment.parentId!] = [];
+          }
+          repliesMap[comment.parentId!]!.add(comment);
+        }
+      }
+      
       setState(() {
-        _comments = response.data;
+        _comments = parentComments;
+        _replies = repliesMap;
         _isLoading = false;
       });
     } catch (e) {
@@ -98,10 +117,12 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
     try {
       final feedService = ref.read(feedServiceProvider);
       
+      // 임시로 parentId 없이 시도 (백엔드 대댓글 기능 확인용)
       final response = await feedService.createComment(
-        targetId: _replyingTo != null ? _replyingTo!.commentId : widget.feedId,
-        targetType: _replyingTo != null ? "COMMENT" : "FEED",
+        targetId: widget.feedId,               // 항상 피드 ID 사용
+        targetType: "FEED",                   // 항상 FEED 타입 사용
         content: content,
+        // parentId: _replyingTo?.commentId,   // 임시로 주석 처리
       );
 
       // 댓글 목록 새로고침
@@ -251,6 +272,7 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
                     itemBuilder: (context, index) {
                       return _CommentItem(
                         comment: _comments[index],
+                        replies: _replies[_comments[index].commentId] ?? [],
                         onReplyTap: _onReplyTap,
                         formatTimeAgo: _formatTimeAgo,
                       );
@@ -376,14 +398,65 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
 
 class _CommentItem extends StatelessWidget {
   final Comment comment;
+  final List<Comment> replies;
   final Function(Comment) onReplyTap;
   final String Function(DateTime) formatTimeAgo;
 
   const _CommentItem({
     required this.comment,
+    required this.replies,
     required this.onReplyTap,
     required this.formatTimeAgo,
   });
+
+  Widget _buildCommentText(String content, {required double fontSize}) {
+    final mentionRegex = RegExp(r'@(\w+)');
+    final spans = <TextSpan>[];
+    int lastEnd = 0;
+
+    for (final match in mentionRegex.allMatches(content)) {
+      // 멘션 이전 텍스트 추가
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: content.substring(lastEnd, match.start),
+          style: TextStyle(
+            fontSize: fontSize,
+            color: const Color(0xFF374151),
+            fontFamily: 'IBMPlexSansKR',
+          ),
+        ));
+      }
+
+      // 멘션 텍스트 추가 (파란색)
+      spans.add(TextSpan(
+        text: match.group(0),
+        style: TextStyle(
+          fontSize: fontSize,
+          color: const Color(0xFF3B82F6), // 파란색
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansKR',
+        ),
+      ));
+
+      lastEnd = match.end;
+    }
+
+    // 남은 텍스트 추가
+    if (lastEnd < content.length) {
+      spans.add(TextSpan(
+        text: content.substring(lastEnd),
+        style: TextStyle(
+          fontSize: fontSize,
+          color: const Color(0xFF374151),
+          fontFamily: 'IBMPlexSansKR',
+        ),
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -427,13 +500,9 @@ class _CommentItem extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    _buildCommentText(
                       comment.content,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF374151),
-                        fontFamily: 'IBMPlexSansKR',
-                      ),
+                      fontSize: 14,
                     ),
                     const SizedBox(height: 8),
                     GestureDetector(
@@ -456,57 +525,66 @@ class _CommentItem extends StatelessWidget {
         ),
         
         // 대댓글들
-        if (comment.replies != null && comment.replies!.isNotEmpty)
-          ...comment.replies!.map(
-            (reply) => Padding(
-              padding: const EdgeInsets.only(left: 44, right: 16, bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ProfileAvatar(
-                    radius: 12,
-                    imageUrl: reply.fullAuthorProfileImageUrl,
+        if (replies.isNotEmpty)
+          ...replies.map(
+            (reply) => Container(
+              margin: const EdgeInsets.only(left: 32, right: 16, bottom: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border(
+                  left: BorderSide(
+                    color: Colors.grey[300]!,
+                    width: 3,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              reply.authorUsername,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                                color: Color(0xFF1F2937),
-                                fontFamily: 'IBMPlexSansKR',
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              formatTimeAgo(reply.createdAt),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[500],
-                                fontFamily: 'IBMPlexSansKR',
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          reply.content,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF374151),
-                            fontFamily: 'IBMPlexSansKR',
-                          ),
-                        ),
-                      ],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ProfileAvatar(
+                      radius: 12,
+                      imageUrl: reply.fullAuthorProfileImageUrl,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                reply.authorUsername,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: Color(0xFF1F2937),
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                formatTimeAgo(reply.createdAt),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[500],
+                                  fontFamily: 'IBMPlexSansKR',
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          _buildCommentText(
+                            reply.content,
+                            fontSize: 13,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

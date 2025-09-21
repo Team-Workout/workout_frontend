@@ -5,10 +5,10 @@ class ProfileAvatar extends StatelessWidget {
   final double radius;
 
   const ProfileAvatar({
-    Key? key,
+    super.key,
     this.imageUrl,
     required this.radius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

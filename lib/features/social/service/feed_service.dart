@@ -35,7 +35,6 @@ class FeedService {
         queryParameters: queryParams,
       );
 
-      // 응답이 null이거나 data 필드가 없는 경우 빈 리스트 반환
       if (response.data == null) {
         return ApiResponse<List<Feed>>(
           data: <Feed>[],
@@ -49,24 +48,21 @@ class FeedService {
         );
       }
 
-      // data 필드가 있는 경우와 없는 경우 모두 처리
-      final responseData = response.data is Map<String, dynamic> && response.data['data'] != null 
-          ? response.data['data'] 
-          : response.data;
-      
-      final feedsList = responseData is List ? responseData : <dynamic>[];
-      
+      // 새로운 API 응답 형태: { "data": [...], "pageInfo": {...} }
+      final responseMap = response.data as Map<String, dynamic>;
+      final dataList = responseMap['data'] as List<dynamic>? ?? [];
+      final pageInfoMap = responseMap['pageInfo'] as Map<String, dynamic>?;
+
       return ApiResponse<List<Feed>>(
-        data: feedsList
-            .where((item) => item != null)
+        data: dataList
             .map((item) => Feed.fromJson(item as Map<String, dynamic>))
             .toList(),
-        pageInfo: response.data is Map<String, dynamic> && response.data['pageInfo'] != null
-            ? PageInfo.fromJson(response.data['pageInfo'] as Map<String, dynamic>)
+        pageInfo: pageInfoMap != null
+            ? PageInfo.fromJson(pageInfoMap)
             : PageInfo(
                 page: 0,
                 size: size,
-                totalElements: feedsList.length,
+                totalElements: dataList.length,
                 totalPages: 1,
                 last: true,
               ),
@@ -113,20 +109,126 @@ class FeedService {
         ),
       );
 
-      // POST 응답: 201 상태코드에 숫자만 반환
-      // response.data가 숫자인 경우와 {"data": 숫자} 형태인 경우 모두 처리
-      int feedId;
+      // POST 응답도 새로운 형태를 따를 수 있음: { "data": 숫자, "pageInfo": {...} }
       if (response.data is int) {
-        feedId = response.data;
-      } else if (response.data is Map<String, dynamic> && response.data['data'] != null) {
-        feedId = response.data['data'] as int;
+        // 기존 방식: 숫자만 반환
+        return ApiResponse<int>(
+          data: response.data as int,
+          pageInfo: PageInfo(
+            page: 0,
+            size: 1,
+            totalElements: 1,
+            totalPages: 1,
+            last: true,
+          ),
+        );
+      } else if (response.data is Map<String, dynamic>) {
+        // 새로운 방식: { "data": 숫자, "pageInfo": {...} }
+        final responseMap = response.data as Map<String, dynamic>;
+        final feedId = responseMap['data'] as int;
+        final pageInfoMap = responseMap['pageInfo'] as Map<String, dynamic>?;
+
+        return ApiResponse<int>(
+          data: feedId,
+          pageInfo: pageInfoMap != null
+              ? PageInfo.fromJson(pageInfoMap)
+              : PageInfo(
+                  page: 0,
+                  size: 1,
+                  totalElements: 1,
+                  totalPages: 1,
+                  last: true,
+                ),
+        );
       } else {
         // 혹시 문자열로 온 경우
-        feedId = int.parse(response.data.toString());
+        final feedId = int.parse(response.data.toString());
+        return ApiResponse<int>(
+          data: feedId,
+          pageInfo: PageInfo(
+            page: 0,
+            size: 1,
+            totalElements: 1,
+            totalPages: 1,
+            last: true,
+          ),
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // 피드 요약 정보 조회 (전체 피드 목록에서 특정 feedId 찾기)
+  Future<ApiResponse<FeedSummary>> getFeedSummary(int feedId) async {
+    try {
+      // TODO: 실제 사용자의 gymId 가져오기 (임시로 1 사용)
+      const int gymId = 1;
+
+      // 전체 피드 목록을 가져와서 특정 feedId 찾기
+      // 큰 size로 설정하여 모든 피드를 가져오거나, 페이징으로 처리
+      final response = await _dio.get(
+        '/feeds',
+        queryParameters: {
+          'gymId': gymId,
+          'size': 100, // 충분히 큰 사이즈로 설정
+        },
+      );
+
+      if (response.data == null) {
+        throw Exception('피드 목록을 가져올 수 없습니다.');
       }
 
-      return ApiResponse<int>(
-        data: feedId,
+      // 응답 형태: { "data": [...], "pageInfo": {...} }
+      final responseMap = response.data as Map<String, dynamic>;
+      final dataList = responseMap['data'] as List<dynamic>? ?? [];
+
+      // 특정 feedId를 가진 피드 찾기
+      final targetFeed = dataList.firstWhere(
+        (feed) => (feed as Map<String, dynamic>)['feedId'] == feedId,
+        orElse: () => null,
+      );
+
+      if (targetFeed == null) {
+        throw Exception('해당 피드를 찾을 수 없습니다.');
+      }
+
+      final feedData = targetFeed as Map<String, dynamic>;
+
+      print('=== Feed Summary Debug ===');
+      print('Found feed data: $feedData');
+      print('Available keys: ${feedData.keys.toList()}');
+
+      // 실제 댓글 수를 가져오기 위해 댓글 API 호출
+      int actualCommentCount = 0;
+      try {
+        final commentsResponse = await _dio.get(
+          '/feeds/${feedData['feedId']}/comments',
+          queryParameters: {'page': 0, 'size': 1}, // 첫 페이지만 가져와서 totalElements 확인
+        );
+        if (commentsResponse.data != null) {
+          final commentsResponseMap = commentsResponse.data as Map<String, dynamic>;
+          final pageInfo = commentsResponseMap['pageInfo'] as Map<String, dynamic>?;
+          actualCommentCount = pageInfo?['totalElements'] ?? 0;
+        }
+      } catch (e) {
+        print('Failed to get comment count: $e');
+      }
+
+      // Feed 객체에서 FeedSummary에 필요한 데이터 추출
+      final feedSummaryData = {
+        'feedId': feedData['feedId'],
+        'imageUrl': feedData['imageUrl'],
+        'authorUsername': feedData['authorUsername'] ?? '',
+        'authorProfileImageUrl': feedData['authorProfileImageUrl'] ?? '',
+        'likeCount': feedData['likeCount'] ?? 0,
+        'commentCount': actualCommentCount, // 실제 댓글 수 사용
+      };
+
+      print('Extracted feed summary data: $feedSummaryData');
+
+      return ApiResponse<FeedSummary>(
+        data: FeedSummary.fromJson(feedSummaryData),
         pageInfo: PageInfo(
           page: 0,
           size: 1,
@@ -134,37 +236,6 @@ class FeedService {
           totalPages: 1,
           last: true,
         ),
-      );
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // 피드 요약 정보 조회
-  Future<ApiResponse<FeedSummary>> getFeedSummary(int feedId) async {
-    try {
-      final response = await _dio.get('/feeds/$feedId/summary');
-
-      if (response.data == null) {
-        throw Exception('피드 정보가 존재하지 않습니다.');
-      }
-
-      // data 필드가 있는 경우와 없는 경우 모두 처리
-      final responseData = response.data is Map<String, dynamic> && response.data['data'] != null 
-          ? response.data['data'] 
-          : response.data;
-
-      return ApiResponse<FeedSummary>(
-        data: FeedSummary.fromJson(responseData as Map<String, dynamic>),
-        pageInfo: response.data is Map<String, dynamic> && response.data['pageInfo'] != null
-            ? PageInfo.fromJson(response.data['pageInfo'] as Map<String, dynamic>)
-            : PageInfo(
-                page: 0,
-                size: 1,
-                totalElements: 1,
-                totalPages: 1,
-                last: true,
-              ),
       );
     } catch (e) {
       throw _handleError(e);
@@ -193,7 +264,6 @@ class FeedService {
         queryParameters: queryParams,
       );
 
-      // 응답이 null이거나 data 필드가 없는 경우 빈 리스트 반환
       if (response.data == null) {
         return ApiResponse<List<Comment>>(
           data: <Comment>[],
@@ -207,24 +277,21 @@ class FeedService {
         );
       }
 
-      // data 필드가 있는 경우와 없는 경우 모두 처리
-      final responseData = response.data is Map<String, dynamic> && response.data['data'] != null 
-          ? response.data['data'] 
-          : response.data;
-      
-      final commentsList = responseData is List ? responseData : <dynamic>[];
-      
+      // 새로운 API 응답 형태: { "data": [...], "pageInfo": {...} }
+      final responseMap = response.data as Map<String, dynamic>;
+      final dataList = responseMap['data'] as List<dynamic>? ?? [];
+      final pageInfoMap = responseMap['pageInfo'] as Map<String, dynamic>?;
+
       return ApiResponse<List<Comment>>(
-        data: commentsList
-            .where((item) => item != null)
+        data: dataList
             .map((item) => Comment.fromJson(item as Map<String, dynamic>))
             .toList(),
-        pageInfo: response.data is Map<String, dynamic> && response.data['pageInfo'] != null
-            ? PageInfo.fromJson(response.data['pageInfo'] as Map<String, dynamic>)
+        pageInfo: pageInfoMap != null
+            ? PageInfo.fromJson(pageInfoMap)
             : PageInfo(
                 page: page,
                 size: size,
-                totalElements: commentsList.length,
+                totalElements: dataList.length,
                 totalPages: 1,
                 last: true,
               ),
@@ -260,37 +327,75 @@ class FeedService {
     required int targetId,
     required String targetType, // "FEED" or "COMMENT"
     required String content,
+    int? parentId, // 대댓글인 경우 부모 댓글 ID
   }) async {
     try {
+      // 멘션이 포함된 경우 임시로 처리해보기
+      String processedContent = content;
+
+      final commentRequest = CommentRequest(
+        targetId: targetId,
+        targetType: targetType,
+        content: processedContent,
+        parentId: parentId,
+      );
+
+      print('=== Comment Request Debug ===');
+      print('Original content: $content');
+      print('Processed content: $processedContent');
+      print('Request data: ${commentRequest.toJson()}');
+      print('Is reply: ${parentId != null}');
+
       final response = await _dio.post(
         '/feeds/comments',
-        data: CommentRequest(
-          targetId: targetId,
-          targetType: targetType,
-          content: content,
-        ).toJson(),
+        data: commentRequest.toJson(),
       );
 
-      // POST 응답: 201 상태코드에 숫자만 반환 (피드 생성과 동일)
-      int commentId;
+      // POST 응답도 새로운 형태를 따를 수 있음: { "data": 숫자, "pageInfo": {...} }
       if (response.data is int) {
-        commentId = response.data;
-      } else if (response.data is Map<String, dynamic> && response.data['data'] != null) {
-        commentId = response.data['data'] as int;
-      } else {
-        commentId = int.parse(response.data.toString());
-      }
+        // 기존 방식: 숫자만 반환
+        return ApiResponse<int>(
+          data: response.data as int,
+          pageInfo: PageInfo(
+            page: 0,
+            size: 1,
+            totalElements: 1,
+            totalPages: 1,
+            last: true,
+          ),
+        );
+      } else if (response.data is Map<String, dynamic>) {
+        // 새로운 방식: { "data": 숫자, "pageInfo": {...} }
+        final responseMap = response.data as Map<String, dynamic>;
+        final commentId = responseMap['data'] as int;
+        final pageInfoMap = responseMap['pageInfo'] as Map<String, dynamic>?;
 
-      return ApiResponse<int>(
-        data: commentId,
-        pageInfo: PageInfo(
-          page: 0,
-          size: 1,
-          totalElements: 1,
-          totalPages: 1,
-          last: true,
-        ),
-      );
+        return ApiResponse<int>(
+          data: commentId,
+          pageInfo: pageInfoMap != null
+              ? PageInfo.fromJson(pageInfoMap)
+              : PageInfo(
+                  page: 0,
+                  size: 1,
+                  totalElements: 1,
+                  totalPages: 1,
+                  last: true,
+                ),
+        );
+      } else {
+        // 혹시 문자열로 온 경우
+        final commentId = int.parse(response.data.toString());
+        return ApiResponse<int>(
+          data: commentId,
+          pageInfo: PageInfo(
+            page: 0,
+            size: 1,
+            totalElements: 1,
+            totalPages: 1,
+            last: true,
+          ),
+        );
+      }
     } catch (e) {
       throw _handleError(e);
     }
