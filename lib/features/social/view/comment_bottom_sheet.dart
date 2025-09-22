@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../model/feed_models.dart';
 import '../service/feed_service.dart';
 import '../widget/profile_avatar.dart';
@@ -190,6 +191,152 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
     });
   }
 
+  Future<void> _deleteComment(Comment comment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: EdgeInsets.zero,
+        content: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: const Icon(
+                        Icons.delete_outline,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      '댓글 삭제',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'IBMPlexSansKR',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      '이 댓글을 삭제하시겠습니까?\n삭제된 댓글은 복구할 수 없습니다.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontFamily: 'IBMPlexSansKR',
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(20),
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          '취소',
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(width: 1, height: 50, color: Colors.grey[300]),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              bottomRight: Radius.circular(20),
+                            ),
+                          ),
+                        ),
+                        child: const Text(
+                          '삭제',
+                          style: TextStyle(
+                            color: Color(0xFFEF4444),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'IBMPlexSansKR',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final feedService = ref.read(feedServiceProvider);
+        await feedService.deleteComment(comment.commentId);
+
+        // 댓글 목록 새로고침
+        await _loadComments();
+        widget.onCommentAdded(); // 댓글 수 업데이트
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('댓글이 삭제되었습니다.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('댓글 삭제에 실패했습니다: ${e.toString()}')),
+          );
+        }
+      }
+    }
+  }
+
   String _formatTimeAgo(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
@@ -274,6 +421,7 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
                         comment: _comments[index],
                         replies: _replies[_comments[index].commentId] ?? [],
                         onReplyTap: _onReplyTap,
+                        onDeleteTap: _deleteComment,
                         formatTimeAgo: _formatTimeAgo,
                       );
                     },
@@ -396,16 +544,18 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
   }
 }
 
-class _CommentItem extends StatelessWidget {
+class _CommentItem extends ConsumerWidget {
   final Comment comment;
   final List<Comment> replies;
   final Function(Comment) onReplyTap;
+  final Function(Comment) onDeleteTap;
   final String Function(DateTime) formatTimeAgo;
 
   const _CommentItem({
     required this.comment,
     required this.replies,
     required this.onReplyTap,
+    required this.onDeleteTap,
     required this.formatTimeAgo,
   });
 
@@ -459,7 +609,9 @@ class _CommentItem extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(authStateProvider).value;
+
     return Column(
       children: [
         // 원댓글
@@ -497,6 +649,60 @@ class _CommentItem extends StatelessWidget {
                             fontFamily: 'IBMPlexSansKR',
                           ),
                         ),
+                        const Spacer(),
+                        if (currentUser?.name == comment.authorUsername)
+                          PopupMenuButton<String>(
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                onDeleteTap(comment);
+                              }
+                            },
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            color: Colors.white,
+                            elevation: 8,
+                            shadowColor: Colors.black.withValues(alpha: 0.2),
+                            itemBuilder: (context) => [
+                              PopupMenuItem<String>(
+                                value: 'delete',
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 2),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Icon(
+                                          Icons.delete_outline,
+                                          color: Color(0xFFEF4444),
+                                          size: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        '삭제',
+                                        style: TextStyle(
+                                          color: Color(0xFFEF4444),
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'IBMPlexSansKR',
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                            icon: Icon(
+                              Icons.more_horiz,
+                              size: 16,
+                              color: Colors.grey[400],
+                            ),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -573,6 +779,60 @@ class _CommentItem extends StatelessWidget {
                                   fontFamily: 'IBMPlexSansKR',
                                 ),
                               ),
+                              const Spacer(),
+                              if (currentUser?.name == reply.authorUsername)
+                                PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'delete') {
+                                      onDeleteTap(reply);
+                                    }
+                                  },
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  color: Colors.white,
+                                  elevation: 8,
+                                  shadowColor: Colors.black.withValues(alpha: 0.2),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem<String>(
+                                      value: 'delete',
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 2),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: const Icon(
+                                                Icons.delete_outline,
+                                                color: Color(0xFFEF4444),
+                                                size: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            const Text(
+                                              '삭제',
+                                              style: TextStyle(
+                                                color: Color(0xFFEF4444),
+                                                fontWeight: FontWeight.w600,
+                                                fontFamily: 'IBMPlexSansKR',
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  icon: Icon(
+                                    Icons.more_horiz,
+                                    size: 14,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
                             ],
                           ),
                           const SizedBox(height: 2),

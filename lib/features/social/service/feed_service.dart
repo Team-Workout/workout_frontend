@@ -406,9 +406,72 @@ class FeedService {
     try {
       final response = await _dio.delete('/feeds/$feedId');
 
-      return ApiResponse<String>.fromJson(
-        response.data,
-        (data) => data as String,
+      if (response.data is Map<String, dynamic>) {
+        final responseMap = response.data as Map<String, dynamic>;
+        return ApiResponse<String>(
+          data: responseMap['data']?.toString() ?? 'success',
+          pageInfo: responseMap['pageInfo'] != null
+              ? PageInfo.fromJson(responseMap['pageInfo'])
+              : PageInfo(
+                  page: 0,
+                  size: 1,
+                  totalElements: 1,
+                  totalPages: 1,
+                  last: true,
+                ),
+        );
+      }
+
+      return ApiResponse<String>(
+        data: 'success',
+        pageInfo: PageInfo(
+          page: 0,
+          size: 1,
+          totalElements: 1,
+          totalPages: 1,
+          last: true,
+        ),
+      );
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // 댓글 삭제
+  Future<ApiResponse<String>> deleteComment(int commentId) async {
+    try {
+      print('=== Comment Delete Debug ===');
+      print('Deleting comment ID: $commentId');
+
+      final response = await _dio.delete('/feeds/$commentId/comments');
+
+      print('Delete comment response: ${response.statusCode} - ${response.data}');
+
+      if (response.data is Map<String, dynamic>) {
+        final responseMap = response.data as Map<String, dynamic>;
+        return ApiResponse<String>(
+          data: responseMap['data']?.toString() ?? 'success',
+          pageInfo: responseMap['pageInfo'] != null
+              ? PageInfo.fromJson(responseMap['pageInfo'])
+              : PageInfo(
+                  page: 0,
+                  size: 1,
+                  totalElements: 1,
+                  totalPages: 1,
+                  last: true,
+                ),
+        );
+      }
+
+      return ApiResponse<String>(
+        data: 'success',
+        pageInfo: PageInfo(
+          page: 0,
+          size: 1,
+          totalElements: 1,
+          totalPages: 1,
+          last: true,
+        ),
       );
     } catch (e) {
       throw _handleError(e);
