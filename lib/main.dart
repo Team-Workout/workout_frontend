@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:app_links/app_links.dart';
 import 'package:pt_service/core/router/app_router.dart';
 import 'package:pt_service/core/theme/app_theme.dart';
 import 'package:pt_service/core/services/session_service.dart';
@@ -17,6 +18,7 @@ import 'package:pt_service/core/providers/auth_provider.dart';
 import 'package:pt_service/features/sync/viewmodel/sync_viewmodel.dart';
 import 'package:pt_service/features/fcm/service/fcm_api_service.dart';
 import 'package:pt_service/features/auth/viewmodel/auth_viewmodel.dart';
+import 'dart:async';
 
 import 'firebase_options.dart';
 
@@ -75,15 +77,75 @@ class WorkoutApp extends ConsumerStatefulWidget {
 }
 
 class _WorkoutAppState extends ConsumerState<WorkoutApp> {
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
   @override
   void initState() {
     super.initState();
+    _initDeepLinks();
     // 앱 시작 후 자동로그인 체크, 동기화 수행
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryAutoLogin();
       _performInitialSync();
       _sendFCMTokenToBackend();
     });
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initDeepLinks() async {
+    try {
+      _appLinks = AppLinks();
+
+      // 앱이 종료된 상태에서 deep link로 열렸을 때 처리
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        _handleDeepLink(initialUri);
+      }
+
+      // 앱이 실행 중일 때 deep link 처리
+      _linkSubscription = _appLinks.uriLinkStream.listen(
+        (uri) {
+          _handleDeepLink(uri);
+        },
+        onError: (err) {
+          print('Deep link error: $err');
+        },
+      );
+    } catch (e) {
+      // iOS 시뮬레이터나 플러그인이 없는 환경에서 발생하는 에러 무시
+      print('Deep links initialization failed (this is normal in iOS simulator): $e');
+    }
+  }
+
+  void _handleDeepLink(Uri uri) {
+    print('Received deep link: $uri');
+
+    // workoutapp://oauth/callback?sessionId=XYZ987...&isNewUser=false
+    if (uri.scheme == 'workoutapp' &&
+        uri.host == 'oauth' &&
+        uri.path == '/callback') {
+
+      final sessionId = uri.queryParameters['sessionId'];
+      final isNewUserStr = uri.queryParameters['isNewUser'];
+
+      if (sessionId != null && isNewUserStr != null) {
+        final isNewUser = isNewUserStr.toLowerCase() == 'true';
+
+        print('Google OAuth callback - sessionId: $sessionId, isNewUser: $isNewUser');
+
+        // AuthViewModel의 handleGoogleCallback 호출
+        ref.read(authViewModelProvider.notifier)
+            .handleGoogleCallback(sessionId, isNewUser);
+      } else {
+        print('Invalid OAuth callback parameters');
+      }
+    }
   }
 
   Future<void> _tryAutoLogin() async {

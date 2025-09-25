@@ -165,6 +165,7 @@ class Comment {
   final String authorProfileImageUrl;
   final DateTime createdAt;
   final int? parentId;
+  final List<Comment>? replies;  // 중첩된 대댓글 추가
 
   const Comment({
     required this.commentId,
@@ -173,6 +174,7 @@ class Comment {
     required this.authorProfileImageUrl,
     required this.createdAt,
     this.parentId,
+    this.replies,
   });
 
   // 완전한 프로필 이미지 URL 반환
@@ -195,6 +197,11 @@ class Comment {
             ? DateTime.parse(json['createdAt'] as String)
             : DateTime.fromMillisecondsSinceEpoch((json['createdAt'] as num).toInt() * 1000),
         parentId: json['parentId'] as int?,
+        replies: json['replies'] != null
+            ? (json['replies'] as List<dynamic>)
+                .map((reply) => Comment.fromJson(reply as Map<String, dynamic>))
+                .toList()
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -228,27 +235,19 @@ class CommentRequest {
   final int targetId;
   final String targetType; // "FEED" or "COMMENT"
   final String content;
-  final int? parentId;  // 대댓글인 경우 부모 댓글 ID
 
   const CommentRequest({
     required this.targetId,
     required this.targetType,
     required this.content,
-    this.parentId,
   });
 
   Map<String, dynamic> toJson() {
-    final json = {
+    return {
       'targetId': targetId,
       'targetType': targetType,
       'content': content,
     };
-    
-    if (parentId != null) {
-      json['parentId'] = parentId!;
-    }
-    
-    return json;
   }
 }
 

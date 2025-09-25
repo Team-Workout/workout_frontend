@@ -12,6 +12,12 @@ abstract class AuthRepository {
     String? phoneNumber,
     String? gender,
   });
+  Future<Map<String, dynamic>> signupSocial({
+    required int gymId,
+    required String name,
+    required String gender,
+    required String role,
+  });
   Future<void> logout();
 }
 
@@ -70,6 +76,17 @@ class MockAuthRepository implements AuthRepository {
     );
   }
   
+  @override
+  Future<Map<String, dynamic>> signupSocial({
+    required int gymId,
+    required String name,
+    required String gender,
+    required String role,
+  }) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return {'id': DateTime.now().millisecondsSinceEpoch.toString()};
+  }
+
   @override
   Future<void> logout() async {
     await Future.delayed(const Duration(milliseconds: 500));

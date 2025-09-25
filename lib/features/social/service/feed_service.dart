@@ -14,7 +14,7 @@ class FeedService {
     required int gymId,
     int? lastFeedId,
     int? firstFeedId,
-    int size = 20,
+    int size = 50,
   }) async {
     try {
       final queryParams = <String, dynamic>{
@@ -159,90 +159,55 @@ class FeedService {
     }
   }
 
-  // 피드 요약 정보 조회 (전체 피드 목록에서 특정 feedId 찾기)
+  // 피드 요약 정보 조회 (새로운 직접 API 사용)
   Future<ApiResponse<FeedSummary>> getFeedSummary(int feedId) async {
     try {
-      // TODO: 실제 사용자의 gymId 가져오기 (임시로 1 사용)
-      const int gymId = 1;
+      print('=== Feed Summary API Call ===');
+      print('Fetching feed summary for feedId: $feedId');
 
-      // 전체 피드 목록을 가져와서 특정 feedId 찾기
-      // 큰 size로 설정하여 모든 피드를 가져오거나, 페이징으로 처리
+      // 피드 요약 조회 API - path parameter + query parameter 둘 다 사용
       final response = await _dio.get(
-        '/feeds',
-        queryParameters: {
-          'gymId': gymId,
-          'size': 100, // 충분히 큰 사이즈로 설정
-        },
+        '/feeds/$feedId',
+        queryParameters: {'feedId': feedId},
       );
 
       if (response.data == null) {
-        throw Exception('피드 목록을 가져올 수 없습니다.');
+        throw Exception('피드 요약 정보를 가져올 수 없습니다.');
       }
 
-      // 응답 형태: { "data": [...], "pageInfo": {...} }
+      print('Feed summary response: ${response.data}');
+
+      // API 응답 형태: { "data": {...}, "pageInfo": {...} } - 단일 객체
       final responseMap = response.data as Map<String, dynamic>;
-      final dataList = responseMap['data'] as List<dynamic>? ?? [];
+      final feedSummaryData = responseMap['data'] as Map<String, dynamic>;
+      final pageInfoMap = responseMap['pageInfo'] as Map<String, dynamic>?;
+      print('Feed summary data: $feedSummaryData');
+      print('Available keys: ${feedSummaryData.keys.toList()}');
 
-      // 특정 feedId를 가진 피드 찾기
-      final targetFeed = dataList.firstWhere(
-        (feed) => (feed as Map<String, dynamic>)['feedId'] == feedId,
-        orElse: () => null,
-      );
-
-      if (targetFeed == null) {
-        throw Exception('해당 피드를 찾을 수 없습니다.');
-      }
-
-      final feedData = targetFeed as Map<String, dynamic>;
-
-      print('=== Feed Summary Debug ===');
-      print('Found feed data: $feedData');
-      print('Available keys: ${feedData.keys.toList()}');
-
-      // 실제 댓글 수를 가져오기 위해 댓글 API 호출
-      int actualCommentCount = 0;
-      try {
-        final commentsResponse = await _dio.get(
-          '/feeds/${feedData['feedId']}/comments',
-          queryParameters: {'page': 0, 'size': 1}, // 첫 페이지만 가져와서 totalElements 확인
-        );
-        if (commentsResponse.data != null) {
-          final commentsResponseMap = commentsResponse.data as Map<String, dynamic>;
-          final pageInfo = commentsResponseMap['pageInfo'] as Map<String, dynamic>?;
-          actualCommentCount = pageInfo?['totalElements'] ?? 0;
-        }
-      } catch (e) {
-        print('Failed to get comment count: $e');
-      }
-
-      // Feed 객체에서 FeedSummary에 필요한 데이터 추출
-      final feedSummaryData = {
-        'feedId': feedData['feedId'],
-        'imageUrl': feedData['imageUrl'],
-        'authorUsername': feedData['authorUsername'] ?? '',
-        'authorProfileImageUrl': feedData['authorProfileImageUrl'] ?? '',
-        'likeCount': feedData['likeCount'] ?? 0,
-        'commentCount': actualCommentCount, // 실제 댓글 수 사용
-      };
-
-      print('Extracted feed summary data: $feedSummaryData');
+      // likeCount와 commentCount가 없으면 기본값 0으로 설정
+      final processedData = Map<String, dynamic>.from(feedSummaryData);
+      processedData['likeCount'] = feedSummaryData['likeCount'] ?? 0;
+      processedData['commentCount'] = feedSummaryData['commentCount'] ?? 0;
 
       return ApiResponse<FeedSummary>(
-        data: FeedSummary.fromJson(feedSummaryData),
-        pageInfo: PageInfo(
-          page: 0,
-          size: 1,
-          totalElements: 1,
-          totalPages: 1,
-          last: true,
-        ),
+        data: FeedSummary.fromJson(processedData),
+        pageInfo: pageInfoMap != null
+            ? PageInfo.fromJson(pageInfoMap)
+            : PageInfo(
+                page: 0,
+                size: 1,
+                totalElements: 1,
+                totalPages: 1,
+                last: true,
+              ),
       );
     } catch (e) {
+      print('Feed summary error: $e');
       throw _handleError(e);
     }
   }
 
-  // 피드 댓글 목록 조회
+  // 피드 댓글 목록 조회 (새로운 API 명세 적용)
   Future<ApiResponse<List<Comment>>> getFeedComments({
     required int feedId,
     int page = 0,
@@ -250,18 +215,26 @@ class FeedService {
     List<String>? sort,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
+      // 새로운 API 명세: pageable 객체로 전달
+      final pageableData = <String, dynamic>{
         'page': page,
         'size': size,
       };
 
       if (sort != null && sort.isNotEmpty) {
-        queryParams['sort'] = sort;
+        pageableData['sort'] = sort;
       }
+
+      print('=== Comments API Call (New Format) ===');
+      print('URL: /feeds/$feedId/comments');
+      print('Pageable data: $pageableData');
 
       final response = await _dio.get(
         '/feeds/$feedId/comments',
-        queryParameters: queryParams,
+        queryParameters: {
+          'feedId': feedId, // path에 있지만 query에도 포함
+          'pageable': pageableData,
+        },
       );
 
       if (response.data == null) {
@@ -327,24 +300,20 @@ class FeedService {
     required int targetId,
     required String targetType, // "FEED" or "COMMENT"
     required String content,
-    int? parentId, // 대댓글인 경우 부모 댓글 ID
   }) async {
     try {
-      // 멘션이 포함된 경우 임시로 처리해보기
-      String processedContent = content;
-
       final commentRequest = CommentRequest(
         targetId: targetId,
         targetType: targetType,
-        content: processedContent,
-        parentId: parentId,
+        content: content,
+        // parentId 제거 - API 명세에 없음
       );
 
       print('=== Comment Request Debug ===');
-      print('Original content: $content');
-      print('Processed content: $processedContent');
+      print('Content: $content');
       print('Request data: ${commentRequest.toJson()}');
-      print('Is reply: ${parentId != null}');
+      print('Target Type: $targetType');
+      print('Target ID: $targetId');
 
       final response = await _dio.post(
         '/feeds/comments',
@@ -445,7 +414,8 @@ class FeedService {
 
       final response = await _dio.delete('/feeds/$commentId/comments');
 
-      print('Delete comment response: ${response.statusCode} - ${response.data}');
+      print(
+          'Delete comment response: ${response.statusCode} - ${response.data}');
 
       if (response.data is Map<String, dynamic>) {
         final responseMap = response.data as Map<String, dynamic>;
@@ -486,11 +456,11 @@ class FeedService {
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
           return Exception('네트워크 연결이 불안정합니다. 다시 시도해주세요.');
-        
+
         case DioExceptionType.badResponse:
           final statusCode = error.response?.statusCode;
           final message = error.response?.data?['message'] ?? '서버 오류가 발생했습니다.';
-          
+
           switch (statusCode) {
             case 400:
               return Exception('잘못된 요청입니다: $message');
@@ -505,21 +475,21 @@ class FeedService {
             default:
               return Exception('서버 오류 ($statusCode): $message');
           }
-        
+
         case DioExceptionType.cancel:
           return Exception('요청이 취소되었습니다.');
-        
+
         case DioExceptionType.unknown:
           if (error.error is SocketException) {
             return Exception('인터넷 연결을 확인해주세요.');
           }
           return Exception('알 수 없는 오류가 발생했습니다.');
-        
+
         default:
           return Exception('네트워크 오류가 발생했습니다.');
       }
     }
-    
+
     return Exception('예상치 못한 오류가 발생했습니다: ${error.toString()}');
   }
 }

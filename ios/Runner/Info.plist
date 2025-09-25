@@ -60,5 +60,16 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>workoutapp.oauth.callback</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>workoutapp</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

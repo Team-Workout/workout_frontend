@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import '../model/feed_models.dart';
 import '../service/feed_service.dart';
 import 'feed_detail_view.dart';
@@ -250,11 +251,17 @@ class _SocialFeedViewState extends ConsumerState<SocialFeedView> {
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           childAspectRatio: 1.0,
                           crossAxisSpacing: 2,
                           mainAxisSpacing: 2,
+                          // 화면 높이에서 AppBar와 여백을 뺀 후 3으로 나누어 정확히 3행이 보이도록
+                          mainAxisExtent: (MediaQuery.of(context).size.height -
+                              AppBar().preferredSize.height -
+                              MediaQuery.of(context).padding.top -
+                              MediaQuery.of(context).padding.bottom -
+                              16) / 3, // 16은 상하 padding
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
@@ -416,20 +423,20 @@ class _CreateFeedBottomSheetState extends ConsumerState<_CreateFeedBottomSheet> 
       // 이미지 선택 (프로필 이미지 업로드와 동일한 설정)
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        imageQuality: 90,
       );
-      
+
       if (image == null) return;
 
       // 파일 형식 검증 (서버 업로드 전에 미리 확인)
       final String fileName = image.name.toLowerCase();
-      if (!fileName.endsWith('.jpg') && 
-          !fileName.endsWith('.jpeg') && 
-          !fileName.endsWith('.png') && 
+      if (!fileName.endsWith('.jpg') &&
+          !fileName.endsWith('.jpeg') &&
+          !fileName.endsWith('.png') &&
           !fileName.endsWith('.webp')) {
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -447,15 +454,79 @@ class _CreateFeedBottomSheetState extends ConsumerState<_CreateFeedBottomSheet> 
         }
         return;
       }
+
+      // 이미지 크롭 기능 추가
+      print('=== 이미지 크롭 시작 ===');
+      print('이미지 경로: ${image.path}');
+
+      CroppedFile? croppedFile;
+      try {
+        croppedFile = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          compressFormat: ImageCompressFormat.jpg,
+          compressQuality: 70, // 압축률 증가 (100 -> 70)
+          maxWidth: 1080, // 최대 너비 제한
+          maxHeight: 1080, // 최대 높이 제한
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: '이미지 크롭',
+              toolbarColor: Colors.deepOrange,
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.original,
+              lockAspectRatio: false,
+              statusBarColor: Colors.deepOrange,
+              activeControlsWidgetColor: Colors.deepOrange,
+              showCropGrid: true,
+              hideBottomControls: false,
+              cropFrameStrokeWidth: 3,
+              cropGridStrokeWidth: 1,
+              cropFrameColor: Colors.deepOrange,
+              cropGridColor: Colors.white,
+            ),
+            IOSUiSettings(
+              title: '이미지 크롭',
+            ),
+          ],
+        );
+        print('=== 이미지 크롭 성공 ===');
+        print('크롭된 파일 경로: ${croppedFile?.path}');
+      } catch (e) {
+        print('=== 이미지 크롭 에러 ===');
+        print('에러 타입: ${e.runtimeType}');
+        print('에러 메시지: $e');
+        print('에러 스택 트레이스: ${StackTrace.current}');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '이미지 크롭 중 오류가 발생했습니다: $e',
+                style: const TextStyle(fontFamily: 'IBMPlexSansKR'),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      if (croppedFile == null) {
+        print('=== 이미지 크롭 취소됨 ===');
+        return;
+      }
       
       setState(() {
         _isUploading = true;
       });
       
-      // 실제 API 호출
+      // 실제 API 호출 (크롭된 이미지 사용)
       final feedService = ref.read(feedServiceProvider);
       final response = await feedService.createFeed(
-        imageFile: File(image.path),
+        imageFile: File(croppedFile.path),
       );
       
       setState(() {

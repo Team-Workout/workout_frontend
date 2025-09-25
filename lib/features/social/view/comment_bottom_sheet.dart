@@ -12,11 +12,11 @@ class CommentBottomSheet extends ConsumerStatefulWidget {
   final VoidCallback onCommentAdded;
 
   const CommentBottomSheet({
-    Key? key,
+    super.key,
     required this.feedId,
     required this.commentCount,
     required this.onCommentAdded,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<CommentBottomSheet> createState() => _CommentBottomSheetState();
@@ -26,9 +26,9 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
   final TextEditingController _commentController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
-  
+
   List<Comment> _comments = [];
-  Map<int, List<Comment>> _replies = {};  // 댓글ID별 대댓글 리스트
+  Map<int, List<Comment>> _replies = {}; // 댓글ID별 대댓글 리스트
   bool _isLoading = true;
   bool _isSubmitting = false;
   Comment? _replyingTo;
@@ -57,37 +57,63 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
       final response = await feedService.getFeedComments(
         feedId: widget.feedId,
         page: 0,
-        size: 50,
-        sort: ['createdAt,asc'],  // 시간순으로 정렬하여 대댓글이 부모 댓글 아래 나오도록
+        size: 100, // 더 많은 댓글을 가져오도록 크기 증가
+        sort: ['createdAt,asc'], // 시간순으로 정렬하여 대댓글이 부모 댓글 아래 나오도록
       );
-      
-      // 평면 구조의 댓글을 부모-자식 구조로 변환
-      List<Comment> parentComments = [];
-      Map<int, List<Comment>> repliesMap = {};
-      
-      for (var comment in response.data) {
-        if (comment.parentId == null) {
-          // 부모 댓글
-          parentComments.add(comment);
-        } else {
-          // 대댓글
-          if (!repliesMap.containsKey(comment.parentId)) {
-            repliesMap[comment.parentId!] = [];
+
+      // API 응답 정보 디버그
+      print('=== API Response Debug ===');
+      print('Page info: ${response.pageInfo.toJson()}');
+      print('Total elements: ${response.pageInfo.totalElements}');
+      print('Current page: ${response.pageInfo.page}');
+      print('Is last: ${response.pageInfo.last}');
+
+      // 새로운 API 응답에서 댓글과 중첩된 답글을 분리
+      List<Comment> directComments = response.data;
+
+      // 디버그 로그 - API에서 실제로 반환되는 데이터 확인
+      print('=== New Nested API Response Debug ===');
+      print('Total direct comments from API: ${directComments.length}');
+
+      Map<int, List<Comment>> repliesByParent = {};
+
+      // 각 직접 댓글의 중첩된 답글을 추출
+      for (var comment in directComments) {
+        print('Comment ID: ${comment.commentId}, Content: ${comment.content}');
+
+        if (comment.replies != null && comment.replies!.isNotEmpty) {
+          print('  Has ${comment.replies!.length} nested replies:');
+          repliesByParent[comment.commentId] = comment.replies!;
+
+          for (var reply in comment.replies!) {
+            print('    Reply ID: ${reply.commentId}, Content: ${reply.content}, ParentId: ${reply.parentId}');
           }
-          repliesMap[comment.parentId!]!.add(comment);
         }
       }
-      
+
+      // 시간순으로 정렬
+      directComments.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      for (var replies in repliesByParent.values) {
+        replies.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      }
+
+      print('=== Updated Comment Structure ===');
+      print('Direct comments: ${directComments.length}');
+      print('Replies by parent: ${repliesByParent.length} groups');
+      for (var entry in repliesByParent.entries) {
+        print('  Parent ${entry.key}: ${entry.value.length} replies');
+      }
+
       setState(() {
-        _comments = parentComments;
-        _replies = repliesMap;
+        _comments = directComments;
+        _replies = repliesByParent;
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -106,7 +132,6 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
     }
   }
 
-
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty || _isSubmitting) return;
@@ -117,24 +142,36 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
 
     try {
       final feedService = ref.read(feedServiceProvider);
-      
-      // 임시로 parentId 없이 시도 (백엔드 대댓글 기능 확인용)
-      final response = await feedService.createComment(
-        targetId: widget.feedId,               // 항상 피드 ID 사용
-        targetType: "FEED",                   // 항상 FEED 타입 사용
-        content: content,
-        // parentId: _replyingTo?.commentId,   // 임시로 주석 처리
-      );
+
+      // 대댓글인 경우와 일반 댓글인 경우를 구분
+      if (_replyingTo != null) {
+        // 대댓글: targetType = "COMMENT", targetId = 부모 댓글 ID
+        final cleanContent =
+            content.replaceFirst(RegExp(r'^@\w+\s*'), ''); // @ 멘션 제거
+        await feedService.createComment(
+          targetId: _replyingTo!.commentId, // 부모 댓글의 ID
+          targetType: "COMMENT", // 댓글에 대한 댓글
+          content: cleanContent,
+          // parentId 제거됨 - API 명세에 없음
+        );
+      } else {
+        // 일반 댓글: targetType = "FEED", targetId = 피드 ID
+        await feedService.createComment(
+          targetId: widget.feedId, // 피드 ID
+          targetType: "FEED", // 피드에 대한 댓글
+          content: content,
+        );
+      }
 
       // 댓글 목록 새로고침
       await _loadComments();
-      
+
       setState(() {
         _commentController.clear();
         _isSubmitting = false;
         _replyingTo = null;
       });
-      
+
       widget.onCommentAdded();
 
       // 새 댓글이 추가되었다는 메시지
@@ -157,7 +194,7 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
       setState(() {
         _isSubmitting = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -179,7 +216,7 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
   void _onReplyTap(Comment comment) {
     setState(() {
       _replyingTo = comment;
-      _commentController.text = '@${comment.authorUsername} ';
+      // @ 멘션을 넣지 않고 대댓글임을 UI로만 표시
     });
     _focusNode.requestFocus();
   }
@@ -378,7 +415,7 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
               ),
             ),
           ),
-          
+
           // 헤더
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -401,9 +438,9 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           // 댓글 목록
           Expanded(
             child: _isLoading
@@ -427,7 +464,7 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
                     },
                   ),
           ),
-          
+
           // 답글 표시 (있는 경우)
           if (_replyingTo != null)
             Container(
@@ -456,7 +493,7 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
                 ],
               ),
             ),
-          
+
           // 댓글 입력
           Container(
             padding: EdgeInsets.only(
@@ -514,8 +551,8 @@ class _CommentBottomSheetState extends ConsumerState<CommentBottomSheet> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: _isSubmitting 
-                          ? Colors.grey[300] 
+                      color: _isSubmitting
+                          ? Colors.grey[300]
                           : const Color(0xFF10B981),
                       shape: BoxShape.circle,
                     ),
@@ -667,14 +704,17 @@ class _CommentItem extends ConsumerWidget {
                               PopupMenuItem<String>(
                                 value: 'delete',
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 2),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 2),
                                   child: Row(
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(6),
+                                          color: const Color(0xFFEF4444)
+                                              .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
                                         ),
                                         child: const Icon(
                                           Icons.delete_outline,
@@ -729,7 +769,7 @@ class _CommentItem extends ConsumerWidget {
             ],
           ),
         ),
-        
+
         // 대댓글들
         if (replies.isNotEmpty)
           ...replies.map(
@@ -792,19 +832,23 @@ class _CommentItem extends ConsumerWidget {
                                   ),
                                   color: Colors.white,
                                   elevation: 8,
-                                  shadowColor: Colors.black.withValues(alpha: 0.2),
+                                  shadowColor:
+                                      Colors.black.withValues(alpha: 0.2),
                                   itemBuilder: (context) => [
                                     PopupMenuItem<String>(
                                       value: 'delete',
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 2),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 2),
                                         child: Row(
                                           children: [
                                             Container(
                                               padding: const EdgeInsets.all(4),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                                                borderRadius: BorderRadius.circular(6),
+                                                color: const Color(0xFFEF4444)
+                                                    .withValues(alpha: 0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
                                               ),
                                               child: const Icon(
                                                 Icons.delete_outline,

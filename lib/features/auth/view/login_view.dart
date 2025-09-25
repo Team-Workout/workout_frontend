@@ -415,6 +415,122 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             ),
                           ),
                           const SizedBox(height: 24),
+                          // Divider with "OR"
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  color: Colors.grey[300],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  '또는',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  color: Colors.grey[300],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          // Google Login Button
+                          Container(
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                onTap: authViewState.isLoading
+                                    ? null
+                                    : () async {
+                                        // 임시로 비활성화
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: const Text(
+                                              '구글 로그인은 현재 개발 중입니다.\n일반 회원가입을 이용해주세요.',
+                                              style: TextStyle(
+                                                fontFamily: 'IBMPlexSansKR',
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            backgroundColor: const Color(0xFF059669),
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            duration: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      },
+                                child: Center(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.red[400]!,
+                                              Colors.orange[400]!,
+                                              Colors.yellow[600]!,
+                                              Colors.green[400]!,
+                                              Colors.blue[400]!,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.g_mobiledata,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Text(
+                                        'Google로 로그인',
+                                        style: TextStyle(
+                                          color: Color(0xFF2C3E50),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
                           // Signup Link
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,

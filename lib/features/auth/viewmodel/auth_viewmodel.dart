@@ -6,6 +6,8 @@ import 'package:pt_service/core/services/session_service.dart';
 import 'package:pt_service/core/services/storage_service.dart';
 import 'package:pt_service/features/fcm/service/fcm_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
 
 class AuthViewState {
   final bool isLoading;
@@ -214,7 +216,7 @@ class AuthViewModel extends StateNotifier<AuthViewState> {
   Future<void> logout() async {
     // 자동 로그인 데이터 정리
     await StorageService.clearAutoLoginData();
-    
+
     // 로그아웃 시 FCM 토큰 삭제
     try {
       await _fcmApiService.deleteFCMToken();
@@ -223,10 +225,62 @@ class AuthViewModel extends StateNotifier<AuthViewState> {
       print('Failed to delete FCM token: $e');
       // FCM 토큰 삭제 실패는 로그아웃 자체를 실패시키지 않음
     }
-    
+
     // logout 메서드를 repository를 통해 호출
     await _repository.logout();
     _authState.logout();
+  }
+
+  // 구글 로그인
+  Future<void> loginWithGoogle() async {
+    if (!mounted) return;
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final googleOAuthUrl = Uri.parse(
+        'http://workout.p-e.kr/oauth2/authorization/google?redirect_uri=workoutapp://oauth/callback'
+      );
+
+      // 서버 연결 테스트
+      print('🔍 Attempting to launch Google OAuth URL: $googleOAuthUrl');
+
+      if (await canLaunchUrl(googleOAuthUrl)) {
+        await launchUrl(
+          googleOAuthUrl,
+          mode: LaunchMode.externalApplication,
+        );
+        print('✅ Successfully launched Google OAuth URL');
+        // URL을 성공적으로 열었으므로 로딩 해제 (콜백에서 다시 로딩 시작)
+        if (!mounted) return;
+        state = state.copyWith(isLoading: false);
+      } else {
+        throw Exception('구글 로그인을 실행할 수 없습니다.');
+      }
+    } catch (e) {
+      print('❌ Google OAuth launch failed: $e');
+      if (!mounted) return;
+      state = state.copyWith(
+        isLoading: false,
+        error: '서버에 연결할 수 없습니다. 네트워크 상태를 확인하거나 잠시 후 다시 시도해주세요.',
+      );
+    }
+  }
+
+  // 구글 OAuth 콜백 처리 (임시 비활성화)
+  Future<void> handleGoogleCallback(String sessionId, bool isNewUser) async {
+    if (!mounted) return;
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // 임시로 구글 로그인은 비활성화
+      throw Exception('구글 로그인은 현재 개발 중입니다. 일반 회원가입을 이용해주세요.');
+    } catch (e) {
+      if (!mounted) return;
+      state = state.copyWith(
+        isLoading: false,
+        error: _getKoreanErrorMessage(e.toString()),
+      );
+    }
   }
 }
 

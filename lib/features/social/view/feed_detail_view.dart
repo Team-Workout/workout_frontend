@@ -434,46 +434,51 @@ class _FeedDetailViewState extends ConsumerState<FeedDetailView> {
                       ],
                     ),
                   )
-                : Column(
-                    children: [
-                      // 사용자 정보
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            ProfileAvatar(
-                              radius: 20,
-                              imageUrl: _feedSummary!.fullAuthorProfileImageUrl,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _feedSummary!.authorUsername,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'IBMPlexSansKR',
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        // 사용자 정보
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              ProfileAvatar(
+                                radius: 20,
+                                imageUrl: _feedSummary!.fullAuthorProfileImageUrl,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _feedSummary!.authorUsername,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'IBMPlexSansKR',
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      
-                      // 이미지
-                      Expanded(
-                        child: Container(
+
+                        // 이미지 (정사각형 또는 세로형)
+                        Container(
                           width: double.infinity,
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.width * 1.25, // 세로형 비율 (5:4 정도)
+                            minHeight: MediaQuery.of(context).size.width, // 최소 정사각형
+                          ),
+                          color: Colors.black,
                           child: InteractiveViewer(
                             minScale: 1.0,
                             maxScale: 3.0,
                             child: Image.network(
                               _feedSummary!.fullImageUrl,
-                              fit: BoxFit.contain,
+                              fit: BoxFit.cover,
                               loadingBuilder: (context, child, loadingProgress) {
                                 if (loadingProgress == null) return child;
                                 return Center(
@@ -511,74 +516,74 @@ class _FeedDetailViewState extends ConsumerState<FeedDetailView> {
                             ),
                           ),
                         ),
-                      ),
-                      
-                      // 하단 액션 바
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // 좋아요, 댓글 버튼
-                            Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: _toggleLike,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    child: Icon(
-                                      _isLiked ? Icons.favorite : Icons.favorite_border,
-                                      color: _isLiked ? Colors.red : Colors.white,
+
+                        // 하단 액션 바
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 좋아요, 댓글 버튼
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: _toggleLike,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      child: Icon(
+                                        _isLiked ? Icons.favorite : Icons.favorite_border,
+                                        color: _isLiked ? Colors.red : Colors.white,
+                                        size: 28,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  GestureDetector(
+                                    onTap: _showComments,
+                                    child: const Icon(
+                                      Icons.chat_bubble_outline,
+                                      color: Colors.white,
                                       size: 28,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                                GestureDetector(
-                                  onTap: _showComments,
-                                  child: const Icon(
-                                    Icons.chat_bubble_outline,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
-                                ),
-                                const Spacer(),
-                              ],
-                            ),
-                            
-                            const SizedBox(height: 12),
-                            
-                            // 좋아요 수
-                            if (_feedSummary!.likeCount > 0)
-                              Text(
-                                '좋아요 ${NumberFormat('#,###').format(_feedSummary!.likeCount)}개',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'IBMPlexSansKR',
-                                ),
+                                  const Spacer(),
+                                ],
                               ),
-                            
-                            const SizedBox(height: 8),
-                            
-                            // 댓글 보기
-                            if (_feedSummary!.commentCount > 0)
-                              GestureDetector(
-                                onTap: _showComments,
-                                child: Text(
-                                  '댓글 ${NumberFormat('#,###').format(_feedSummary!.commentCount)}개 보기',
-                                  style: TextStyle(
-                                    color: Colors.grey[400],
+
+                              const SizedBox(height: 12),
+
+                              // 좋아요 수
+                              if (_feedSummary!.likeCount > 0)
+                                Text(
+                                  '좋아요 ${NumberFormat('#,###').format(_feedSummary!.likeCount)}개',
+                                  style: const TextStyle(
+                                    color: Colors.white,
                                     fontSize: 14,
+                                    fontWeight: FontWeight.w600,
                                     fontFamily: 'IBMPlexSansKR',
                                   ),
                                 ),
-                              ),
-                          ],
+
+                              const SizedBox(height: 8),
+
+                              // 댓글 보기
+                              if (_feedSummary!.commentCount > 0)
+                                GestureDetector(
+                                  onTap: _showComments,
+                                  child: Text(
+                                    '댓글 ${NumberFormat('#,###').format(_feedSummary!.commentCount)}개 보기',
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                      fontSize: 14,
+                                      fontFamily: 'IBMPlexSansKR',
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
       ),
     );

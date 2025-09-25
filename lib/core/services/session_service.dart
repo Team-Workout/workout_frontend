@@ -77,6 +77,12 @@ class SessionService {
     return headers;
   }
 
+  // Set session ID manually (for OAuth callback)
+  Future<void> setSessionId(String sessionId) async {
+    _sessionId = sessionId;
+    await _prefs.setString('session_id', sessionId);
+  }
+
   // Clear session on logout
   Future<void> clearSession() async {
     _sessionId = null;

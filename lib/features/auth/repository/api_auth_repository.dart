@@ -122,6 +122,39 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> signupSocial({
+    required int gymId,
+    required String name,
+    required String gender,
+    required String role,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        '/auth/signup/social',
+        data: {
+          'gymId': gymId,
+          'name': name,
+          'gender': gender,
+          'role': role,
+        },
+      );
+
+      if (response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      } else if (response.data is int || response.data is String) {
+        return {'id': response.data.toString()};
+      } else {
+        return {'id': ''};
+      }
+    } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
+      throw Exception('소셜 회원가입 실패: 서버 오류가 발생했습니다.');
+    }
+  }
+
+  @override
   Future<void> logout() async {
     try {
       // Call logout API if session exists
