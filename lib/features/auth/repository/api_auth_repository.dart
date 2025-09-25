@@ -33,13 +33,20 @@ class ApiAuthRepository implements AuthRepository {
       // role을 확인하여 UserType 결정
       UserType userType;
       final roleValue = actualUserData['role']?.toString()?.toUpperCase();
-      
+
+      print('=== Login API Response Debug ===');
+      print('Raw role from server: ${actualUserData['role']}');
+      print('Converted role: $roleValue');
+
       if (roleValue == 'TRAINER') {
         userType = UserType.trainer;
+        print('Mapped to UserType.trainer');
       } else if (roleValue == 'MANAGER') {
         userType = UserType.manager;
+        print('Mapped to UserType.manager');
       } else {
         userType = UserType.member; // 기본값 (MEMBER or USER)
+        print('Mapped to UserType.member (default)');
       }
 
       // 간단한 응답 처리: id와 name만 받음
@@ -66,26 +73,29 @@ class ApiAuthRepository implements AuthRepository {
     String? gender,
   }) async {
     try {
-      // Different endpoints based on user type
+      // Use correct endpoints based on user type
       final endpoint = userType == UserType.trainer
-          ? '/auth/signup/trainer'
-          : '/auth/signup/user';
+          ? '/auth/signup/trainer'  // 트레이너 전용 엔드포인트
+          : '/auth/signup/user';    // 일반 회원 전용 엔드포인트
+
+      final requestData = {
+        'gymId': 1,
+        'email': email,
+        'password': password,
+        'name': name,
+        'gender': gender?.toUpperCase() ?? 'MALE',
+        'role': _mapUserTypeToRole(userType),
+      };
+
+      print('=== Signup Request Debug ===');
+      print('Endpoint: $endpoint');
+      print('UserType: $userType');
+      print('Mapped Role: ${_mapUserTypeToRole(userType)}');
+      print('Request Data: $requestData');
 
       final response = await _apiService.post(
         endpoint,
-        data: {
-          'gymId': 1, // Default gym ID
-          'email': email,
-          'password': password,
-          'name': name,
-          'gender': gender?.toUpperCase() ?? 'MALE',
-          'role': _mapUserTypeToRole(userType),
-          // Add trainer-specific fields if needed
-          if (userType == UserType.trainer) ...{
-            'specialization': 'General Fitness', // Default specialization
-            'experience': 0, // Default experience
-          },
-        },
+        data: requestData,
       );
 
       // 서버가 단순히 ID만 반환하는 경우 처리

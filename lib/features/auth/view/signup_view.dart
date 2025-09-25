@@ -895,7 +895,9 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                                     userType:
                                                         _selectedRole == '회원'
                                                             ? UserType.member
-                                                            : UserType.trainer,
+                                                            : _selectedRole == '트레이너'
+                                                                ? UserType.trainer
+                                                                : UserType.member,
                                                     gender: genderInEnglish,
                                                   );
                                             }
